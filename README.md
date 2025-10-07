@@ -53,5 +53,9 @@ New York Times API
   <img src="https://contrib.rocks/image?repo=anajera05/ArtSphere" />
 </a>
 
+<a href="https://github.com/lindaccy/ArtSphere/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=lindaccy/ArtSphere" />
+</a>
+
 
 
