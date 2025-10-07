@@ -9,8 +9,7 @@
   <h3 align="center">ArtSphere</h3>
 
   <p align="center">
-    An art platform for artist art exchange, show the latest art trend, see locations of your nearby artist. 
-  </p>
+  An accessible art world for artists of all levels — trade artworks, discover trends, share creativity, and connect locally.  </p>
 </div>
 
 <!-- ABOUT THE PROJECT -->
@@ -20,16 +19,13 @@ Our app facilitates the exchange and collaboration of artwork. It allows users t
 
 Key features: 
 * User Authentication
-  * User can be a buyer or a seller
-  * Buyers: Can find art pieces they want to buy and contact sellers
-  * Seller: List their art and be contacted to buy
+  * User can be both buyer and seller
+  * Buyers: click on artworks they’re interested in to view artist information and contact them directly.
+  * Seller: upload artworks to enrich their profile and choose whether to be visible on the interactive map.
 * Interactive Feed
-  * Trending Posts
-  * Weather Integration: Homepage Artwork daily pick based on mood/weather
-* Map Integration
-  * Find artists selling in your area
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+  * News Integration: displays recent news and trends from the art industry.
+  * Weather Integration: personalize the homepage with daily artwork picks based on mood and weather conditions.
+  * Map Integration: Helps users discover and connect with nearby artists.
 
 
 <!-- USAGE EXAMPLES -->
@@ -37,7 +33,6 @@ Key features:
 
 Those who love art and/or want to sell!
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- APIs Used -->
 ## Planned API  
@@ -48,7 +43,6 @@ Google Maps
 
 New York Times API
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
@@ -59,6 +53,5 @@ New York Times API
   <img src="https://contrib.rocks/image?repo=anajera05/ArtSphere" />
 </a>
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
