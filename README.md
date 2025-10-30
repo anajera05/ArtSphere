@@ -9,7 +9,7 @@
   <h3 align="center">ArtSphere</h3>
 
   <p align="center">
-  An accessible art world for artists of all levels — trade artworks, discover trends, share creativity, and connect locally </p>
+  An accessible art world for artists of all levels — trade artworks, discover trends, share creativity, and connect locally.  </p>
 </div>
 
 <!-- ABOUT THE PROJECT -->
@@ -25,7 +25,7 @@ Key features:
 * Interactive Feed
   * News Integration: displays recent news and trends from the art industry.
   * Weather Integration: personalize the homepage with daily artwork picks based on mood and weather conditions.
-  * Map Integration: Helps users to discover and connect with nearby artists.
+  * Map Integration: Helps users discover and connect with nearby artists.
 
 
 <!-- USAGE EXAMPLES -->
