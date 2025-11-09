@@ -51,14 +51,17 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
+    implementation("androidx.navigation:navigation-compose:2.8.3")
     // Firebase BOM
     implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
-
     // You need this for login
     implementation("com.google.firebase:firebase-auth")
-
     // You can keep analytics if you want
     implementation("com.google.firebase:firebase-analytics")
+    implementation("androidx.navigation:navigation-compose:2.8.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
