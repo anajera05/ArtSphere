@@ -1,7 +1,10 @@
 package com.example.artsphere
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,9 +27,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -35,6 +40,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,9 +48,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.artsphere.features.NewsViewModel
 import com.example.artsphere.ui.theme.ArtSphereTheme
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -91,6 +101,10 @@ fun HomeScreen(modifier: Modifier = Modifier) {
         ) {
             // Trending Art News Section
             item(span = { GridItemSpan(maxLineSpan) }) {
+                val viewModel: NewsViewModel = viewModel()
+                val uiState by viewModel.uiState.collectAsState()
+                val context = LocalContext.current
+
                 Column(modifier = Modifier.padding(bottom = 16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -103,28 +117,68 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                             fontWeight = FontWeight.Bold
                         )
                         Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh news",
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clickable { viewModel.loadNews() }
+                        )
+                        Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = "View all",
                             modifier = Modifier.size(20.dp)
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(3) { index ->
-                            Card(
-                                modifier = Modifier
-                                    .width(200.dp)
-                                    .height(120.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0))
-                            ) {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomStart) {
-                                    Text(
-                                        text = "Article ${index + 1}",
-                                        modifier = Modifier.padding(12.dp),
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Medium
-                                    )
+
+                    when {
+                        uiState.isLoading -> {
+                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                        uiState.error != null -> {
+                            Text(
+                                text = "Error: ${uiState.error}",
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                        else -> {
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                items(uiState.articles) { article ->
+                                    Card(
+                                        modifier = Modifier
+                                            .width(200.dp)
+                                            .height(180.dp)
+                                            .clickable {
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(article.url))
+                                                context.startActivity(intent)
+                                            },
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0))
+                                    ) {
+                                        Column(modifier = Modifier.fillMaxSize()) {
+                                            article.imageUrl?.let { imageUrl ->
+                                                AsyncImage(
+                                                    model = imageUrl,
+                                                    contentDescription = article.title,
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .weight(1f),
+                                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                                )
+                                            }
+                                            Text(
+                                                text = article.title,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(8.dp),
+                                                maxLines = 2
+                                            )
+                                        }
+                                    }
+
                                 }
                             }
                         }
