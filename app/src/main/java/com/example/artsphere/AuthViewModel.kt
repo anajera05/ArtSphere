@@ -32,6 +32,10 @@ class AuthViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(username = newUsername, error = null)
     }
 
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
+    }
+
     fun login(onSuccess: () -> Unit) {
         val state = _uiState.value
         val email = state.email.trim()
