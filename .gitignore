@@ -13,3 +13,15 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+
+# --- Firebase config (keep local only)
+app/google-services.json
+
+# --- API Keys (keep local only)
+.env
+
+# --- Miscellaneous IDE/system files
+*.log
+Thumbs.db
+.DS_Store
