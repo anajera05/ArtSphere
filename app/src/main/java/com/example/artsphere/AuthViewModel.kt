@@ -15,6 +15,7 @@ data class AuthUiState(
 
 class AuthViewModel : ViewModel() {
 
+
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -87,5 +88,10 @@ class AuthViewModel : ViewModel() {
                     )
                 }
             }
+    }
+    fun signOut() {
+        auth.signOut()
+        // reset UI state so login/signup fields are empty next time
+        _uiState.value = AuthUiState()
     }
 }

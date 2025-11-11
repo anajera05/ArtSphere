@@ -41,9 +41,18 @@ fun ArtSphereApp() {
                 }
             )
         }
-        // this is the screen you see AFTER auth
         composable("main") {
-            MainScreenWithBottomBar()
+            // ⬇️ give the bottom-bar screen a way to sign out
+            MainScreenWithBottomBar(
+                onSignOut = {
+                    authViewModel.signOut()
+                    navController.navigate("login") {
+                        // remove main so user can’t go back to it
+                        popUpTo("main") { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
+

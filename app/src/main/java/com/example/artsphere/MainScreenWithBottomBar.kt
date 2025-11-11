@@ -41,32 +41,31 @@ val screens = listOf(
     Screen.Profile
 )
 @Composable
-fun MainScreenWithBottomBar() {
+fun MainScreenWithBottomBar(
+    onSignOut: () -> Unit
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-    val currentScreen = screens.find { currentRoute?.startsWith(it.route.substringBefore("/")) == true }
     val currentDestination = navBackStackEntry?.destination
 
     Scaffold(
         bottomBar = {
             NavigationBar {
                 screens.forEach { screen ->
-                        NavigationBarItem(
-                            label = { Text(screen.title) },
-                            icon = { Icon(screen.icon, contentDescription = screen.title) },
-                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-
-                            onClick = {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
+                    NavigationBarItem(
+                        label = { Text(screen.title) },
+                        icon = { Icon(screen.icon, contentDescription = screen.title) },
+                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                        onClick = {
+                            navController.navigate(screen.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
                                 }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                        )
+                        }
+                    )
                 }
             }
         }
@@ -79,9 +78,9 @@ fun MainScreenWithBottomBar() {
             composable(Screen.Home.route) { HomeScreen() }
             composable(Screen.Map.route) { MapScreen() }
             composable(Screen.Inbox.route) { InboxScreen() }
-            composable(Screen.Profile.route) { ProfileScreen() }
-
+            composable(Screen.Profile.route) {
+                ProfileScreen(onSignOut = onSignOut)
+            }
         }
     }
 }
-
