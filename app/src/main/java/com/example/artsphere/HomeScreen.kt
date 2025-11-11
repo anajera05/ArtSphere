@@ -123,11 +123,6 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                                 .size(20.dp)
                                 .clickable { viewModel.loadNews() }
                         )
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "View all",
-                            modifier = Modifier.size(20.dp)
-                        )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
 
