@@ -29,8 +29,8 @@ Current features:
 
 <!-- build/run instructions -->
 ## How to build and run the application 
-1. git clone https://github.com/anajera05/ArtSphere
-2. cd Artsphere
+1. ```git clone https://github.com/anajera05/ArtSphere```
+2. ```cd Artsphere```
 3. Run emulator
 4. run application
 
