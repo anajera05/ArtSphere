@@ -17,16 +17,22 @@
 
 Our app facilitates the exchange and collaboration of artwork. It allows users to sell their own creations while also discovering and purchasing art from other artists. By providing a platform for both buying and selling, the app encourages creative collaboration and helps artists reach a wider audience.
 
-Key features: 
-* User Authentication
-  * User can be both buyer and seller
-  * Buyers: click on artworks they’re interested in to view artist information and contact them directly.
-  * Seller: upload artworks to enrich their profile and choose whether to be visible on the interactive map.
+Current features: 
+* User Authentication:
+  * Users can create their accounts and log in with the same credentials
+  * Passwords must be +6 characters
+  * User can sign out of their account and log back in
 * Interactive Feed
-  * News Integration: displays recent news and trends from the art industry.
-  * Weather Integration: personalize the homepage with daily artwork picks based on mood and weather conditions.
-  * Map Integration: Helps users discover and connect with nearby artists.
+  * News Integration: displays recent news and trends from the art industry using the NYTimes API.
+* Navigation:
+  * Navigate between the 4 main screens: Home, Map, Inbox, and Profile
 
+<!-- build/run instructions -->
+## How to build and run the application 
+1. git clone https://github.com/anajera05/ArtSphere
+2. cd Artsphere
+3. Run emulator
+4. run application
 
 <!-- USAGE EXAMPLES -->
 ## Users 
