@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 fun ArtSphereApp() {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
+    val profileViewModel: ProfileViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -42,12 +43,11 @@ fun ArtSphereApp() {
             )
         }
         composable("main") {
-            // ⬇️ give the bottom-bar screen a way to sign out
             MainScreenWithBottomBar(
+                profileViewModel = profileViewModel,
                 onSignOut = {
                     authViewModel.signOut()
                     navController.navigate("login") {
-                        // remove main so user can’t go back to it
                         popUpTo("main") { inclusive = true }
                     }
                 }
@@ -55,4 +55,3 @@ fun ArtSphereApp() {
         }
     }
 }
-
