@@ -1,14 +1,11 @@
 package com.example.artsphere
 
-import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -20,19 +17,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.*
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.artsphere.Screen.Home.icon
+import androidx.compose.ui.graphics.vector.ImageVector
+import android.net.Uri
+import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.ui.graphics.Color
 import com.example.artsphere.AddArtworkScreen
 import com.example.artsphere.CameraScreen
-import androidx.compose.ui.graphics.vector.ImageVector
 
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
@@ -58,17 +52,14 @@ fun MainScreenWithBottomBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
-
-    val currentRoute = currentDestination?.route
-    val showBottomBar = currentRoute !in listOf("camera", "add_artwork")
-
     // Create shared ViewModels
     val artworkViewModel: ArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
     val savedArtworkViewModel: SavedArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
     // Track selected artwork for detail view
     var selectedArtwork by remember { mutableStateOf<Artwork?>(null) }
+
+    var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     // Only show bottom bar on main screens
     val showBottomBar = currentDestination?.route in bottomNavScreens.map { it.route }
@@ -144,34 +135,6 @@ fun MainScreenWithBottomBar(
                     profileViewModel = profileViewModel
                 )
             }
-            composable("camera") {
-                CameraScreen(
-                    onBackClick = {
-                        navController.popBackStack()
-                    },
-                    onPhotoTaken = { uri ->
-                        capturedImageUri = uri
-                        navController.navigate("add_artwork")
-                    }
-                )
-            }
-
-            composable("add_artwork") {
-                capturedImageUri?.let { uri ->
-                    AddArtworkScreen(
-                        imageUri = uri,
-                        onBackClick = {
-                            navController.popBackStack()
-                        },
-                        onSaveSuccess = {
-                            navController.popBackStack(Screen.Home.route, false)
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
 
             // My Artwork Screen
             composable("my_artwork") {
@@ -216,6 +179,33 @@ fun MainScreenWithBottomBar(
                             navController.popBackStack()
                         },
                         viewModel = artworkViewModel
+                    )
+                }
+            }
+            composable("camera") {
+                CameraScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onPhotoTaken = { uri ->
+                        // Save the photo URI and navigate to add artwork screen
+                        capturedImageUri = uri
+                        navController.navigate("add_artwork")
+                    }
+                )
+            }
+
+            // Opens automatically after taking a photo
+            composable("add_artwork") {
+                capturedImageUri?.let { uri ->
+                    AddArtworkScreen(
+                        imageUri = uri,
+                        onBackClick = {
+                            navController.popBackStack()
+                        },
+                        onSaveSuccess = {
+                            navController.popBackStack(Screen.Home.route, false)
+                        }
                     )
                 }
             }
