@@ -25,7 +25,6 @@ import android.net.Uri
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.graphics.Color
-import com.example.artsphere.AddArtworkScreen
 import com.example.artsphere.CameraScreen
 
 
@@ -120,7 +119,14 @@ fun MainScreenWithBottomBar(
                     savedViewModel = savedArtworkViewModel
                 )
             }
-            composable(Screen.Map.route) { MapScreen() }
+            composable(Screen.Map.route) {
+                MapScreen(
+                    onArtworkClick = { artwork ->
+                        selectedArtwork = artwork
+                        navController.navigate("artwork_detail")
+                    }
+                )
+            }
             composable(Screen.Inbox.route) { InboxScreen() }
 
             composable(Screen.Profile.route) {
@@ -140,7 +146,10 @@ fun MainScreenWithBottomBar(
             composable("my_artwork") {
                 MyArtworkScreen(
                     onBackClick = { navController.popBackStack() },
-                    onUploadClick = { navController.navigate("upload_artwork") },
+                    onUploadClick = {
+                        capturedImageUri = null
+                        navController.navigate("upload_artwork")
+                    },
                     onArtworkClick = { artwork ->
                         selectedArtwork = artwork
                         navController.navigate("artwork_detail")
@@ -164,8 +173,12 @@ fun MainScreenWithBottomBar(
             // Upload Artwork Screen
             composable("upload_artwork") {
                 UploadArtworkScreen(
-                    onBackClick = { navController.popBackStack() },
-                    viewModel = artworkViewModel
+                    onBackClick = {
+                        capturedImageUri = null
+                        navController.popBackStack()
+                    },
+                    viewModel = artworkViewModel,
+                    initialImageUri = capturedImageUri
                 )
             }
 
@@ -182,32 +195,19 @@ fun MainScreenWithBottomBar(
                     )
                 }
             }
+
             composable("camera") {
                 CameraScreen(
                     onBackClick = {
                         navController.popBackStack()
                     },
                     onPhotoTaken = { uri ->
-                        // Save the photo URI and navigate to add artwork screen
                         capturedImageUri = uri
-                        navController.navigate("add_artwork")
+                        navController.navigate("upload_artwork") {
+                            popUpTo("camera") { inclusive = true }
+                        }
                     }
                 )
-            }
-
-            // Opens automatically after taking a photo
-            composable("add_artwork") {
-                capturedImageUri?.let { uri ->
-                    AddArtworkScreen(
-                        imageUri = uri,
-                        onBackClick = {
-                            navController.popBackStack()
-                        },
-                        onSaveSuccess = {
-                            navController.popBackStack(Screen.Home.route, false)
-                        }
-                    )
-                }
             }
         }
     }

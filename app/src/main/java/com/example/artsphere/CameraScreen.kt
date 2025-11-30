@@ -23,7 +23,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
@@ -32,8 +31,6 @@ import androidx.core.content.ContextCompat
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 @Composable
 fun CameraScreen(
@@ -41,6 +38,7 @@ fun CameraScreen(
     onPhotoTaken: (Uri) -> Unit
 ) {
     val context = LocalContext.current
+
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -50,7 +48,7 @@ fun CameraScreen(
         )
     }
 
-    val launcher = rememberLauncherForActivityResult(
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasCameraPermission = isGranted
@@ -58,25 +56,22 @@ fun CameraScreen(
 
     LaunchedEffect(Unit) {
         if (!hasCameraPermission) {
-            launcher.launch(Manifest.permission.CAMERA)
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
-    when {
-        hasCameraPermission -> {
-            CameraPreview(
-                onBackClick = onBackClick,
-                onPhotoTaken = onPhotoTaken
-            )
-        }
-        else -> {
-            PermissionDeniedScreen(
-                onBackClick = onBackClick,
-                onRequestPermission = {
-                    launcher.launch(Manifest.permission.CAMERA)
-                }
-            )
-        }
+    if (hasCameraPermission) {
+        CameraPreview(
+            onBackClick = onBackClick,
+            onPhotoTaken = onPhotoTaken
+        )
+    } else {
+        PermissionDeniedScreen(
+            onBackClick = onBackClick,
+            onRequestPermission = {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        )
     }
 }
 
@@ -162,26 +157,30 @@ private fun PermissionDeniedScreen(
     onBackClick: () -> Unit,
     onRequestPermission: () -> Unit
 ) {
-    Box(
+    Surface(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(24.dp)
+            verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.AddAPhoto,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.primary
+            Text(
+                text = "📷",
+                style = MaterialTheme.typography.displayLarge
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = "Camera Permission Required",
                 style = MaterialTheme.typography.headlineSmall
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "To take photos of artwork, please grant camera permission.",
@@ -189,15 +188,26 @@ private fun PermissionDeniedScreen(
                 color = Color.Gray
             )
 
+            Spacer(modifier = Modifier.height(24.dp))
+
             Button(
-                onClick = onRequestPermission,
-                modifier = Modifier.fillMaxWidth()
+                onClick = {
+                    onRequestPermission()
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF7B61FF)
+                )
             ) {
                 Text("Grant Permission")
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
             OutlinedButton(
-                onClick = onBackClick,
+                onClick = {
+                    onBackClick()
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Go Back")
