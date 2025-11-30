@@ -30,9 +30,15 @@ import coil.compose.AsyncImage
 @Composable
 fun UploadArtworkScreen(
     onBackClick: () -> Unit,
-    viewModel: ArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: ArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    initialImageUri: Uri? = null
 ) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    LaunchedEffect(initialImageUri) {
+        if (initialImageUri != null) {
+            selectedImageUri = initialImageUri
+        }
+    }
     var artworkName by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(ArtworkCategory.PAINTING_DRAWING) }
     var description by remember { mutableStateOf("") }

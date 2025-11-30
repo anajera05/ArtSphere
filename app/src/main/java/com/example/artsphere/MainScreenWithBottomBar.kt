@@ -21,6 +21,11 @@ import androidx.navigation.compose.*
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.compose.ui.graphics.vector.ImageVector
+import android.net.Uri
+import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.ui.graphics.Color
+import com.example.artsphere.CameraScreen
 
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
@@ -53,6 +58,8 @@ fun MainScreenWithBottomBar(
     // Track selected artwork for detail view
     var selectedArtwork by remember { mutableStateOf<Artwork?>(null) }
 
+    var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
+
     // Only show bottom bar on main screens
     val showBottomBar = currentDestination?.route in bottomNavScreens.map { it.route }
 
@@ -78,6 +85,22 @@ fun MainScreenWithBottomBar(
                     }
                 }
             }
+        },
+        floatingActionButton = {
+            if (showBottomBar) {
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate("camera")
+                    },
+                    containerColor = Color(0xFF7B61FF)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AddAPhoto,
+                        contentDescription = "Take Photo",
+                        tint = Color.White
+                    )
+                }
+            }
         }
     ) { innerPadding ->
 
@@ -96,7 +119,14 @@ fun MainScreenWithBottomBar(
                     savedViewModel = savedArtworkViewModel
                 )
             }
-            composable(Screen.Map.route) { MapScreen() }
+            composable(Screen.Map.route) {
+                MapScreen(
+                    onArtworkClick = { artwork ->
+                        selectedArtwork = artwork
+                        navController.navigate("artwork_detail")
+                    }
+                )
+            }
             composable(Screen.Inbox.route) { InboxScreen() }
 
             composable(Screen.Profile.route) {
@@ -116,7 +146,10 @@ fun MainScreenWithBottomBar(
             composable("my_artwork") {
                 MyArtworkScreen(
                     onBackClick = { navController.popBackStack() },
-                    onUploadClick = { navController.navigate("upload_artwork") },
+                    onUploadClick = {
+                        capturedImageUri = null
+                        navController.navigate("upload_artwork")
+                    },
                     onArtworkClick = { artwork ->
                         selectedArtwork = artwork
                         navController.navigate("artwork_detail")
@@ -140,8 +173,12 @@ fun MainScreenWithBottomBar(
             // Upload Artwork Screen
             composable("upload_artwork") {
                 UploadArtworkScreen(
-                    onBackClick = { navController.popBackStack() },
-                    viewModel = artworkViewModel
+                    onBackClick = {
+                        capturedImageUri = null
+                        navController.popBackStack()
+                    },
+                    viewModel = artworkViewModel,
+                    initialImageUri = capturedImageUri
                 )
             }
 
@@ -157,6 +194,20 @@ fun MainScreenWithBottomBar(
                         viewModel = artworkViewModel
                     )
                 }
+            }
+
+            composable("camera") {
+                CameraScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onPhotoTaken = { uri ->
+                        capturedImageUri = uri
+                        navController.navigate("upload_artwork") {
+                            popUpTo("camera") { inclusive = true }
+                        }
+                    }
+                )
             }
         }
     }
