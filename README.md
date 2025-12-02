@@ -17,15 +17,41 @@
 
 Our app facilitates the exchange and collaboration of artwork. It allows users to sell their own creations while also discovering and purchasing art from other artists. By providing a platform for both buying and selling, the app encourages creative collaboration and helps artists reach a wider audience.
 
-Current features: 
-* User Authentication:
+Features: 
+* User Authentication (Completed):
   * Users can create their accounts and log in with the same credentials
   * Passwords must be +6 characters
   * User can sign out of their account and log back in
-* Interactive Feed
-  * News Integration: displays recent news and trends from the art industry using the NYTimes API.
-* Navigation:
+* Interactive Feed:
+  * News Integration (Completed): displays recent news and trends from the art industry using the NYTimes API.
+  * Gallery (Completed): Ability to view all listed artwork and filter based on preexisting categories
+  * Camera (Completed): Quick action to make a new listing from taking photo
+  * Search (WIP): Search for specific art pieces and profiles 
+* Map:
+  * See pins for artworks being sold in the area
+  * Add new pins 
+* Navigation (Completed):
   * Navigate between the 4 main screens: Home, Map, Inbox, and Profile
+* Profile:
+  * View your profile picture and the number of listings (Completed)
+  * View Posted Art pieces (Completed)
+  * View saved Art pieces (Completed)
+  * Settings page (WIP): log out function, ability to edit username and contact information
+  * Add listings (Completed)
+* Add listing:
+  * Add listing from Camera Quick Action or the Add button on Profile (Completed)
+  * If no price, contact seller (Completed)
+  * Choose if you want this piece to be featured on the map (WIP)
+* Transactions (WIP):
+  * View Art pieces in your cart
+  * In-App Purchasing
+  * View previously bought items
+  * View items sold
+ 
+* Stretch Features:
+  * In-App Messaging
+  * Add art events in the map 
+
 
 <!-- build/run instructions -->
 ## How to build and run the application 
@@ -69,7 +95,7 @@ Automated unit/UI tests were added to verify key composable components and flows
 This approach ensured that each feature functions correctly and that the app behaves as expected under different scenarios.
 
 ## AI Usage
-Tools Used: ChatGPT
+Tools Used: ChatGPT, Gemini
 
 Where and How Used: 
 
