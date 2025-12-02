@@ -1,5 +1,6 @@
 package com.example.artsphere
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,102 +27,99 @@ import coil.compose.AsyncImage
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyArtworkScreen(
-    onBackClick: () -> Unit,
     onUploadClick: () -> Unit,
     onArtworkClick: (Artwork) -> Unit,
-    viewModel: ArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: ArtworkViewModel,
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Scaffold(
-    ) { padding ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF4F1FA))
+    ) {
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(Color(0xFFF4F1FA))
-        ) {
-            when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = Color(0xFF6200EE)
+        when {
+            uiState.isLoading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = Color(0xFF6200EE)
+                )
+            }
+
+            uiState.artworks.isEmpty() -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        "🎨",
+                        style = MaterialTheme.typography.displayLarge
                     )
-                }
-
-                uiState.artworks.isEmpty() -> {
-                    // Empty state
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "No Artwork Yet",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Upload your first artwork to get started",
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = onUploadClick,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF6200EE)
+                        )
                     ) {
-                        Text(
-                            "🎨",
-                            style = MaterialTheme.typography.displayLarge
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            "No Artwork Yet",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "Upload your first artwork to get started",
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                            color = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Button(
-                            onClick = onUploadClick,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF6200EE)
-                            )
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Upload Artwork")
-                        }
-                    }
-                }
-
-                else -> {
-                    // Grid of artworks
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        contentPadding = PaddingValues(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(uiState.artworks) { artwork ->
-                            ArtworkCard(
-                                artwork = artwork,
-                                onClick = { onArtworkClick(artwork) }
-                            )
-                        }
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Upload Artwork")
                     }
                 }
             }
 
-            // Error message
-            if (uiState.error != null) {
-                Snackbar(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(16.dp),
-                    action = {
-                        TextButton(onClick = { viewModel.clearError() }) {
-                            Text("Dismiss")
-                        }
-                    }
+            else -> {
+
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text(uiState.error ?: "An error occurred")
+
+                    items(uiState.artworks) { artwork ->
+                        ArtworkCard(
+                            120,
+                            artwork = artwork,
+                            onClick = { onArtworkClick(artwork) }
+                        )
+                    }
                 }
+            }
+        }
+
+        // Error message
+        if (uiState.error != null) {
+            Snackbar(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp),
+                action = {
+                    TextButton(onClick = { viewModel.clearError() }) {
+                        Text("Dismiss")
+                    }
+                }
+            ) {
+                Text(uiState.error ?: "An error occurred")
             }
         }
     }
@@ -129,39 +127,30 @@ fun MyArtworkScreen(
 
 @Composable
 fun ArtworkCard(
-    artwork: Artwork,
-    onClick: () -> Unit
-) {
+    height: Int,
+    onClick: () -> Unit,
+    artwork: Artwork
+){
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(0.8f)
-            .clickable(onClick = onClick),
+            .height(height.dp)
+            .padding(6.dp)
+            .clickable ( onClick = onClick ),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Column {
-            // Image
-            AsyncImage(
-                model = artwork.imageUrl,
-                contentDescription = artwork.name,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-                contentScale = ContentScale.Crop
-            )
+        AsyncImage(
+            model = artwork.imageUrl,
+            contentDescription = artwork.name,
+            modifier = Modifier
+                .fillMaxSize()
+                .weight(1f)
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+            contentScale = ContentScale.Crop,
+        )
 
-            // Name
-            Text(
-                text = artwork.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(12.dp)
-            )
-        }
+
     }
 }
+

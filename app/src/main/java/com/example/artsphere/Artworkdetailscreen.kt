@@ -1,20 +1,27 @@
 package com.example.artsphere
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 
@@ -24,46 +31,66 @@ fun ArtworkDetailScreen(
     artwork: Artwork,
     onBackClick: () -> Unit,
     onDeleteClick: () -> Unit,
-    viewModel: ArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: ArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    savedViewModel: SavedArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val savedState by savedViewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Artwork Details") },
+                title = { Text("Artwork") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                actions = {
-                    IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Delete",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF6200EE),
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White,
-                    actionIconContentColor = Color.White
-                )
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(90.dp)
+
             )
         }
-    ) { padding ->
-
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .background(Color(0xFFF4F1FA))
+                .padding(paddingValues)
+                .background(Color.White)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Artwork Image
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color.Gray)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(text = artwork.contactName, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = artwork.contactEmail,
+                        style = MaterialTheme.typography.bodySmall,
+                        textDecoration = TextDecoration.Underline
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(onClick = { showDeleteDialog = true }) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = Color.Black
+                    )
+                }
+            }
+
             AsyncImage(
                 model = artwork.imageUrl,
                 contentDescription = artwork.name,
@@ -73,150 +100,113 @@ fun ArtworkDetailScreen(
                 contentScale = ContentScale.Crop
             )
 
-            Column(
-                modifier = Modifier.padding(24.dp)
-            ) {
-                // Artwork Name
-                Text(
-                    text = artwork.name,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A)
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Category Chip
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color(0xFFE8DEF8),
-                    modifier = Modifier.padding(vertical = 8.dp)
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Text(
-                        text = artwork.categoryEnum.displayName,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF6200EE),
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Description
-                if (artwork.description.isNotBlank()) {
-                    DetailSection(
-                        title = "Description",
-                        content = artwork.description
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                // Price
-                if (artwork.price.isNotBlank()) {
-                    DetailSection(
-                        title = "Price",
-                        content = artwork.price
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                // Contact Information
-                if (artwork.contactName.isNotBlank() || artwork.contactEmail.isNotBlank()) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.White
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = artwork.name,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        // Category Chip
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = Color(0xFFE8DEF8),
+                            modifier = Modifier.padding(vertical = 8.dp)
                         ) {
                             Text(
-                                text = "Contact Information",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF6200EE)
+                                text = artwork.categoryEnum.displayName,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFF6200EE),
+                                fontWeight = FontWeight.Medium
                             )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            if (artwork.contactName.isNotBlank()) {
-                                ContactRow(label = "Name", value = artwork.contactName)
-                                Spacer(modifier = Modifier.height(8.dp))
-                            }
-
-                            if (artwork.contactEmail.isNotBlank()) {
-                                ContactRow(label = "Email", value = artwork.contactEmail)
-                            }
+                        }
+                    }
+                    Row {
+                        IconButton(
+                            onClick = {
+                                Log.d("DETAIL_SCREEN", "Like button clicked for artwork: ${artwork.id}")
+                                Log.d("DETAIL_SCREEN", "Current saved state: ${savedState.savedArtworkIds.contains(artwork.id)}")
+                                savedViewModel.toggleSaveArtwork(artwork.id)
+                                Log.d("DETAIL_SCREEN", "After toggle: ${savedState.savedArtworkIds.contains(artwork.id)}")
+                            },
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .background(
+                                    Color.White.copy(alpha = 0.8f),
+                                    shape = RoundedCornerShape(50)
+                                )
+                        ) {
+                            Icon(
+                                imageVector = if (savedState.savedArtworkIds.contains(artwork.id)) {
+                                    Icons.Filled.Favorite
+                                } else {
+                                    Icons.Filled.FavoriteBorder
+                                },
+                                contentDescription = "Like",
+                                tint = if (savedState.savedArtworkIds.contains(artwork.id)) {
+                                    Color(0xFFE91E63)  // Pink when liked
+                                } else {
+                                    Color(0xFF6200EE)  // Purple when not liked
+                                }
+                            )
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
+                if (artwork.description.isNotBlank()) {
+                    Row() {
+                        Text(text = "Description", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,  color = Color(0xFF6200EE),)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(artwork.description)
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+
+                if (artwork.price.isNotBlank()) {
+                    Row() {
+                        Text(text = "Price", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,  color = Color(0xFF6200EE),)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(artwork.price)
+                    }
+                }
+            }
+
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = { Text("Delete Artwork") },
+                    text = { Text("Are you sure you want to delete \"${artwork.name}\"? This action cannot be undone.") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.deleteArtwork(artwork.id)
+                                showDeleteDialog = false
+                                onDeleteClick()
+                            },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color.Red
+                            )
+                        ) {
+                            Text("Delete")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteDialog = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
             }
         }
     }
-
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Artwork") },
-            text = { Text("Are you sure you want to delete \"${artwork.name}\"? This action cannot be undone.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteArtwork(artwork.id)
-                        showDeleteDialog = false
-                        onDeleteClick()
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color.Red
-                    )
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
 }
 
-@Composable
-fun DetailSection(title: String, content: String) {
-    Column {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF6200EE)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = content,
-            style = MaterialTheme.typography.bodyLarge,
-            color = Color(0xFF424242)
-        )
-    }
-}
 
-@Composable
-fun ContactRow(label: String, value: String) {
-    Row {
-        Text(
-            text = "$label: ",
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF757575)
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFF424242)
-        )
-    }
-}
+

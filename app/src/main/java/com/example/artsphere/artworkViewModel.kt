@@ -29,6 +29,9 @@ class ArtworkViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(ArtworkUiState())
     val uiState: StateFlow<ArtworkUiState> = _uiState
+    val artworkCount: Int
+        get() = _uiState.value.artworks.size
+
 
     init {
         loadArtworks()

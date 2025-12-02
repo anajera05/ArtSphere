@@ -141,6 +141,11 @@ fun MainScreenWithBottomBar(
                     navController = navController,
                     profileViewModel = profileViewModel,
                     artViewModel = artworkViewModel,
+                    savedArtworkViewModel = savedArtworkViewModel,
+                    onArtworkClick = { artwork ->
+                        selectedArtwork = artwork
+                        navController.navigate("artwork_detail")
+                    },
                     onUploadClick = {
                         capturedImageUri = null
                         selectedLocation = null
@@ -153,36 +158,6 @@ fun MainScreenWithBottomBar(
                 SettingsScreen(
                     onSignOut = onSignOut,
                     onBackClick = { navController.popBackStack() },
-                )
-            }
-
-
-            // My Artwork Screen
-            composable("my_artwork") {
-                MyArtworkScreen(
-                    onBackClick = { navController.popBackStack() },
-                    onUploadClick = {
-                        capturedImageUri = null
-                        selectedLocation = null
-                        navController.navigate("upload_artwork")
-                    },
-                    onArtworkClick = { artwork ->
-                        selectedArtwork = artwork
-                        navController.navigate("artwork_detail")
-                    },
-                    viewModel = artworkViewModel
-                )
-            }
-
-            // Saved Artwork Screen
-            composable("saved_artwork") {
-                SavedArtworkScreen(
-                    onBackClick = { navController.popBackStack() },
-                    onArtworkClick = { artwork ->
-                        selectedArtwork = artwork
-                        navController.navigate("artwork_detail")
-                    },
-                    viewModel = savedArtworkViewModel
                 )
             }
 
@@ -209,7 +184,8 @@ fun MainScreenWithBottomBar(
                         onDeleteClick = {
                             navController.popBackStack()
                         },
-                        viewModel = artworkViewModel
+                        viewModel = artworkViewModel,
+                        savedViewModel = savedArtworkViewModel
                     )
                 }
             }

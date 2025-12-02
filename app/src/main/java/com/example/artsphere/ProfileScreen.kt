@@ -5,7 +5,9 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
@@ -26,7 +28,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.artsphere.components.ArtworkCard
 import com.google.android.gms.maps.model.LatLng
 
 
@@ -36,18 +37,16 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
     profileViewModel: ProfileViewModel,
+    savedArtworkViewModel: SavedArtworkViewModel,
     artViewModel: ArtworkViewModel,
-    onUploadClick: () -> Unit
+    onUploadClick: () -> Unit,
+    onArtworkClick: (Artwork) -> Unit
 ) {
     var state by remember { mutableIntStateOf(0) }
     val titles = listOf("Shop", "Saved")
     val uiState by profileViewModel.uiState.collectAsState()
     val context = LocalContext.current
-    var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
-    var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
-    var selectedArtwork by remember { mutableStateOf<Artwork?>(null) }
-
-
+    val artworkUiState by artViewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
         profileViewModel.refreshPhotoFromFirebase()
@@ -80,7 +79,7 @@ fun ProfileScreen(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "@username",
+                    text = "My Profile",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.align(Alignment.Center)
@@ -91,14 +90,24 @@ fun ProfileScreen(
                     IconButton(
                         onClick = { onUploadClick() },
                     ){
-                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add", tint = Color.Black)
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add",
+                            tint = Color.Black,
+                            modifier = Modifier.size(32.dp)
+                        )
                     }
                     IconButton(
                         onClick = {
                             navController.navigate("settings")
                         },
                     ){
-                        Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings", tint = Color.Black)
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = Color.Black,
+                            modifier = Modifier.size(32.dp)
+                        )
                     }
                 }
             }
@@ -110,13 +119,14 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 32.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceEvenly
             ){
                 Box(
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(100.dp)
                         .clip(CircleShape)
                         .background(Color.LightGray)
+                        .clickable { pickImageLauncher.launch(arrayOf("image/*")) },
                 ){
                     when {
                         uiState.isUploading -> {
@@ -155,26 +165,17 @@ fun ProfileScreen(
                     }
                 }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(50.dp),
-                    verticalAlignment = Alignment.CenterVertically
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("42", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text("followers", style = MaterialTheme.typography.bodySmall)
-                    }
-
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("30", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text("following", style = MaterialTheme.typography.bodySmall)
-                    }
+                    Text(text = artworkUiState.artworks.size.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("artworks", style = MaterialTheme.typography.bodySmall)
                 }
-            }
 
+
+            }
+            Spacer(modifier = Modifier.height(16.dp))
             Column {
                 SecondaryTabRow(selectedTabIndex = state) {
                     titles.forEachIndexed { index, title ->
@@ -185,35 +186,19 @@ fun ProfileScreen(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(20.dp))
                 when (state) {
-                    0 -> { MyArtworkScreen(
-                        onBackClick = { navController.popBackStack() },
-                        onUploadClick = {
-                            capturedImageUri = null
-                            selectedLocation = null
-                            navController.navigate("upload_artwork")
-                        },
-                        onArtworkClick = { artwork ->
-                            selectedArtwork = artwork
-                            navController.navigate("artwork_detail")
-                        },
-                        viewModel = artViewModel
-                    )}
+                    0 -> {
+                        MyArtworkScreen(
+                            onUploadClick = onUploadClick,
+                            onArtworkClick = onArtworkClick,
+                            viewModel = artViewModel
+                        )
+                    }
                     1 -> {
-
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(3),
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(horizontal = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            items(5) { index ->
-                                ArtworkCard(index, 120, navController)
-
-                            }
-                        }
+                        SavedArtworkScreen(
+                            onArtworkClick = onArtworkClick,
+                            viewModel = savedArtworkViewModel
+                        )
                     }
                 }
 

@@ -57,7 +57,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.artsphere.components.ArtworkCard
 import com.example.artsphere.features.NewsViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
