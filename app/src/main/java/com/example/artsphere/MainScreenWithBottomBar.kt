@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -17,6 +18,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
+import com.example.artsphere.Screen.Home.icon
+import com.example.artsphere.components.DetailScreen
+import com.example.artsphere.ui.theme.ArtSphereTheme
 import androidx.navigation.compose.*
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -30,17 +44,22 @@ import com.google.android.gms.maps.model.LatLng
 
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-    data object Home : Screen("home", "Home", Icons.Default.Home)
-    data object Map : Screen("map", "Map", Icons.Default.LocationOn)
-    data object Inbox : Screen("inbox", "Inbox", Icons.Default.Email)
-    data object Profile : Screen("profile", "Profile", Icons.Default.AccountCircle)
+
+    data object Home : Screen("home", "Home", Icons.Default.Home, )
+    data object Map : Screen("map", "Map", Icons.Default.LocationOn, )
+    data object Inbox : Screen("inbox", "Inbox", Icons.Default.Email, )
+    data object Profile : Screen("profile", "Profile", Icons.Default.AccountCircle, )
+    data object Settings : Screen("settings", "Settings", Icons.Default.Settings, )
+
+
 }
 
 val bottomNavScreens = listOf(
     Screen.Home,
     Screen.Map,
     Screen.Inbox,
-    Screen.Profile
+    Screen.Profile,
+    Screen.Settings
 )
 
 @Composable
@@ -67,9 +86,9 @@ fun MainScreenWithBottomBar(
 
     Scaffold(
         bottomBar = {
-            if (showBottomBar) {
-                NavigationBar {
-                    bottomNavScreens.forEach { screen ->
+            NavigationBar {
+                screens.forEach { screen ->
+                    if (screen != Screen.Settings){
                         NavigationBarItem(
                             label = { Text(screen.title) },
                             icon = { Icon(screen.icon, contentDescription = screen.title) },
@@ -80,27 +99,12 @@ fun MainScreenWithBottomBar(
                                         saveState = true
                                     }
                                     launchSingleTop = true
-                                    restoreState = true
+                                    restoreState = screen != Screen.Profile
                                 }
                             }
                         )
                     }
-                }
-            }
-        },
-        floatingActionButton = {
-            if (showBottomBar) {
-                FloatingActionButton(
-                    onClick = {
-                        navController.navigate("camera")
-                    },
-                    containerColor = Color(0xFF7B61FF)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AddAPhoto,
-                        contentDescription = "Take Photo",
-                        tint = Color.White
-                    )
+
                 }
             }
         }
