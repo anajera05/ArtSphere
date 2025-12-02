@@ -31,8 +31,9 @@ Current features:
 ## How to build and run the application 
 1. ```git clone https://github.com/anajera05/ArtSphere```
 2. ```cd Artsphere```
-3. Run emulator
-4. run application
+3. Add MAPS_API_KEY=Key to local.properties, where Key is your Google Maps API key.
+4. Run emulator
+5. run application
 
 <!-- USAGE EXAMPLES -->
 ## Users 
