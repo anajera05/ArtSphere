@@ -103,10 +103,17 @@ Where and How Used:
   * Example prompt: What is AndroidView and factory, and why is it used in CameraX Compose?
 * Map: Used ChatGPT to learn how to customize map pins in my Android project, including loading images from URLs with Coil, converting them to bitmaps, cropping them into circular icons, and applying them as custom markers in Google Maps Compose.
   * Example prompt: Explain how to load an image from a URL in Jetpack Compose, convert it into a bitmap, make it circular, and use it as a custom marker on Google Maps. I want to understand how each step works.
+* Firebase Storage & Firestore Setup:
+  * Using Chat helped me rewrite the rules so authenticated users could upload their own profile photos while preventing unauthorized access
 
 Analysis of Helpfulness and Limitations:
-* Provided clear explanations, step-by-step breakdowns, and example code snippets that helped me understand the concepts and apply them directly in my project. It helped clarify how Jetpack Compose interacts with traditional Android Views, and how to manipulate camera and map features effectively.
-* Limitations: Some answers were high-level and required me to verify or adapt the examples to my project context. For instance, actual implementation required adjustments to the codebase, such as modifying the Firebase data items to include longitude and latitude.
+* Helpfulness:
+  * Provided clear explanations, step-by-step breakdowns, and example code snippets that helped me understand the concepts and apply them directly in my project. It helped clarify how Jetpack Compose interacts with traditional Android Views, and how to manipulate camera and map features effectively.
+  * Chatgpt was helpful in speeding up the debugging process and helping me understand the deeper logic behind Firebase and Jetpack Compose state management. 
+
+* Limitations:
+  * Some answers were high-level and required me to verify or adapt the examples to my project context. For instance, actual implementation required adjustments to the codebase, such as modifying the Firebase data items to include longitude and latitude.
+  * Some code required adjustments to fit my actual project structure. It sometimes assumed best-practice architecture, which required me to adjust my existing project design to match (e.g., hoisting ViewModels to the NavHost level).
 
 Corrections Required / Demonstration of Understanding:
 
