@@ -108,7 +108,7 @@ fun MainScreenWithBottomBar(
 
         NavHost(
             navController = navController,
-            startDestination = Screen.Profile.route,
+            startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
 
