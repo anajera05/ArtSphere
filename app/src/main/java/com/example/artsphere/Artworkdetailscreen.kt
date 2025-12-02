@@ -66,12 +66,12 @@ fun ArtworkDetailScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color.Gray)
-                )
+//                Box(
+//                    modifier = Modifier
+//                        .size(48.dp)
+//                        .clip(CircleShape)
+//                        .background(Color.Gray)
+//                )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(text = artwork.contactName, fontWeight = FontWeight.Bold)
@@ -174,6 +174,13 @@ fun ArtworkDetailScreen(
                         Text(text = "Price", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,  color = Color(0xFF6200EE),)
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(artwork.price)
+                    }
+                }
+                else{
+                    Row() {
+                        Text(text = "Price", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,  color = Color(0xFF6200EE),)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Contact for price")
                     }
                 }
             }

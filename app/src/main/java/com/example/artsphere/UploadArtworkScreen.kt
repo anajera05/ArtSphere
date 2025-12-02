@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -19,10 +20,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.google.android.gms.maps.model.LatLng
@@ -245,13 +248,46 @@ fun UploadArtworkScreen(
             // Price
             OutlinedTextField(
                 value = price,
-                onValueChange = { price = it },
-                label = { Text("Price (e.g., $500 or Contact for price)") },
-                modifier = Modifier.fillMaxWidth(),
+                onValueChange = { newValue ->
+                    price = when {
+                        // Allow empty string
+                        newValue.isEmpty() -> ""
+
+                        // Only allow digits and one decimal point
+                        else -> {
+                            val filtered = newValue.filter { it.isDigit() || it == '.' }
+
+                            // Check all conditions
+                            val hasMultipleDecimals = filtered.count { it == '.' } > 1
+                            val startsWithDecimal = filtered.startsWith(".")
+                            val parts = filtered.split(".")
+                            val tooManyDecimals = parts.size == 2 && parts[1].length > 2
+
+                            // Only update if all conditions pass
+                            if (hasMultipleDecimals || startsWithDecimal || tooManyDecimals) {
+                                price // Keep old value
+                            } else {
+                                filtered // Use new filtered value
+                            }
+                        }
+                    }
+                },
+                label = { Text("Price (e.g., $500 or leave empty if needs to be contacted)") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { focusState ->
+                        if (!focusState.isFocused && price.isNotEmpty()) {
+                            // Format to 2 decimals when user leaves the field
+                            price.toDoubleOrNull()?.let {
+                                price = String.format("%.2f", it)
+                            }
+                        }
+                    },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFF6200EE),
                     focusedLabelColor = Color(0xFF6200EE)
-                )
+                ),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
             )
 
             Spacer(modifier = Modifier.height(16.dp))

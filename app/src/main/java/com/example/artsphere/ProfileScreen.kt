@@ -88,7 +88,7 @@ fun ProfileScreen(
                     modifier = Modifier.align(Alignment.CenterEnd)
                 ) {
                     IconButton(
-                        onClick = { onUploadClick() },
+                        onClick = { navController.navigate("upload_artwork") },
                     ){
                         Icon(
                             imageVector = Icons.Default.Add,
