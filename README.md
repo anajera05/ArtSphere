@@ -51,7 +51,7 @@ New York Times API
 
 
 ## Testing Strategy
-The app was tested using a combination of debugging techniques and manual verification. Debugging included the use of Log.d and Log.e for logging events and errors, try/catch blocks for exception handling, and managing errors through UI state to provide user feedback.
+The app was tested using a combination of debugging techniques, manual verification, and automated unit/UI tests. Debugging included the use of Log.d and Log.e for logging events and errors, try/catch blocks for exception handling, and managing errors through UI state to provide user feedback.
 
 Manual testing verified core components on the emulator:
 
@@ -62,6 +62,10 @@ Manual testing verified core components on the emulator:
 * Saved Artwork: loading, viewing, and deleting items
 
 * Navigation: ensuring smooth transitions between screens
+
+Automated unit/UI tests were added to verify key composable components and flows:
+* Login/Sign-in Screen: ensured users can type in email and password fields and that the login button is enabled
+* Artwork Upload Flow: verified that users can input and submit artwork details through the UI
 
 This approach ensured that each feature functions correctly and that the app behaves as expected under different scenarios.
 
