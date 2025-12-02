@@ -25,18 +25,24 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UploadArtworkScreen(
     onBackClick: () -> Unit,
     viewModel: ArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    initialImageUri: Uri? = null
+    initialImageUri: Uri? = null,
+    initialLocation: LatLng? = null
 ) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var location by remember { mutableStateOf<LatLng?>(null) }
     LaunchedEffect(initialImageUri) {
         if (initialImageUri != null) {
             selectedImageUri = initialImageUri
+        }
+        if (initialLocation != null) {
+            location = initialLocation
         }
     }
     var artworkName by remember { mutableStateOf("") }
@@ -129,6 +135,43 @@ fun UploadArtworkScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // Location Info
+            if (location != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFE8DEF8)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "📍",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Location Selected",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF6200EE)
+                            )
+                            Text(
+                                text = "Lat: ${String.format("%.4f", location!!.latitude)}, " +
+                                        "Lng: ${String.format("%.4f", location!!.longitude)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF6200EE)
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             // Artwork Name
             OutlinedTextField(
@@ -253,6 +296,8 @@ fun UploadArtworkScreen(
                             price = price,
                             contactEmail = contactEmail,
                             contactName = contactName,
+                            latitude = location?.latitude,
+                            longitude = location?.longitude,
                             onSuccess = onBackClick
                         )
                     }
