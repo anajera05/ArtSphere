@@ -25,8 +25,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
@@ -35,6 +35,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -48,29 +49,39 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.artsphere.components.ArtworkCard
 import com.example.artsphere.features.NewsViewModel
-import com.example.artsphere.ui.theme.ArtSphereTheme
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    onArtworkClick: (Artwork) -> Unit = {},
+    savedViewModel: SavedArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
     var selectedFilter by remember { mutableStateOf("All") }
-    val filters = listOf("All", "Sculptures", "Photography", "Digital", "Paintings")
+    val filters = listOf("All", "Painting & Drawing", "Photographic", "Digital", "Other")
+
+    val galleryViewModel: GalleryViewModel = viewModel()
+    val galleryState by galleryViewModel.uiState.collectAsState()
+
+    // Use the passed-in savedViewModel instead of creating a new one
+    val savedState by savedViewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-        // This search bar is not part of the grid and will remain at the top
+        // Search bar
         OutlinedTextField(
             value = "",
             onValueChange = {},
@@ -103,8 +114,8 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
         ) {
             // Trending Art News Section
             item(span = { GridItemSpan(maxLineSpan) }) {
-                val viewModel: NewsViewModel = viewModel()
-                val uiState by viewModel.uiState.collectAsState()
+                val newsViewModel: NewsViewModel = viewModel()
+                val uiState by newsViewModel.uiState.collectAsState()
                 val context = LocalContext.current
 
                 Column(modifier = Modifier.padding(bottom = 16.dp)) {
@@ -123,14 +134,17 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                             contentDescription = "Refresh news",
                             modifier = Modifier
                                 .size(20.dp)
-                                .clickable { viewModel.loadNews() }
+                                .clickable { newsViewModel.loadNews() }
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
 
                     when {
                         uiState.isLoading -> {
-                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
                                 CircularProgressIndicator()
                             }
                         }
@@ -148,7 +162,10 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                                             .width(200.dp)
                                             .height(180.dp)
                                             .clickable {
-                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(article.url))
+                                                val intent = Intent(
+                                                    Intent.ACTION_VIEW,
+                                                    Uri.parse(article.url)
+                                                )
                                                 context.startActivity(intent)
                                             },
                                         shape = RoundedCornerShape(16.dp),
@@ -162,7 +179,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                                                     modifier = Modifier
                                                         .fillMaxWidth()
                                                         .weight(1f),
-                                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                                    contentScale = ContentScale.Crop
                                                 )
                                             }
                                             Text(
@@ -175,7 +192,6 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                                             )
                                         }
                                     }
-
                                 }
                             }
                         }
@@ -183,7 +199,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                 }
             }
 
-            // Sticky Filter Chips Header
+            // Filter Chips Header - Purple themed like profile page
             stickyHeader {
                 Box(
                     modifier = Modifier
@@ -197,12 +213,17 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                                 selected = selectedFilter == filter,
                                 onClick = { selectedFilter = filter },
                                 label = { Text(filter) },
-                                leadingIcon = if (selectedFilter == filter) {
-                                    { Icon(imageVector = Icons.Default.Close, contentDescription = "Remove filter", modifier = Modifier.size(16.dp)) }
-                                } else null,
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = Color(0xFFE8DEF8),
-                                    selectedLabelColor = Color(0xFF6750A4)
+                                    selectedContainerColor = Color(0xFFE8DEF8),  // Purple background
+                                    selectedLabelColor = Color(0xFF6200EE),      // Purple text
+                                    containerColor = Color.White,
+                                    labelColor = Color.Gray
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = selectedFilter == filter,
+                                    borderColor = if (selectedFilter == filter) Color(0xFF6200EE) else Color.LightGray,
+                                    selectedBorderColor = Color(0xFF6200EE)
                                 )
                             )
                         }
@@ -210,17 +231,116 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                 }
             }
 
-            // Spacer for visual separation after sticky header
+            // Spacer for visual separation
             item(span = { GridItemSpan(maxLineSpan) }) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(4.dp))
             }
 
-            // Artwork Gallery
-            items(20) { index ->
-                ArtworkCard(index, 180, navController)
+            // Artwork Gallery from Firebase
+            when {
+                galleryState.isLoading -> {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Color(0xFF6200EE))
+                        }
+                    }
+                }
+                galleryState.artworks.isEmpty() -> {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "No artworks available yet",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+                else -> {
+                    // Filter artworks based on selected category
+                    val filteredArtworks = if (selectedFilter == "All") {
+                        galleryState.artworks
+                    } else {
+                        galleryState.artworks.filter {
+                            it.categoryEnum.displayName == selectedFilter
+                        }
+                    }
+
+                    items(filteredArtworks) { artwork ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .clickable { onArtworkClick(artwork) },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                Column(modifier = Modifier.fillMaxSize()) {
+                                    // Artwork Image
+                                    AsyncImage(
+                                        model = artwork.imageUrl,
+                                        contentDescription = artwork.name,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .weight(1f),
+                                        contentScale = ContentScale.Crop
+                                    )
+
+                                    // Artwork Name
+                                    Text(
+                                        text = artwork.name,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.padding(12.dp)
+                                    )
+                                }
+
+                                // Like Button (top right corner)
+                                IconButton(
+                                    onClick = {
+                                        savedViewModel.toggleSaveArtwork(artwork.id)
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(8.dp)
+                                        .background(
+                                            Color.White.copy(alpha = 0.8f),
+                                            shape = RoundedCornerShape(50)
+                                        )
+                                ) {
+                                    Icon(
+                                        imageVector = if (savedState.savedArtworkIds.contains(artwork.id)) {
+                                            Icons.Filled.Favorite
+                                        } else {
+                                            Icons.Filled.FavoriteBorder
+                                        },
+                                        contentDescription = "Like",
+                                        tint = if (savedState.savedArtworkIds.contains(artwork.id)) {
+                                            Color(0xFFE91E63)  // Pink when liked
+                                        } else {
+                                            Color(0xFF6200EE)  // Purple when not liked
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
-
-

@@ -48,148 +48,145 @@ import com.example.artsphere.components.ArtworkCard
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    navController: NavController
+    onSignOut: () -> Unit,
+    onMyArtworkClick: () -> Unit,
+    onSavedArtworkClick: () -> Unit,
+    profileViewModel: ProfileViewModel
 ) {
-    var state by remember { mutableStateOf(0) }
-    val titles = listOf("Shop", "Saved", "Liked")
+    val uiState by profileViewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        profileViewModel.refreshPhotoFromFirebase()
+    }
+
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    it, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch(_: Exception) {}
+            profileViewModel.uploadProfilePhoto(uri)
+        }
+    }
 
     Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF4F1FA))
     ) {
+
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
-        ){
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 60.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            // Profile Image
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+                    .size(140.dp)
+                    .clip(CircleShape)
+                    .clickable { pickImageLauncher.launch(arrayOf("image/*")) },
+                contentAlignment = Alignment.Center
             ) {
+
+                when {
+                    uiState.isUploading -> {
+                        CircularProgressIndicator(
+                            color = Color(0xFF6200EE),
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+
+                    uiState.photoUrl != null -> {
+                        AsyncImage(
+                            model = uiState.photoUrl,
+                            contentDescription = "Profile Photo",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    else -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.LightGray),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Filled.Person,
+                                contentDescription = "Default profile icon",
+                                tint = Color.White,
+                                modifier = Modifier.size(60.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (uiState.error != null) {
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "@username",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Center)
+                    text = "Error: ${uiState.error}",
+                    color = Color.Red,
+                    style = MaterialTheme.typography.bodyMedium
                 )
-                Row(
-                    modifier = Modifier.align(Alignment.CenterEnd)
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Saved Artwork Button
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(60.dp)
+                    .clickable { onSavedArtworkClick() },
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE0E5))
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    IconButton(
-                        onClick = {  },
-                    ){
-                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add", tint = Color.Black)
-                    }
-                    IconButton(
-                        onClick = {
-                            navController.navigate(Screen.Settings.route)
-                        },
-                    ){
-                        Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings", tint = Color.Black)
-                    }
+                    Text(" Saved Artwork", style = MaterialTheme.typography.titleMedium)
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
+            Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ){
+                    .fillMaxWidth(0.8f)
+                    .height(60.dp)
+                    .clickable { onMyArtworkClick() },
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFDDE9FF))
+            ) {
                 Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray)
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(50.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("42", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text("followers", style = MaterialTheme.typography.bodySmall)
-                    }
-
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("30", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text("following", style = MaterialTheme.typography.bodySmall)
-                    }
+                    Text(" My Artwork", style = MaterialTheme.typography.titleMedium)
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(25.dp))
-
-            Column {
-                SecondaryTabRow(selectedTabIndex = state) {
-                    titles.forEachIndexed { index, title ->
-                        Tab(
-                            selected = state == index,
-                            onClick = { state = index },
-                            text = { Text(text = title)},
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(20.dp))
-                when (state) {
-                    0 -> {
-
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(3),
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(horizontal = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            items(12) { index ->
-                                ArtworkCard(index, 120, navController)
-
-
-                            }
-                        }
-                    }
-                    1 -> {
-
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(3),
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(horizontal = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            items(5) { index ->
-                                ArtworkCard(index, 120, navController)
-
-                            }
-                        }
-                    }
-                    else -> {
-
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(3),
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(horizontal = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            items(20) { index ->
-                                ArtworkCard(index, 120, navController)
-
-                            }
-                        }
-                    }
-                }
-
-            }
-
+        // Sign Out Button
+        Button(
+            onClick = onSignOut,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(20.dp)
+        ) {
+            Text("Sign Out")
         }
     }
 }
