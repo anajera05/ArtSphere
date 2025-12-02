@@ -43,8 +43,6 @@ Those who love art and/or want to sell!
 <!-- APIs Used -->
 ## Planned API  
 
-Weather API 
-
 Google Maps
 
 New York Times API
