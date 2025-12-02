@@ -34,33 +34,6 @@ fun MyArtworkScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("My Artwork") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF6200EE),
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onUploadClick,
-                containerColor = Color(0xFF6200EE)
-            ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = "Add artwork",
-                    tint = Color.White
-                )
-            }
-        }
     ) { padding ->
 
         Box(

@@ -14,7 +14,7 @@ fun ArtSphereApp() {
 
     NavHost(
         navController = navController,
-        startDestination = "login"
+        startDestination = "main"
     ) {
         composable("login") {
             LoginScreen(

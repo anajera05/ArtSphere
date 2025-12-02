@@ -6,7 +6,6 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -18,19 +17,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.navArgument
-import com.example.artsphere.Screen.Home.icon
-import com.example.artsphere.components.DetailScreen
-import com.example.artsphere.ui.theme.ArtSphereTheme
 import androidx.navigation.compose.*
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -39,27 +25,22 @@ import android.net.Uri
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.graphics.Color
-import com.example.artsphere.CameraScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.model.LatLng
 
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-
-    data object Home : Screen("home", "Home", Icons.Default.Home, )
-    data object Map : Screen("map", "Map", Icons.Default.LocationOn, )
-    data object Inbox : Screen("inbox", "Inbox", Icons.Default.Email, )
-    data object Profile : Screen("profile", "Profile", Icons.Default.AccountCircle, )
-    data object Settings : Screen("settings", "Settings", Icons.Default.Settings, )
-
-
+    data object Home : Screen("home", "Home", Icons.Default.Home)
+    data object Map : Screen("map", "Map", Icons.Default.LocationOn)
+    data object Inbox : Screen("inbox", "Inbox", Icons.Default.Email)
+    data object Profile : Screen("profile", "Profile", Icons.Default.AccountCircle)
 }
 
 val bottomNavScreens = listOf(
     Screen.Home,
     Screen.Map,
     Screen.Inbox,
-    Screen.Profile,
-    Screen.Settings
+    Screen.Profile
 )
 
 @Composable
@@ -72,8 +53,8 @@ fun MainScreenWithBottomBar(
     val currentDestination = navBackStackEntry?.destination
 
     // Create shared ViewModels
-    val artworkViewModel: ArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
-    val savedArtworkViewModel: SavedArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val artworkViewModel: ArtworkViewModel = viewModel()
+    val savedArtworkViewModel: SavedArtworkViewModel = viewModel()
 
     // Track selected artwork for detail view
     var selectedArtwork by remember { mutableStateOf<Artwork?>(null) }
@@ -86,9 +67,9 @@ fun MainScreenWithBottomBar(
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                screens.forEach { screen ->
-                    if (screen != Screen.Settings){
+            if (showBottomBar) {
+                NavigationBar {
+                    bottomNavScreens.forEach { screen ->
                         NavigationBarItem(
                             label = { Text(screen.title) },
                             icon = { Icon(screen.icon, contentDescription = screen.title) },
@@ -99,12 +80,27 @@ fun MainScreenWithBottomBar(
                                         saveState = true
                                     }
                                     launchSingleTop = true
-                                    restoreState = screen != Screen.Profile
+                                    restoreState = true
                                 }
                             }
                         )
                     }
-
+                }
+            }
+        },
+        floatingActionButton = {
+            if (showBottomBar) {
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate("camera")
+                    },
+                    containerColor = Color(0xFF7B61FF)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AddAPhoto,
+                        contentDescription = "Take Photo",
+                        tint = Color.White
+                    )
                 }
             }
         }
@@ -112,7 +108,7 @@ fun MainScreenWithBottomBar(
 
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = Screen.Profile.route,
             modifier = Modifier.padding(innerPadding)
         ) {
 
@@ -142,16 +138,24 @@ fun MainScreenWithBottomBar(
 
             composable(Screen.Profile.route) {
                 ProfileScreen(
-                    onSignOut = onSignOut,
-                    onMyArtworkClick = {
-                        navController.navigate("my_artwork")
+                    navController = navController,
+                    profileViewModel = profileViewModel,
+                    artViewModel = artworkViewModel,
+                    onUploadClick = {
+                        capturedImageUri = null
+                        selectedLocation = null
+                        navController.navigate("upload_artwork")
                     },
-                    onSavedArtworkClick = {
-                        navController.navigate("saved_artwork")
-                    },
-                    profileViewModel = profileViewModel
                 )
             }
+
+            composable("settings") {
+                SettingsScreen(
+                    onSignOut = onSignOut,
+                    onBackClick = { navController.popBackStack() },
+                )
+            }
+
 
             // My Artwork Screen
             composable("my_artwork") {

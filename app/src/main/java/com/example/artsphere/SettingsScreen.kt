@@ -18,13 +18,13 @@ import androidx.navigation.NavController
 fun SettingsScreen(
     modifier: Modifier = Modifier,
     onSignOut: () -> Unit,
-    navController: NavController
+    onBackClick: () -> Unit,
 ) {
     Box(
         modifier = modifier.fillMaxSize(),
     ) {
         IconButton(
-            onClick = { navController.popBackStack() },
+            onClick = { onBackClick() },
             modifier = Modifier.align(Alignment.TopStart)
         ) {
             Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

@@ -35,15 +35,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import com.example.artsphere.Artwork
 import com.example.artsphere.R
 
 @Composable
-fun ArtworkCard(index: Int, height: Int, navController: NavController){
+fun ArtworkCard(
+    index: Int, height: Int,
+    navController: NavController,
+//    artwork: Artwork
+){
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -52,8 +59,16 @@ fun ArtworkCard(index: Int, height: Int, navController: NavController){
                 navController.navigate("artwork/$index")
             },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0))
     ) {
+//        AsyncImage(
+//            model = artwork.imageUrl,
+//            contentDescription = artwork.name,
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .weight(1f)
+//                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+//            contentScale = ContentScale.Crop
+//        )
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(text = "Artwork ${index + 1}", color = Color.Gray)
         }
