@@ -53,13 +53,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.artsphere.components.ArtworkCard
 import com.example.artsphere.features.NewsViewModel
 import com.example.artsphere.ui.theme.ArtSphereTheme
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
     var selectedFilter by remember { mutableStateOf("All") }
     val filters = listOf("All", "Sculptures", "Photography", "Digital", "Paintings")
 
@@ -215,27 +217,10 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 
             // Artwork Gallery
             items(20) { index ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0))
-                ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = "Artwork ${index + 1}", color = Color.Gray)
-                    }
-                }
+                ArtworkCard(index, 180, navController)
             }
         }
     }
 }
 
-@Preview(showBackground = true, name = "Home Screen")
-@Composable
-fun HomeScreenPreview() {
-    ArtSphereTheme {
-        HomeScreen()
-    }
-}
 
