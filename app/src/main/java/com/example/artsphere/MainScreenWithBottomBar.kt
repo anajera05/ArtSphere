@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.graphics.Color
 import com.example.artsphere.CameraScreen
+import com.google.android.gms.maps.model.LatLng
 
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
@@ -59,6 +60,7 @@ fun MainScreenWithBottomBar(
     var selectedArtwork by remember { mutableStateOf<Artwork?>(null) }
 
     var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
 
     // Only show bottom bar on main screens
     val showBottomBar = currentDestination?.route in bottomNavScreens.map { it.route }
@@ -124,6 +126,11 @@ fun MainScreenWithBottomBar(
                     onArtworkClick = { artwork ->
                         selectedArtwork = artwork
                         navController.navigate("artwork_detail")
+                    },
+                    onAddArtworkAtLocation = { latLng ->
+                        selectedLocation = latLng
+                        capturedImageUri = null
+                        navController.navigate("upload_artwork")
                     }
                 )
             }
@@ -148,6 +155,7 @@ fun MainScreenWithBottomBar(
                     onBackClick = { navController.popBackStack() },
                     onUploadClick = {
                         capturedImageUri = null
+                        selectedLocation = null
                         navController.navigate("upload_artwork")
                     },
                     onArtworkClick = { artwork ->
@@ -175,10 +183,12 @@ fun MainScreenWithBottomBar(
                 UploadArtworkScreen(
                     onBackClick = {
                         capturedImageUri = null
+                        selectedLocation = null
                         navController.popBackStack()
                     },
                     viewModel = artworkViewModel,
-                    initialImageUri = capturedImageUri
+                    initialImageUri = capturedImageUri,
+                    initialLocation = selectedLocation
                 )
             }
 
@@ -203,6 +213,7 @@ fun MainScreenWithBottomBar(
                     },
                     onPhotoTaken = { uri ->
                         capturedImageUri = uri
+                        selectedLocation = null
                         navController.navigate("upload_artwork") {
                             popUpTo("camera") { inclusive = true }
                         }

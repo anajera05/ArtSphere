@@ -75,6 +75,8 @@ class ArtworkViewModel : ViewModel() {
         price: String,
         contactEmail: String,
         contactName: String,
+        latitude: Double? = null,
+        longitude: Double? = null,
         onSuccess: () -> Unit
     ) {
         val userId = user?.uid ?: return
@@ -104,12 +106,22 @@ class ArtworkViewModel : ViewModel() {
                     createdAt = System.currentTimeMillis()
                 )
 
+                val artworkData = artwork.toMap().toMutableMap()
+                artworkData["userId"] = userId
+
+                // Add location if provided
+                if (latitude != null && longitude != null) {
+                    artworkData["latitude"] = latitude
+                    artworkData["longitude"] = longitude
+                    Log.d("ARTWORK_VM", "✅ Adding location to Firestore: Lat=$latitude, Lng=$longitude")
+                } else {
+                    Log.d("ARTWORK_VM", "⚠️ No location data to save")
+                }
+
                 // Save to Firestore
                 db.collection("artworks")
                     .document(artworkId)
-                    .set(
-                        artwork.toMap().plus("userId" to userId)
-                    )
+                    .set(artworkData)
                     .await()
 
                 Log.d("ARTWORK_VM", "Artwork uploaded successfully")
