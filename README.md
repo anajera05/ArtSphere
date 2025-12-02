@@ -74,6 +74,27 @@ Google Maps
 
 New York Times API
 
+## Navigation routes:
+
+| Screen | Route | Parent |
+|--------|-------|--------|
+| Login/Sign Up | `login` | Root |
+| Login Screen | `login` | Root |
+| Sign Up Screen | `signup` | Root |
+| Bottom Navigation | `main` | Root |
+| Home Screen | `home` | Bottom Nav |
+| Map Screen | `map` | Bottom Nav |
+| Shopping Cart | `inbox` | Bottom Nav |
+| Profile Screen | `profile` | Bottom Nav |
+| Camera Screen | `camera` | Any Main Screen |
+| Upload Artwork | `upload_artwork` | Camera/Map/Profile |
+| Art Detail | `artwork_detail` | Any Artwork |
+| My Artworks | `my_artwork` | Profile |
+| Saved Artworks | `saved_artwork` | Profile |
+| Settings | `settings` | Profile |
+
+
+
 
 ## Testing Strategy
 The app was tested using a combination of debugging techniques, manual verification, and automated unit/UI tests. Debugging included the use of Log.d and Log.e for logging events and errors, try/catch blocks for exception handling, and managing errors through UI state to provide user feedback.
