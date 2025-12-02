@@ -50,9 +50,38 @@ Google Maps
 New York Times API
 
 
+## Testing Strategy
+The app was tested using a combination of debugging techniques and manual verification. Debugging included the use of Log.d and Log.e for logging events and errors, try/catch blocks for exception handling, and managing errors through UI state to provide user feedback.
 
+Manual testing verified core components on the emulator:
 
+* Camera: capturing and uploading artwork
 
+* Map: displaying locations and coordinates accurately
+
+* Saved Artwork: loading, viewing, and deleting items
+
+* Navigation: ensuring smooth transitions between screens
+
+This approach ensured that each feature functions correctly and that the app behaves as expected under different scenarios.
+
+## AI Usage
+Tools Used: ChatGPT
+
+Where and How Used: 
+
+* Camera: Asked questions about AndroidView, factory, and ImageCapture in CameraX to understand how to set up the camera preview and take photos in a Jetpack Compose application.
+  * Example prompt: What is AndroidView and factory, and why is it used in CameraX Compose?
+* Map: Used ChatGPT to learn how to customize map pins in my Android project, including loading images from URLs with Coil, converting them to bitmaps, cropping them into circular icons, and applying them as custom markers in Google Maps Compose.
+  * Example prompt: Explain how to load an image from a URL in Jetpack Compose, convert it into a bitmap, make it circular, and use it as a custom marker on Google Maps. I want to understand how each step works.
+
+Analysis of Helpfulness and Limitations:
+* Provided clear explanations, step-by-step breakdowns, and example code snippets that helped me understand the concepts and apply them directly in my project. It helped clarify how Jetpack Compose interacts with traditional Android Views, and how to manipulate camera and map features effectively.
+* Limitations: Some answers were high-level and required me to verify or adapt the examples to my project context. For instance, actual implementation required adjustments to the codebase, such as modifying the Firebase data items to include longitude and latitude.
+
+Corrections Required / Demonstration of Understanding:
+
+While using ChatGPT, I verified its suggestions by checking official documentation, testing the code in my project, and interacting with the emulator to ensure each component worked correctly.
 ### Top contributors:
 
 <a href="https://github.com/anajera05/ArtSphere/graphs/contributors">
