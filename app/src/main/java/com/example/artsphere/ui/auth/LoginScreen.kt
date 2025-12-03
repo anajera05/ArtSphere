@@ -1,5 +1,6 @@
-package com.example.artsphere.ui.auth
+package com.example.artsphere
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,10 +21,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.artsphere.ui.auth.AuthUiState
+import com.example.artsphere.ui.auth.AuthViewModel
+import com.example.artsphere.ui.theme.ArtSphereTheme
 
 @Composable
 fun LoginScreen(
@@ -39,29 +48,53 @@ fun LoginScreen(
         }
     }
 
+    LoginContent(
+        uiState = uiState,
+        onEmailChange = viewModel::onEmailChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onLoginClick = { viewModel.login(onLoginSuccess) },
+        onCreateAccountClick = onCreateAccountClick
+    )
+}
 
+@Composable
+fun LoginContent(
+    uiState: AuthUiState,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onLoginClick: () -> Unit,
+    onCreateAccountClick: () -> Unit
+) {
     Box(
-    modifier = Modifier
-    .fillMaxSize()
-    .background(Color.DarkGray.copy(alpha = 0.1f)), // placeholder background
-    contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.madamemonet),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+            colorFilter = ColorFilter.tint(
+                color = Color.Black.copy(alpha = 0.4f),
+                blendMode = BlendMode.Darken
+            )
+        )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "Welcome Back", style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 24.dp)
+                text = "Welcome Back", style = MaterialTheme.typography.headlineMedium, color = Color.White,
+                modifier = Modifier.padding(bottom = 24.dp, start = 25.dp).align(Alignment.Start)
             )
 
             Box(
                 modifier = Modifier
                     .padding(horizontal = 20.dp)
-                    .background(Color.White.copy(alpha = 0.85f), shape = RoundedCornerShape(16.dp))
+                    .background(Color.White.copy(alpha = 0.60f), shape = RoundedCornerShape(16.dp))
                     .padding(horizontal = 30.dp, vertical = 32.dp)
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     OutlinedTextField(
                         value = uiState.email,
-                        onValueChange = { viewModel.onEmailChange(it) },
+                        onValueChange = onEmailChange,
                         label = { Text("Email") },
                         leadingIcon = {
                             Icon(
@@ -78,7 +111,7 @@ fun LoginScreen(
 
                     OutlinedTextField(
                         value = uiState.password,
-                        onValueChange = { viewModel.onPasswordChange(it) },
+                        onValueChange = onPasswordChange,
                         label = { Text("Password") },
                         leadingIcon = {
                             Icon(
@@ -102,16 +135,18 @@ fun LoginScreen(
 
                     Text(
                         text = "Don't have an account?", color = Color.Gray, style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.align(Alignment.End).clickable { onCreateAccountClick() }
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .clickable { onCreateAccountClick() }
                     )
 
 
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
-                        onClick = { viewModel.login(onLoginSuccess) },
+                        onClick = onLoginClick,
                         enabled = !uiState.isLoading,
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .width(150.dp)
                             .height(48.dp),
                         shape = RoundedCornerShape(24.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -124,7 +159,7 @@ fun LoginScreen(
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Loging in...")
+                            Text("Logging in...")
                         } else {
                             Text(text = "LOGIN", fontWeight = FontWeight.Bold, color = Color.White)
                         }
@@ -133,5 +168,19 @@ fun LoginScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoginScreenPreview() {
+    ArtSphereTheme {
+        LoginContent(
+            uiState = AuthUiState(),
+            onEmailChange = {},
+            onPasswordChange = {},
+            onLoginClick = {},
+            onCreateAccountClick = {}
+        )
     }
 }

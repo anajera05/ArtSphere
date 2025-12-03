@@ -36,6 +36,7 @@ import com.example.artsphere.ui.artwork.ArtworkViewModel
 import com.example.artsphere.ui.home.HomeScreen
 import com.example.artsphere.ui.map.MapScreen
 import com.example.artsphere.ui.profile.ProfileScreen
+import com.example.artsphere.ui.profile.ProfileViewModel
 import com.example.artsphere.ui.settings.SettingsScreen
 import com.google.android.gms.maps.model.LatLng
 
