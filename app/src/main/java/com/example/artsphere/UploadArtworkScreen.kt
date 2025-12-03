@@ -250,24 +250,20 @@ fun UploadArtworkScreen(
                 value = price,
                 onValueChange = { newValue ->
                     price = when {
-                        // Allow empty string
                         newValue.isEmpty() -> ""
 
-                        // Only allow digits and one decimal point
                         else -> {
                             val filtered = newValue.filter { it.isDigit() || it == '.' }
 
-                            // Check all conditions
                             val hasMultipleDecimals = filtered.count { it == '.' } > 1
                             val startsWithDecimal = filtered.startsWith(".")
                             val parts = filtered.split(".")
                             val tooManyDecimals = parts.size == 2 && parts[1].length > 2
 
-                            // Only update if all conditions pass
                             if (hasMultipleDecimals || startsWithDecimal || tooManyDecimals) {
-                                price // Keep old value
+                                price
                             } else {
-                                filtered // Use new filtered value
+                                filtered
                             }
                         }
                     }

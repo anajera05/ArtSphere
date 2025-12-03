@@ -173,7 +173,7 @@ fun ArtworkDetailScreen(
                     Row() {
                         Text(text = "Price", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,  color = Color(0xFF6200EE),)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(artwork.price)
+                        Text("$${artwork.price}")
                     }
                 }
                 else{
