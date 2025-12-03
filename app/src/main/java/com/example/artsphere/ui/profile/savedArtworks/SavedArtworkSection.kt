@@ -1,4 +1,4 @@
-package com.example.artsphere
+package com.example.artsphere.ui.profile.savedArtworks
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,15 +18,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.artsphere.data.model.Artwork
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedArtworkScreen(
     onArtworkClick: (Artwork) -> Unit,
-    viewModel: SavedArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: SavedArtworkViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 

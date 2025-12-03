@@ -1,4 +1,4 @@
-package com.example.artsphere
+package com.example.artsphere.data.model
 
 import com.google.firebase.firestore.PropertyName
 

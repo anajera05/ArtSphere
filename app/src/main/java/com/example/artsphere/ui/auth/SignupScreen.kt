@@ -1,4 +1,4 @@
-package com.example.artsphere
+package com.example.artsphere.ui.auth
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

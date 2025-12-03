@@ -1,4 +1,4 @@
-package com.example.artsphere
+package com.example.artsphere.ui.addArtwork
 
 import android.Manifest
 import android.content.Context
