@@ -49,7 +49,6 @@ Features:
   * View items sold
  
 * Stretch Features:
-  * In-App Messaging
   * Add art events in the map 
 
 
