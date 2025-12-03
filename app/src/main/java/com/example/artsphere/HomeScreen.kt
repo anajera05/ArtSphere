@@ -129,7 +129,7 @@ fun HomeScreen(
                 val uiState by newsViewModel.uiState.collectAsState()
                 val context = LocalContext.current
 
-                Column(modifier = Modifier.padding(bottom = 16.dp)) {
+                Column(modifier = Modifier.padding(bottom = 8.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -222,7 +222,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color(0xFFF5F5F5))
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = 4.dp)
                 ) {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(filters) { filter ->
@@ -246,11 +246,6 @@ fun HomeScreen(
                         }
                     }
                 }
-            }
-
-            // Spacer for visual separation
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                Spacer(modifier = Modifier.height(4.dp))
             }
 
             // Artwork Gallery from Firebase
