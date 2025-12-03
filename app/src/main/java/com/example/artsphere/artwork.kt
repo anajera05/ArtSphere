@@ -11,9 +11,11 @@ data class Artwork(
     @PropertyName("price") val price: String = "",
     @PropertyName("contactEmail") val contactEmail: String = "",
     @PropertyName("contactName") val contactName: String = "",
-    @PropertyName("createdAt") val createdAt: Long = System.currentTimeMillis()
+    @PropertyName("createdAt") val createdAt: Long = System.currentTimeMillis(),
+    @PropertyName("latitude") val latitude: Double? = null,
+    @PropertyName("longitude") val longitude: Double? = null,
+    @PropertyName("userId") val userId: String = ""
 ) {
-    // Helper property for display
     val categoryEnum: ArtworkCategory
         get() = try {
             ArtworkCategory.valueOf(category)
