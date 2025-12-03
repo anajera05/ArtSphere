@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
@@ -29,12 +30,14 @@ fun ArtworkDetailScreen(
     artwork: Artwork,
     onBackClick: () -> Unit,
     onDeleteClick: () -> Unit,
+    onMessageClick: () -> Unit = {},
     viewModel: ArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     savedViewModel: SavedArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val savedState by savedViewModel.uiState.collectAsState()
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+    val isOwnArtwork = currentUserId == artwork.userId
 
     Scaffold(
         topBar = {
@@ -74,7 +77,7 @@ fun ArtworkDetailScreen(
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
-                if (currentUserId == artwork.userId) {
+                if (isOwnArtwork) {
                     IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(
                             Icons.Default.Delete,
@@ -120,16 +123,16 @@ fun ArtworkDetailScreen(
                             )
                         }
                     }
-                    Row {
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         IconButton(
                             onClick = {
                                 Log.d("DETAIL_SCREEN", "Like button clicked for artwork: ${artwork.id}")
-                                Log.d("DETAIL_SCREEN", "Current saved state: ${savedState.savedArtworkIds.contains(artwork.id)}")
                                 savedViewModel.toggleSaveArtwork(artwork.id)
-                                Log.d("DETAIL_SCREEN", "After toggle: ${savedState.savedArtworkIds.contains(artwork.id)}")
                             },
                             modifier = Modifier
-                                .padding(8.dp)
                                 .background(
                                     Color.White.copy(alpha = 0.8f),
                                     shape = RoundedCornerShape(50)
@@ -148,6 +151,24 @@ fun ArtworkDetailScreen(
                                     Color(0xFF6200EE)
                                 }
                             )
+                        }
+
+                        // Message Artist Button - Only show if NOT own artwork
+                        if (!isOwnArtwork) {
+                            IconButton(
+                                onClick = onMessageClick,
+                                modifier = Modifier
+                                    .background(
+                                        Color(0xFF6200EE),
+                                        shape = RoundedCornerShape(50)
+                                    )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Email,
+                                    contentDescription = "Message Artist",
+                                    tint = Color.White
+                                )
+                            }
                         }
                     }
                 }

@@ -58,6 +58,7 @@ fun MainScreenWithBottomBar(
 
     // Track selected artwork for detail view
     var selectedArtwork by remember { mutableStateOf<Artwork?>(null) }
+    var selectedConversation by remember { mutableStateOf<Conversation?>(null) }
 
     var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
@@ -134,7 +135,14 @@ fun MainScreenWithBottomBar(
                     }
                 )
             }
-            composable(Screen.Inbox.route) { InboxScreen() }
+            composable(Screen.Inbox.route) {
+                InboxScreen(
+                    onConversationClick = { conversation ->
+                        selectedConversation = conversation
+                        navController.navigate("chat")
+                    }
+                )
+            }
 
             composable(Screen.Profile.route) {
                 ProfileScreen(
@@ -184,8 +192,33 @@ fun MainScreenWithBottomBar(
                         onDeleteClick = {
                             navController.popBackStack()
                         },
+                        onMessageClick = {
+                            // Create conversation and navigate to chat
+                            selectedConversation = Conversation(
+                                conversationId = "${artwork.userId}_${artwork.id}",
+                                otherUserId = artwork.userId,
+                                otherUserName = artwork.contactName.ifBlank { "Artist" },
+                                artworkId = artwork.id,
+                                artworkName = artwork.name,
+                                artworkImageUrl = artwork.imageUrl,
+                                lastMessage = "",
+                                lastMessageTime = 0,
+                                unreadCount = 0
+                            )
+                            navController.navigate("chat")
+                        },
                         viewModel = artworkViewModel,
                         savedViewModel = savedArtworkViewModel
+                    )
+                }
+            }
+
+            // Chat Screen
+            composable("chat") {
+                selectedConversation?.let { conversation ->
+                    ChatScreen(
+                        conversation = conversation,
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
             }

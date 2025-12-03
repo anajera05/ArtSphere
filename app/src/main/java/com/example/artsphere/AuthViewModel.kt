@@ -2,6 +2,7 @@ package com.example.artsphere
 
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -14,7 +15,6 @@ data class AuthUiState(
 )
 
 class AuthViewModel : ViewModel() {
-
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
@@ -79,8 +79,23 @@ class AuthViewModel : ViewModel() {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    onSuccess()
-                    _uiState.value = _uiState.value.copy(isLoading = false)
+                    // Set display name
+                    val profileUpdates = UserProfileChangeRequest.Builder()
+                        .setDisplayName(username)
+                        .build()
+
+                    auth.currentUser?.updateProfile(profileUpdates)
+                        ?.addOnCompleteListener { updateTask ->
+                            if (updateTask.isSuccessful) {
+                                onSuccess()
+                                _uiState.value = _uiState.value.copy(isLoading = false)
+                            } else {
+                                _uiState.value = _uiState.value.copy(
+                                    isLoading = false,
+                                    error = "Failed to set username"
+                                )
+                            }
+                        }
                 } else {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -89,9 +104,9 @@ class AuthViewModel : ViewModel() {
                 }
             }
     }
+
     fun signOut() {
         auth.signOut()
-        // reset UI state so login/signup fields are empty next time
         _uiState.value = AuthUiState()
     }
 }
