@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Refresh
@@ -55,7 +56,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.artsphere.features.NewsViewModel
 
@@ -67,6 +67,7 @@ fun HomeScreen(
     savedViewModel: SavedArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     var selectedFilter by remember { mutableStateOf("All") }
+    var searchQuery by remember { mutableStateOf("") }  //  Add search state
     val filters = listOf("All", "Painting & Drawing", "Photographic", "Digital", "Other")
 
     val galleryViewModel: GalleryViewModel = viewModel()
@@ -80,17 +81,27 @@ fun HomeScreen(
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-        // Search bar
+        // Search bar - NOW FUNCTIONAL
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
+            value = searchQuery,  // ⭐ Bind to state
+            onValueChange = { searchQuery = it },  // ⭐ Update on change
             placeholder = { Text("Search Artsphere", color = Color.Gray) },
             trailingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = Color.Gray
-                )
+                if (searchQuery.isNotEmpty()) {
+                    // Show X button to clear search
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Clear search",
+                        tint = Color.Gray,
+                        modifier = Modifier.clickable { searchQuery = "" }
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = Color.Gray
+                    )
+                }
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -101,7 +112,8 @@ fun HomeScreen(
                 focusedBorderColor = Color.Transparent,
                 unfocusedContainerColor = Color.White,
                 focusedContainerColor = Color.White
-            )
+            ),
+            singleLine = true  // Keep it single line
         )
 
         LazyVerticalGrid(
@@ -147,12 +159,14 @@ fun HomeScreen(
                                 CircularProgressIndicator()
                             }
                         }
+
                         uiState.error != null -> {
                             Text(
                                 text = "Error: ${uiState.error}",
                                 modifier = Modifier.padding(16.dp)
                             )
                         }
+
                         else -> {
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 items(uiState.articles) { article ->
@@ -168,7 +182,11 @@ fun HomeScreen(
                                                 context.startActivity(intent)
                                             },
                                         shape = RoundedCornerShape(16.dp),
-                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0))
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = Color(
+                                                0xFFE0E0E0
+                                            )
+                                        )
                                     ) {
                                         Column(modifier = Modifier.fillMaxSize()) {
                                             article.imageUrl?.let { imageUrl ->
@@ -249,6 +267,7 @@ fun HomeScreen(
                         }
                     }
                 }
+
                 galleryState.artworks.isEmpty() -> {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Box(
@@ -265,75 +284,123 @@ fun HomeScreen(
                         }
                     }
                 }
+
                 else -> {
-                    // Filter artworks based on selected category
-                    val filteredArtworks = if (selectedFilter == "All") {
-                        galleryState.artworks
-                    } else {
-                        galleryState.artworks.filter {
-                            it.categoryEnum.displayName == selectedFilter
+                    // Filter artworks based on selected category AND search query
+                    val filteredArtworks = galleryState.artworks
+                        .filter { artwork ->
+                            // Category filter
+                            val matchesCategory = if (selectedFilter == "All") {
+                                true
+                            } else {
+                                artwork.categoryEnum.displayName == selectedFilter
+                            }
+
+                            // Search filter (case-insensitive)
+                            val matchesSearch = if (searchQuery.isBlank()) {
+                                true
+                            } else {
+                                artwork.name.contains(searchQuery, ignoreCase = true)
+                            }
+
+                            // Both conditions must be true
+                            matchesCategory && matchesSearch
                         }
-                    }
 
-                    items(filteredArtworks) { artwork ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .clickable { onArtworkClick(artwork) },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                        ) {
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                Column(modifier = Modifier.fillMaxSize()) {
-                                    // Artwork Image
-                                    AsyncImage(
-                                        model = artwork.imageUrl,
-                                        contentDescription = artwork.name,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .weight(1f),
-                                        contentScale = ContentScale.Crop
-                                    )
-
-                                    // Artwork Name
+                    // Show message if no results found
+                    if (filteredArtworks.isEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
                                     Text(
-                                        text = artwork.name,
+                                        "No artworks found",
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.padding(12.dp)
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        if (searchQuery.isNotBlank()) {
+                                            "Try a different search term"
+                                        } else {
+                                            "No artworks in this category"
+                                        },
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.Gray
                                     )
                                 }
-
-                                // Like Button (top right corner)
-                                IconButton(
-                                    onClick = {
-                                        savedViewModel.toggleSaveArtwork(artwork.id)
-                                    },
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .padding(8.dp)
-                                        .background(
-                                            Color.White.copy(alpha = 0.8f),
-                                            shape = RoundedCornerShape(50)
+                            }
+                        }
+                    } else {
+                        items(filteredArtworks) { artwork ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .clickable { onArtworkClick(artwork) },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    Column(modifier = Modifier.fillMaxSize()) {
+                                        // Artwork Image
+                                        AsyncImage(
+                                            model = artwork.imageUrl,
+                                            contentDescription = artwork.name,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .weight(1f),
+                                            contentScale = ContentScale.Crop
                                         )
-                                ) {
-                                    Icon(
-                                        imageVector = if (savedState.savedArtworkIds.contains(artwork.id)) {
-                                            Icons.Filled.Favorite
-                                        } else {
-                                            Icons.Filled.FavoriteBorder
+
+                                        // Artwork Name
+                                        Text(
+                                            text = artwork.name,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.padding(12.dp)
+                                        )
+                                    }
+
+                                    // Like Button (top right corner)
+                                    IconButton(
+                                        onClick = {
+                                            savedViewModel.toggleSaveArtwork(artwork.id)
                                         },
-                                        contentDescription = "Like",
-                                        tint = if (savedState.savedArtworkIds.contains(artwork.id)) {
-                                            Color(0xFFE91E63)  // Pink when liked
-                                        } else {
-                                            Color(0xFF6200EE)  // Purple when not liked
-                                        }
-                                    )
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(8.dp)
+                                            .background(
+                                                Color.White.copy(alpha = 0.8f),
+                                                shape = RoundedCornerShape(50)
+                                            )
+                                    ) {
+                                        Icon(
+                                            imageVector = if (savedState.savedArtworkIds.contains(
+                                                    artwork.id
+                                                )
+                                            ) {
+                                                Icons.Filled.Favorite
+                                            } else {
+                                                Icons.Filled.FavoriteBorder
+                                            },
+                                            contentDescription = "Like",
+                                            tint = if (savedState.savedArtworkIds.contains(artwork.id)) {
+                                                Color(0xFFE91E63)  // Pink when liked
+                                            } else {
+                                                Color(0xFF6200EE)  // Purple when not liked
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
