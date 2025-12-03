@@ -3,6 +3,8 @@ package com.example.artsphere
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.ui.artworks.myArtworks.ArtworkCard
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith

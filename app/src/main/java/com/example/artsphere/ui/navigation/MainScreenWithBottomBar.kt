@@ -1,4 +1,4 @@
-package com.example.artsphere
+package com.example.artsphere.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -26,6 +26,18 @@ import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.artsphere.ui.inbox.InboxScreen
+import com.example.artsphere.ui.profile.ProfileViewModel
+import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.ui.artworks.ArtworkDetailScreen
+import com.example.artsphere.ui.artworks.ArtworkViewModel
+import com.example.artsphere.ui.artworks.addArtwork.CameraScreen
+import com.example.artsphere.ui.artworks.addArtwork.UploadArtworkScreen
+import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
+import com.example.artsphere.ui.home.HomeScreen
+import com.example.artsphere.ui.map.MapScreen
+import com.example.artsphere.ui.profile.ProfileScreen
+import com.example.artsphere.ui.profile.SettingsScreen
 import com.google.android.gms.maps.model.LatLng
 
 

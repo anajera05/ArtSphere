@@ -1,4 +1,4 @@
-package com.example.artsphere.features
+package com.example.artsphere.data.source.remote
 
 import com.example.artsphere.BuildConfig
 import android.content.Intent

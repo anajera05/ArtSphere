@@ -1,7 +1,16 @@
-package com.example.artsphere
+package com.example.artsphere.ui.map
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.Rect
+import android.graphics.RectF
+import android.graphics.drawable.BitmapDrawable
 import android.location.Location
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,12 +25,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.example.artsphere.MapViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.ImageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
+import com.example.artsphere.data.model.Artwork
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 data class ArtworkMarker(
     val id: String,
@@ -121,7 +136,7 @@ private fun MapWithArtwork(
     onAddArtworkAtLocation: ((LatLng) -> Unit)?
 ) {
     // ViewModel to load artworks from Firestore
-    val mapViewModel: MapViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val mapViewModel: MapViewModel = viewModel()
     val uiState by mapViewModel.uiState.collectAsState()
 
     val cameraPositionState = rememberCameraPositionState {
@@ -222,21 +237,21 @@ private fun ArtworkImageMarker(
     onMarkerClick: () -> Boolean
 ) {
     val context = LocalContext.current
-    var markerBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    var markerBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     // Load image and convert to bitmap for marker
     LaunchedEffect(artworkMarker.imageUrl) {
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             try {
-                val loader = coil.ImageLoader(context)
-                val request = coil.request.ImageRequest.Builder(context)
+                val loader = ImageLoader(context)
+                val request = ImageRequest.Builder(context)
                     .data(artworkMarker.imageUrl)
                     .size(150, 150) // Resize for marker
                     .allowHardware(false) // Required for bitmap conversion
                     .build()
 
-                val result = (loader.execute(request) as? coil.request.SuccessResult)?.drawable
-                val bitmap = (result as? android.graphics.drawable.BitmapDrawable)?.bitmap
+                val result = (loader.execute(request) as? SuccessResult)?.drawable
+                val bitmap = (result as? BitmapDrawable)?.bitmap
 
                 bitmap?.let {
                     // Create rounded bitmap for marker
@@ -257,31 +272,31 @@ private fun ArtworkImageMarker(
     )
 }
 
-private fun createCircularBitmap(bitmap: android.graphics.Bitmap, size: Int): android.graphics.Bitmap {
-    val output = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
-    val canvas = android.graphics.Canvas(output)
+private fun createCircularBitmap(bitmap: Bitmap, size: Int): Bitmap {
+    val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(output)
 
-    val paint = android.graphics.Paint().apply {
+    val paint = Paint().apply {
         isAntiAlias = true
         color = android.graphics.Color.WHITE
     }
 
-    val rect = android.graphics.Rect(0, 0, size, size)
-    val rectF = android.graphics.RectF(rect)
+    val rect = Rect(0, 0, size, size)
+    val rectF = RectF(rect)
     val radius = size / 2f
 
     canvas.drawCircle(radius, radius, radius, paint)
 
     paint.color = android.graphics.Color.parseColor("#6200EE")
-    paint.style = android.graphics.Paint.Style.STROKE
+    paint.style = Paint.Style.STROKE
     paint.strokeWidth = 8f
     canvas.drawCircle(radius, radius, radius - 4f, paint)
 
     paint.reset()
     paint.isAntiAlias = true
-    paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.SRC_IN)
+    paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
 
-    val scaledBitmap = android.graphics.Bitmap.createScaledBitmap(bitmap, size, size, true)
+    val scaledBitmap = Bitmap.createScaledBitmap(bitmap, size, size, true)
     canvas.drawBitmap(scaledBitmap, rect, rect, paint)
 
     return output
@@ -330,7 +345,7 @@ private fun LocationPermissionDenied(
 }
 
 private fun getCurrentLocation(
-    context: android.content.Context,
+    context: Context,
     onLocationReceived: (LatLng) -> Unit
 ) {
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)

@@ -1,10 +1,9 @@
-package com.example.artsphere
+package com.example.artsphere.ui.map
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.artsphere.Artwork
-import com.example.artsphere.ArtworkMarker
+import com.example.artsphere.data.model.Artwork
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow

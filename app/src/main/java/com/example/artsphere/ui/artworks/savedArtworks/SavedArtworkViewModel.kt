@@ -1,8 +1,9 @@
-package com.example.artsphere
+package com.example.artsphere.ui.artworks.savedArtworks
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.artsphere.data.model.Artwork
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow

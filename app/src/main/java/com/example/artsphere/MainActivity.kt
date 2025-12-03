@@ -6,10 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.rememberNavController
-import com.example.artsphere.features.ArtNewsScreen
+import com.example.artsphere.ui.navigation.ArtSphereApp
 import com.example.artsphere.ui.theme.ArtSphereTheme
 
 class MainActivity : ComponentActivity() {
