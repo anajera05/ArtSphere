@@ -1,4 +1,4 @@
-package com.example.artsphere
+package com.example.artsphere.ui.home
 
 import android.content.Intent
 import android.net.Uri
@@ -57,14 +57,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.artsphere.features.NewsViewModel
+import com.example.artsphere.ui.artworks.gallery.GalleryViewModel
+import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
+import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.data.source.remote.NewsViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onArtworkClick: (Artwork) -> Unit = {},
-    savedViewModel: SavedArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    savedViewModel: SavedArtworkViewModel = viewModel()
 ) {
     var selectedFilter by remember { mutableStateOf("All") }
     var searchQuery by remember { mutableStateOf("") }  //  Add search state

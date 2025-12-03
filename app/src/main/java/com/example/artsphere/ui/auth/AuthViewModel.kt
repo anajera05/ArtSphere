@@ -1,4 +1,4 @@
-package com.example.artsphere
+package com.example.artsphere.ui.auth
 
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth

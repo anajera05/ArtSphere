@@ -1,4 +1,4 @@
-package com.example.artsphere
+package com.example.artsphere.ui.profile
 
 import android.content.Intent
 import android.net.Uri
@@ -8,8 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -28,7 +26,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.google.android.gms.maps.model.LatLng
+import com.example.artsphere.ui.profile.ProfileViewModel
+import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.ui.artworks.ArtworkViewModel
+import com.example.artsphere.ui.artworks.myArtworks.MyArtworkScreen
+import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkScreen
+import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)

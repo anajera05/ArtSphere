@@ -1,10 +1,14 @@
-package com.example.artsphere
+package com.example.artsphere.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.artsphere.ui.profile.ProfileViewModel
+import com.example.artsphere.ui.auth.AuthViewModel
+import com.example.artsphere.ui.auth.LoginScreen
+import com.example.artsphere.ui.auth.SignupScreen
 
 @Composable
 fun ArtSphereApp() {

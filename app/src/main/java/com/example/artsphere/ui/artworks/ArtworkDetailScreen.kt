@@ -1,4 +1,4 @@
-package com.example.artsphere
+package com.example.artsphere.ui.artworks
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -20,7 +20,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
+import com.example.artsphere.data.model.Artwork
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,8 +32,8 @@ fun ArtworkDetailScreen(
     artwork: Artwork,
     onBackClick: () -> Unit,
     onDeleteClick: () -> Unit,
-    viewModel: ArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    savedViewModel: SavedArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: ArtworkViewModel = viewModel(),
+    savedViewModel: SavedArtworkViewModel = viewModel()
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val savedState by savedViewModel.uiState.collectAsState()

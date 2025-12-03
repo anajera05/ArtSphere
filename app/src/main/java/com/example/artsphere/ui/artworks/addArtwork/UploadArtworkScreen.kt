@@ -1,4 +1,4 @@
-package com.example.artsphere
+package com.example.artsphere.ui.artworks.addArtwork
 
 import android.content.Intent
 import android.net.Uri
@@ -28,14 +28,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.artsphere.data.model.ArtworkCategory
+import com.example.artsphere.ui.artworks.ArtworkViewModel
 import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UploadArtworkScreen(
     onBackClick: () -> Unit,
-    viewModel: ArtworkViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    viewModel: ArtworkViewModel = viewModel(),
     initialImageUri: Uri? = null,
     initialLocation: LatLng? = null
 ) {

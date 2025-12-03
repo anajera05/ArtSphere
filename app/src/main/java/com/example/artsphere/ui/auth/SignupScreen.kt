@@ -1,4 +1,4 @@
-package com.example.artsphere
+package com.example.artsphere.ui.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
@@ -16,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -26,42 +26,38 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.artsphere.R
 import com.example.artsphere.ui.theme.ArtSphereTheme
 
 @Composable
-fun LoginScreen(
+fun SignupScreen(
     viewModel: AuthViewModel,
-    onLoginSuccess: () -> Unit,
-    onCreateAccountClick: () -> Unit
+    onSignupSuccess: () -> Unit,
+    onBackToLogin: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    DisposableEffect(Unit) {
-        onDispose {
-            viewModel.clearError()
-        }
-    }
-
-    LoginContent(
+    SignupContent(
         uiState = uiState,
+        onUsernameChange = viewModel::onUsernameChange,
         onEmailChange = viewModel::onEmailChange,
         onPasswordChange = viewModel::onPasswordChange,
-        onLoginClick = { viewModel.login(onLoginSuccess) },
-        onCreateAccountClick = onCreateAccountClick
+        onSignupClick = { viewModel.signup(onSignupSuccess) },
+        onBackToLogin = onBackToLogin
     )
 }
 
 @Composable
-fun LoginContent(
+fun SignupContent(
     uiState: AuthUiState,
+    onUsernameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
-    onLoginClick: () -> Unit,
-    onCreateAccountClick: () -> Unit
+    onSignupClick: () -> Unit,
+    onBackToLogin: () -> Unit
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -79,7 +75,9 @@ fun LoginContent(
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "Welcome Back", style = MaterialTheme.typography.headlineMedium, color = Color.White,
+                text = "Create an Account",
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color.White,
                 modifier = Modifier.padding(bottom = 24.dp, start = 25.dp).align(Alignment.Start)
             )
 
@@ -90,6 +88,22 @@ fun LoginContent(
                     .padding(horizontal = 30.dp, vertical = 32.dp)
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    OutlinedTextField(
+                        value = uiState.username,
+                        onValueChange = onUsernameChange,
+                        label = { Text("Username") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = "Account Icon"
+                            )
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     OutlinedTextField(
                         value = uiState.email,
                         onValueChange = onEmailChange,
@@ -104,7 +118,6 @@ fun LoginContent(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
-
                     Spacer(modifier = Modifier.height(16.dp))
 
                     OutlinedTextField(
@@ -128,23 +141,13 @@ fun LoginContent(
                             color = MaterialTheme.colorScheme.error
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Don't have an account?", color = Color.Gray, style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .align(Alignment.End)
-                            .clickable { onCreateAccountClick() }
-                    )
-
-
                     Spacer(modifier = Modifier.height(16.dp))
+
                     Button(
-                        onClick = onLoginClick,
+                        onClick = onSignupClick,
                         enabled = !uiState.isLoading,
                         modifier = Modifier
-                            .width(150.dp)
+                            .width(200.dp)
                             .height(48.dp),
                         shape = RoundedCornerShape(24.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -157,10 +160,23 @@ fun LoginContent(
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Logging in...")
+                            Text("Creating...")
                         } else {
-                            Text(text = "LOGIN", fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("Create account")
                         }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Already have an account? ")
+                        Text(
+                            text = "Sign in",
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable { onBackToLogin() }
+
+                        )
                     }
 
                 }
@@ -171,14 +187,15 @@ fun LoginContent(
 
 @Preview(showBackground = true)
 @Composable
-fun LoginScreenPreview() {
+fun SignupScreenPreview() {
     ArtSphereTheme {
-        LoginContent(
+        SignupContent(
             uiState = AuthUiState(),
+            onUsernameChange = {},
             onEmailChange = {},
             onPasswordChange = {},
-            onLoginClick = {},
-            onCreateAccountClick = {}
+            onSignupClick = {},
+            onBackToLogin = {}
         )
     }
 }

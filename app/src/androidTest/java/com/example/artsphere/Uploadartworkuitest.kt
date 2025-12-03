@@ -4,6 +4,8 @@ import android.net.Uri
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.artsphere.ui.artworks.ArtworkViewModel
+import com.example.artsphere.ui.artworks.addArtwork.UploadArtworkScreen
 import com.google.android.gms.maps.model.LatLng
 import org.junit.Rule
 import org.junit.Test
