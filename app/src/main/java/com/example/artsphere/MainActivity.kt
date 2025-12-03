@@ -24,12 +24,3 @@ class MainActivity : ComponentActivity() {
 }
 
 
-
-//@Preview(showBackground = true)
-//@Composable
-//fun DefaultPreview() {
-//    ArtSphereTheme {
-//        val navController = rememberNavController()
-//        ProfileScreen(navController = navController)
-//    }
-//}
