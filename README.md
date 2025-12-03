@@ -126,15 +126,19 @@ Where and How Used:
   * Example prompt: Explain how to load an image from a URL in Jetpack Compose, convert it into a bitmap, make it circular, and use it as a custom marker on Google Maps. I want to understand how each step works.
 * Firebase Storage & Firestore Setup:
   * Using Chat helped me rewrite the rules so authenticated users could upload their own profile photos while preventing unauthorized access
+* Creating Previews: To help create more complex UI, we used Gemini to update our files to allow us to render previews that would not break our code
+  * Example prompt: Why does the preview for X not render?
 
 Analysis of Helpfulness and Limitations:
 * Helpfulness:
   * Provided clear explanations, step-by-step breakdowns, and example code snippets that helped me understand the concepts and apply them directly in my project. It helped clarify how Jetpack Compose interacts with traditional Android Views, and how to manipulate camera and map features effectively.
-  * Chatgpt was helpful in speeding up the debugging process and helping me understand the deeper logic behind Firebase and Jetpack Compose state management. 
+  * Chatgpt was helpful in speeding up the debugging process and helping me understand the deeper logic behind Firebase and Jetpack Compose state management.
+  * Sped up the process of UI development without destroying existing code 
 
 * Limitations:
   * Some answers were high-level and required me to verify or adapt the examples to my project context. For instance, actual implementation required adjustments to the codebase, such as modifying the Firebase data items to include longitude and latitude.
   * Some code required adjustments to fit my actual project structure. It sometimes assumed best-practice architecture, which required me to adjust my existing project design to match (e.g., hoisting ViewModels to the NavHost level).
+  * Need to test code to ensure code is still functional 
 
 Corrections Required / Demonstration of Understanding:
 
