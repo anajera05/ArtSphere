@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -12,18 +11,17 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +34,7 @@ fun ArtworkDetailScreen(
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val savedState by savedViewModel.uiState.collectAsState()
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
 
     Scaffold(
         topBar = {
@@ -49,7 +48,6 @@ fun ArtworkDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(90.dp)
-
             )
         }
     ) { paddingValues ->
@@ -66,12 +64,6 @@ fun ArtworkDetailScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-//                Box(
-//                    modifier = Modifier
-//                        .size(48.dp)
-//                        .clip(CircleShape)
-//                        .background(Color.Gray)
-//                )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(text = artwork.contactName, fontWeight = FontWeight.Bold)
@@ -82,12 +74,14 @@ fun ArtworkDetailScreen(
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
-                IconButton(onClick = { showDeleteDialog = true }) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = Color.Black
-                    )
+                if (currentUserId == artwork.userId) {
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            tint = Color.Black
+                        )
+                    }
                 }
             }
 
@@ -112,7 +106,6 @@ fun ArtworkDetailScreen(
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold
                         )
-                        // Category Chip
                         Surface(
                             shape = RoundedCornerShape(20.dp),
                             color = Color(0xFFE8DEF8),
@@ -150,9 +143,9 @@ fun ArtworkDetailScreen(
                                 },
                                 contentDescription = "Like",
                                 tint = if (savedState.savedArtworkIds.contains(artwork.id)) {
-                                    Color(0xFFE91E63)  // Pink when liked
+                                    Color(0xFFE91E63)
                                 } else {
-                                    Color(0xFF6200EE)  // Purple when not liked
+                                    Color(0xFF6200EE)
                                 }
                             )
                         }
@@ -214,6 +207,3 @@ fun ArtworkDetailScreen(
         }
     }
 }
-
-
-

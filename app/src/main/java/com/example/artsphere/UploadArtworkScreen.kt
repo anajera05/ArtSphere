@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -55,6 +56,26 @@ fun UploadArtworkScreen(
     var contactEmail by remember { mutableStateOf("") }
     var contactName by remember { mutableStateOf("") }
     var showCategoryMenu by remember { mutableStateOf(false) }
+
+    // ⭐ EMAIL VALIDATION - NEW
+    var emailError by remember { mutableStateOf<String?>(null) }
+
+    // ⭐ Email validation function
+    fun isValidEmail(email: String): Boolean {
+        if (email.isBlank()) return true // Allow empty for optional field
+        val emailPattern = "[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}".toRegex()
+        return emailPattern.matches(email)
+    }
+
+    // ⭐ Validate email on change
+    fun validateEmail(email: String) {
+        contactEmail = email
+        emailError = when {
+            email.isBlank() -> null
+            !isValidEmail(email) -> "Please enter a valid email address"
+            else -> null
+        }
+    }
 
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -251,10 +272,8 @@ fun UploadArtworkScreen(
                 onValueChange = { newValue ->
                     price = when {
                         newValue.isEmpty() -> ""
-
                         else -> {
                             val filtered = newValue.filter { it.isDigit() || it == '.' }
-
                             val hasMultipleDecimals = filtered.count { it == '.' } > 1
                             val startsWithDecimal = filtered.startsWith(".")
                             val parts = filtered.split(".")
@@ -273,7 +292,6 @@ fun UploadArtworkScreen(
                     .fillMaxWidth()
                     .onFocusChanged { focusState ->
                         if (!focusState.isFocused && price.isNotEmpty()) {
-                            // Format to 2 decimals when user leaves the field
                             price.toDoubleOrNull()?.let {
                                 price = String.format("%.2f", it)
                             }
@@ -302,16 +320,28 @@ fun UploadArtworkScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Contact Email
+            // Contact Email - ⭐ WITH VALIDATION
             OutlinedTextField(
                 value = contactEmail,
-                onValueChange = { contactEmail = it },
+                onValueChange = { validateEmail(it) },  //  Use validation
                 label = { Text("Contact Email") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF6200EE),
-                    focusedLabelColor = Color(0xFF6200EE)
-                )
+                    focusedBorderColor = if (emailError != null) Color.Red else Color(0xFF6200EE),
+                    unfocusedBorderColor = if (emailError != null) Color.Red else Color.Gray,
+                    focusedLabelColor = if (emailError != null) Color.Red else Color(0xFF6200EE),
+                    errorBorderColor = Color.Red,
+                    errorLabelColor = Color.Red
+                ),
+                isError = emailError != null,  //  Show error state
+                supportingText = if (emailError != null) {  // Show error message
+                    { Text(emailError!!, color = Color.Red) }
+                } else null,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,  // Email keyboard
+                    imeAction = ImeAction.Done
+                ),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -323,7 +353,7 @@ fun UploadArtworkScreen(
                         viewModel.uploadArtwork(
                             imageUri = selectedImageUri!!,
                             name = artworkName,
-                            category = selectedCategory.name,  // Pass as string
+                            category = selectedCategory.name,
                             description = description,
                             price = price,
                             contactEmail = contactEmail,
@@ -337,7 +367,10 @@ fun UploadArtworkScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = selectedImageUri != null && artworkName.isNotBlank() && !uiState.isUploading,
+                enabled = selectedImageUri != null &&
+                        artworkName.isNotBlank() &&
+                        emailError == null &&  // ⭐ Disable if email invalid
+                        !uiState.isUploading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF6200EE)
                 )
