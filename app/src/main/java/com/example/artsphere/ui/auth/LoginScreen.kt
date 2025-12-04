@@ -87,7 +87,10 @@ fun LoginContent(
             Box(
                 modifier = Modifier
                     .padding(horizontal = 20.dp)
-                    .background(Color.White.copy(alpha = 0.60f), shape = RoundedCornerShape(16.dp))
+                    .background(
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.60f),
+                        shape = RoundedCornerShape(16.dp)
+                    )
                     .padding(horizontal = 30.dp, vertical = 32.dp)
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -98,7 +101,8 @@ fun LoginContent(
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Email,
-                                contentDescription = "Email Icon"
+                                contentDescription = "Email Icon",
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         },
                         singleLine = true,
@@ -115,7 +119,8 @@ fun LoginContent(
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Lock,
-                                contentDescription = "Password Icon"
+                                contentDescription = "Password Icon",
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         },
                         visualTransformation = PasswordVisualTransformation(),
@@ -133,7 +138,9 @@ fun LoginContent(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Don't have an account?", color = Color.Gray, style = MaterialTheme.typography.bodySmall,
+                        text = "Don't have an account?",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier
                             .align(Alignment.End)
                             .clickable { onCreateAccountClick() }
@@ -149,18 +156,26 @@ fun LoginContent(
                             .height(48.dp),
                         shape = RoundedCornerShape(24.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF7B61FF) // purple shade
+                            containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Logging in...")
+                            Text(
+                                "Logging in...",
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
                         } else {
-                            Text(text = "LOGIN", fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(
+                                text = "LOGIN",
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
                         }
                     }
 
