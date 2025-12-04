@@ -1,6 +1,7 @@
 package com.example.artsphere.ui.inbox
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,20 +20,28 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.artsphere.data.model.Conversation
 import com.example.artsphere.data.model.Message
+import com.example.artsphere.ui.profile.ArtistProfileSheet
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import com.example.artsphere.ui.inbox.formatTimestamp
+import com.example.artsphere.data.model.Artwork
+
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
     conversation: Conversation,
     onBackClick: () -> Unit,
+    onNavigateToArtwork: (Artwork) -> Unit = {}, // ADD THIS
     viewModel: ChatViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    var showArtistProfile by remember { mutableStateOf(false) }
 
     LaunchedEffect(conversation) {
         viewModel.loadMessages(conversation.otherUserId, conversation.artworkId)
@@ -50,15 +59,19 @@ fun ChatScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
+                    Column(
+                        modifier = Modifier.clickable {
+                            showArtistProfile = true
+                        }
+                    ) {
                         Text(
                             text = conversation.otherUserName,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = conversation.artworkName,
+                            text = "Tap to view profile",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.8f)
+                            color = Color.White.copy(alpha = 0.7f)
                         )
                     }
                 },
@@ -191,6 +204,20 @@ fun ChatScreen(
             }
         }
     }
+
+    // Artist Profile Sheet
+    // Artist Profile Sheet
+    if (showArtistProfile) {
+        ArtistProfileSheet(
+            userId = conversation.otherUserId,
+            userName = conversation.otherUserName,
+            onDismiss = { showArtistProfile = false },
+            onArtworkClick = { artwork ->
+                showArtistProfile = false
+                onNavigateToArtwork(artwork)
+            }
+        )
+    }
 }
 
 @Composable
@@ -243,3 +270,4 @@ fun MessageBubble(message: Message) {
         }
     }
 }
+

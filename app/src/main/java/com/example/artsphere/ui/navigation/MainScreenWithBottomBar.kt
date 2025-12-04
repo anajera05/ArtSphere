@@ -41,6 +41,7 @@ import com.example.artsphere.ui.profile.ProfileViewModel
 import com.example.artsphere.ui.profile.SettingsScreen
 import com.google.android.gms.maps.model.LatLng
 
+
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     data object Home : Screen("home", "Home", Icons.Default.Home)
     data object Map : Screen("map", "Map", Icons.Default.LocationOn)
@@ -215,6 +216,10 @@ fun MainScreenWithBottomBar(
                             )
                             navController.navigate("chat")
                         },
+                        onNavigateToArtwork = { newArtwork ->
+                            selectedArtwork = newArtwork
+                            // We're already on artwork_detail, it will recompose with new artwork
+                        },
                         viewModel = artworkViewModel,
                         savedViewModel = savedArtworkViewModel
                     )
@@ -225,7 +230,11 @@ fun MainScreenWithBottomBar(
                 selectedConversation?.let { conversation ->
                     ChatScreen(
                         conversation = conversation,
-                        onBackClick = { navController.popBackStack() }
+                        onBackClick = { navController.popBackStack() },
+                        onNavigateToArtwork = { artwork ->
+                            selectedArtwork = artwork
+                            navController.navigate("artwork_detail")
+                        }
                     )
                 }
             }
