@@ -2,6 +2,7 @@ package com.example.artsphere.ui.artworks
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
+import com.example.artsphere.ui.profile.ArtistProfileSheet
 import com.example.artsphere.data.model.Artwork
 import com.google.firebase.auth.FirebaseAuth
 
@@ -34,10 +36,12 @@ fun ArtworkDetailScreen(
     onBackClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onMessageClick: () -> Unit = {},
+    onNavigateToArtwork: (Artwork) -> Unit = {}, // ADD THIS
     viewModel: ArtworkViewModel = viewModel(),
     savedViewModel: SavedArtworkViewModel = viewModel()
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showArtistProfile by remember { mutableStateOf(false) }
     val savedState by savedViewModel.uiState.collectAsState()
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
     val isOwnArtwork = currentUserId == artwork.userId
@@ -67,6 +71,11 @@ fun ArtworkDetailScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clickable(enabled = !isOwnArtwork) {
+                        if (!isOwnArtwork) {
+                            showArtistProfile = true
+                        }
+                    }
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -78,6 +87,14 @@ fun ArtworkDetailScreen(
                         style = MaterialTheme.typography.bodySmall,
                         textDecoration = TextDecoration.Underline
                     )
+                    if (!isOwnArtwork) {
+                        Text(
+                            text = "Tap to view profile",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF6200EE),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 if (isOwnArtwork) {
@@ -229,5 +246,19 @@ fun ArtworkDetailScreen(
                 )
             }
         }
+    }
+
+    // Artist Profile Sheet
+    // Artist Profile Sheet
+    if (showArtistProfile) {
+        ArtistProfileSheet(
+            userId = artwork.userId,
+            userName = artwork.contactName.ifBlank { "Artist" },
+            onDismiss = { showArtistProfile = false },
+            onArtworkClick = { selectedArtwork ->
+                showArtistProfile = false
+                onNavigateToArtwork(selectedArtwork) // Navigate to the clicked artwork
+            }
+        )
     }
 }
