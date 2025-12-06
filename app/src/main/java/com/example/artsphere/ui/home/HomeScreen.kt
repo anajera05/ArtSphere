@@ -45,13 +45,14 @@ import kotlinx.coroutines.delay
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onArtworkClick: (Artwork) -> Unit = {},
-    savedViewModel: SavedArtworkViewModel = viewModel()
+    savedViewModel: SavedArtworkViewModel = viewModel(),
+    galleryViewModel: GalleryViewModel = viewModel()
 ) {
     var selectedFilter by remember { mutableStateOf("All") }
     var searchQuery by remember { mutableStateOf("") }
     val filters = listOf("All", "Painting & Drawing", "Photographic", "Digital", "Other")
 
-    val galleryViewModel: GalleryViewModel = viewModel()
+    // val galleryViewModel: GalleryViewModel = viewModel()
     val galleryState by galleryViewModel.uiState.collectAsState()
     val savedState by savedViewModel.uiState.collectAsState()
 
@@ -409,7 +410,6 @@ fun CuteArtworkCard(
         label = "scale"
     )
 
-    // Simple heart scale animation
     val heartScale by animateFloatAsState(
         targetValue = if (isSaved) 1.2f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
@@ -451,7 +451,27 @@ fun CuteArtworkCard(
                     )
             )
 
-            // Like Button
+            // SOLD badge (top left)
+            if (artwork.isSold) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(8.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFE91E63),
+                    shadowElevation = 4.dp
+                ) {
+                    Text(
+                        text = "SOLD",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+
+            // Like Button (top right)
             IconButton(
                 onClick = onLikeClick,
                 modifier = Modifier

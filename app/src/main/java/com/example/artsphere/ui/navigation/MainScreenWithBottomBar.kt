@@ -30,6 +30,7 @@ import com.example.artsphere.ui.artworks.ArtworkDetailScreen
 import com.example.artsphere.ui.artworks.ArtworkViewModel
 import com.example.artsphere.ui.artworks.addArtwork.CameraScreen
 import com.example.artsphere.ui.artworks.addArtwork.UploadArtworkScreen
+import com.example.artsphere.ui.artworks.gallery.GalleryViewModel
 import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
 import com.example.artsphere.ui.auth.LoginScreen
 import com.example.artsphere.ui.home.HomeScreen
@@ -40,7 +41,7 @@ import com.example.artsphere.ui.profile.ProfileScreen
 import com.example.artsphere.ui.profile.ProfileViewModel
 import com.example.artsphere.ui.profile.SettingsScreen
 import com.google.android.gms.maps.model.LatLng
-
+import androidx.compose.runtime.collectAsState
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     data object Home : Screen("home", "Home", Icons.Default.Home)
@@ -67,6 +68,7 @@ fun MainScreenWithBottomBar(
 
     val artworkViewModel: ArtworkViewModel = viewModel()
     val savedArtworkViewModel: SavedArtworkViewModel = viewModel()
+    val galleryViewModel: GalleryViewModel = viewModel() // ADD THIS - Shared instance
 
     var selectedArtwork by remember { mutableStateOf<Artwork?>(null) }
     var selectedConversation by remember { mutableStateOf<Conversation?>(null) }
@@ -129,7 +131,8 @@ fun MainScreenWithBottomBar(
                         selectedArtwork = artwork
                         navController.navigate("artwork_detail")
                     },
-                    savedViewModel = savedArtworkViewModel
+                    savedViewModel = savedArtworkViewModel,
+                    galleryViewModel = galleryViewModel  // ADD THIS
                 )
             }
 
@@ -164,6 +167,7 @@ fun MainScreenWithBottomBar(
                     savedArtworkViewModel = savedArtworkViewModel,
                     onArtworkClick = { artwork ->
                         selectedArtwork = artwork
+                        galleryViewModel.loadAllArtworks() // ADD THIS - Refresh before navigating
                         navController.navigate("artwork_detail")
                     },
                     onUploadClick = {
@@ -186,6 +190,7 @@ fun MainScreenWithBottomBar(
                     onBackClick = {
                         capturedImageUri = null
                         selectedLocation = null
+                        galleryViewModel.loadAllArtworks() // REFRESH gallery
                         navController.popBackStack()
                     },
                     viewModel = artworkViewModel,
@@ -196,20 +201,28 @@ fun MainScreenWithBottomBar(
 
             composable("artwork_detail") {
                 selectedArtwork?.let { artwork ->
+                    // Reload artwork from gallery to get latest data
+                    val galleryState by galleryViewModel.uiState.collectAsState()
+                    val currentArtwork = galleryState.artworks.find { it.id == artwork.id } ?: artwork
+
                     ArtworkDetailScreen(
-                        artwork = artwork,
-                        onBackClick = { navController.popBackStack() },
+                        artwork = currentArtwork,  // Use refreshed artwork
+                        onBackClick = {
+                            galleryViewModel.loadAllArtworks() // Refresh gallery
+                            navController.popBackStack()
+                        },
                         onDeleteClick = {
+                            galleryViewModel.loadAllArtworks() // Refresh after delete
                             navController.popBackStack()
                         },
                         onMessageClick = {
                             selectedConversation = Conversation(
-                                conversationId = "${artwork.userId}_${artwork.id}",
-                                otherUserId = artwork.userId,
-                                otherUserName = artwork.contactName.ifBlank { "Artist" },
-                                artworkId = artwork.id,
-                                artworkName = artwork.name,
-                                artworkImageUrl = artwork.imageUrl,
+                                conversationId = "${currentArtwork.userId}_${currentArtwork.id}",
+                                otherUserId = currentArtwork.userId,
+                                otherUserName = currentArtwork.contactName.ifBlank { "Artist" },
+                                artworkId = currentArtwork.id,
+                                artworkName = currentArtwork.name,
+                                artworkImageUrl = currentArtwork.imageUrl,
                                 lastMessage = "",
                                 lastMessageTime = 0,
                                 unreadCount = 0
@@ -218,9 +231,10 @@ fun MainScreenWithBottomBar(
                         },
                         onNavigateToArtwork = { newArtwork ->
                             selectedArtwork = newArtwork
-                            // We're already on artwork_detail, it will recompose with new artwork
+                            galleryViewModel.loadAllArtworks() // Refresh when navigating between artworks
                         },
                         viewModel = artworkViewModel,
+                        galleryViewModel = galleryViewModel,
                         savedViewModel = savedArtworkViewModel
                     )
                 }
