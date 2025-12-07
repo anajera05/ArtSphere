@@ -9,11 +9,11 @@ import com.example.artsphere.ui.profile.ProfileViewModel
 import com.example.artsphere.ui.auth.AuthViewModel
 import com.example.artsphere.ui.auth.LoginScreen
 import com.example.artsphere.ui.auth.SignupScreen
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun ArtSphereApp() {
     val navController = rememberNavController()
-    val authViewModel: AuthViewModel = viewModel()
     val profileViewModel: ProfileViewModel = viewModel()
 
     NavHost(
@@ -22,35 +22,35 @@ fun ArtSphereApp() {
     ) {
         composable("login") {
             LoginScreen(
-                viewModel = authViewModel,
                 onLoginSuccess = {
                     navController.navigate("main") {
                         popUpTo("login") { inclusive = true }
                     }
                 },
-                onCreateAccountClick = {
+                onNavigateToSignup = {
                     navController.navigate("signup")
                 }
             )
         }
+
         composable("signup") {
             SignupScreen(
-                viewModel = authViewModel,
                 onSignupSuccess = {
                     navController.navigate("main") {
                         popUpTo("login") { inclusive = true }
                     }
                 },
-                onBackToLogin = {
+                onNavigateToLogin = {
                     navController.popBackStack()
                 }
             )
         }
+
         composable("main") {
             MainScreenWithBottomBar(
                 profileViewModel = profileViewModel,
                 onSignOut = {
-                    authViewModel.signOut()
+                    FirebaseAuth.getInstance().signOut()
                     navController.navigate("login") {
                         popUpTo("main") { inclusive = true }
                     }

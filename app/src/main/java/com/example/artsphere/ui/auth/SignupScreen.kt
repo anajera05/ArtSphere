@@ -1,201 +1,341 @@
 package com.example.artsphere.ui.auth
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.artsphere.R
-import com.example.artsphere.ui.theme.ArtSphereTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun SignupScreen(
-    viewModel: AuthViewModel,
     onSignupSuccess: () -> Unit,
-    onBackToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
 ) {
+    val viewModel: AuthViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
 
-    SignupContent(
-        uiState = uiState,
-        onUsernameChange = viewModel::onUsernameChange,
-        onEmailChange = viewModel::onEmailChange,
-        onPasswordChange = viewModel::onPasswordChange,
-        onSignupClick = { viewModel.signup(onSignupSuccess) },
-        onBackToLogin = onBackToLogin
-    )
-}
+    var confirmPassword by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var passwordMismatchError by remember { mutableStateOf(false) }
 
-@Composable
-fun SignupContent(
-    uiState: AuthUiState,
-    onUsernameChange: (String) -> Unit,
-    onEmailChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onSignupClick: () -> Unit,
-    onBackToLogin: () -> Unit
-) {
     Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF6200EE),
+                        Color(0xFF8E24AA),
+                        Color(0xFFAB47BC)
+                    )
+                )
+            )
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.madamemonet),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-            colorFilter = ColorFilter.tint(
-                color = Color.Black.copy(alpha = 0.4f),
-                blendMode = BlendMode.Darken
-            )
+        // Decorative circles
+        Box(
+            modifier = Modifier
+                .size(250.dp)
+                .offset(x = 200.dp, y = 50.dp)
+                .background(
+                    Color.White.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(125.dp)
+                )
+                .blur(50.dp)
         )
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "Create an Account",
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 24.dp, start = 25.dp).align(Alignment.Start)
-            )
 
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 20.dp)
-                    .background(Color.White.copy(alpha = 0.60f), shape = RoundedCornerShape(16.dp))
-                    .padding(horizontal = 30.dp, vertical = 32.dp)
+        Box(
+            modifier = Modifier
+                .size(200.dp)
+                .offset(x = (-80).dp, y = 600.dp)
+                .background(
+                    Color.White.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(100.dp)
+                )
+                .blur(50.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Welcome Text
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(bottom = 24.dp)
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Join ArtSphere! 🎨",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Create your account",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White.copy(alpha = 0.9f)
+                )
+            }
+
+            // Floating Signup Card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 24.dp,
+                        shape = RoundedCornerShape(32.dp),
+                        spotColor = Color.Black.copy(alpha = 0.4f)
+                    ),
+                shape = RoundedCornerShape(32.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Username Field
                     OutlinedTextField(
                         value = uiState.username,
-                        onValueChange = onUsernameChange,
+                        onValueChange = { viewModel.onUsernameChange(it) },
                         label = { Text("Username") },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Default.AccountCircle,
-                                contentDescription = "Account Icon"
+                                Icons.Default.Person,
+                                contentDescription = null,
+                                tint = Color(0xFF6200EE)
                             )
                         },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF6200EE),
+                            focusedLabelColor = Color(0xFF6200EE),
+                            cursorColor = Color(0xFF6200EE)
+                        ),
+                        singleLine = true
                     )
+
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    // Email Field
                     OutlinedTextField(
                         value = uiState.email,
-                        onValueChange = onEmailChange,
+                        onValueChange = { viewModel.onEmailChange(it) },
                         label = { Text("Email") },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Default.Email,
-                                contentDescription = "Email Icon"
+                                Icons.Default.Email,
+                                contentDescription = null,
+                                tint = Color(0xFF6200EE)
                             )
                         },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF6200EE),
+                            focusedLabelColor = Color(0xFF6200EE),
+                            cursorColor = Color(0xFF6200EE)
+                        ),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email
+                        ),
+                        singleLine = true
                     )
+
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    // Password Field
                     OutlinedTextField(
                         value = uiState.password,
-                        onValueChange = onPasswordChange,
+                        onValueChange = {
+                            viewModel.onPasswordChange(it)
+                            passwordMismatchError = false
+                        },
                         label = { Text("Password") },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = "Password Icon"
+                                Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = Color(0xFF6200EE)
                             )
                         },
-                        visualTransformation = PasswordVisualTransformation(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = null,
+                                    tint = Color.Gray
+                                )
+                            }
+                        },
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF6200EE),
+                            focusedLabelColor = Color(0xFF6200EE),
+                            cursorColor = Color(0xFF6200EE)
+                        ),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password
+                        ),
+                        singleLine = true
                     )
-                    if (uiState.error != null) {
-                        Text(
-                            text = uiState.error ?: "",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
+
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    // Confirm Password Field
+                    OutlinedTextField(
+                        value = confirmPassword,
+                        onValueChange = {
+                            confirmPassword = it
+                            passwordMismatchError = false
+                        },
+                        label = { Text("Confirm Password") },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = Color(0xFF6200EE)
+                            )
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                                Icon(
+                                    imageVector = if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = null,
+                                    tint = Color.Gray
+                                )
+                            }
+                        },
+                        visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF6200EE),
+                            focusedLabelColor = Color(0xFF6200EE),
+                            cursorColor = Color(0xFF6200EE)
+                        ),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password
+                        ),
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Error Messages
+                    if (passwordMismatchError) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFFFEBEE)
+                        ) {
+                            Text(
+                                text = "Passwords don't match",
+                                color = Color(0xFFC62828),
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                    if (uiState.error != null) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFFFEBEE)
+                        ) {
+                            Text(
+                                text = uiState.error ?: "",
+                                color = Color(0xFFC62828),
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                    // Sign Up Button
                     Button(
-                        onClick = onSignupClick,
-                        enabled = !uiState.isLoading,
+                        onClick = {
+                            if (uiState.password != confirmPassword) {
+                                passwordMismatchError = true
+                            } else {
+                                passwordMismatchError = false
+                                viewModel.signup(onSignupSuccess)
+                            }
+                        },
                         modifier = Modifier
-                            .width(200.dp)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(24.dp),
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF7B61FF) // purple shade
-                        )
+                            containerColor = Color(0xFF6200EE)
+                        ),
+                        enabled = !uiState.isLoading
                     ) {
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
+                                color = Color.White,
+                                modifier = Modifier.size(24.dp)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Creating...")
                         } else {
-                            Text("Create account")
+                            Text(
+                                text = "Create Account",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
+
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    // Login Link
                     Row(
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Already have an account? ")
                         Text(
-                            text = "Sign in",
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.clickable { onBackToLogin() }
-
+                            text = "Already have an account?",
+                            color = Color.Gray
                         )
+                        TextButton(onClick = onNavigateToLogin) {
+                            Text(
+                                text = "Sign In",
+                                color = Color(0xFF6200EE),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
-
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SignupScreenPreview() {
-    ArtSphereTheme {
-        SignupContent(
-            uiState = AuthUiState(),
-            onUsernameChange = {},
-            onEmailChange = {},
-            onPasswordChange = {},
-            onSignupClick = {},
-            onBackToLogin = {}
-        )
     }
 }

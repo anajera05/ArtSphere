@@ -60,24 +60,17 @@ fun UploadArtworkScreen(
     var contactName by remember { mutableStateOf("") }
     var showCategoryMenu by remember { mutableStateOf(false) }
 
-    // ⭐ EMAIL VALIDATION - NEW
+    // Email validation
     var emailError by remember { mutableStateOf<String?>(null) }
 
-    // ⭐ Email validation function
+    // Track if user has attempted to save (to show errors)
+    var attemptedSave by remember { mutableStateOf(false) }
+
+    // Email validation function
     fun isValidEmail(email: String): Boolean {
-        if (email.isBlank()) return true // Allow empty for optional field
+        if (email.isBlank()) return false
         val emailPattern = "[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}".toRegex()
         return emailPattern.matches(email)
-    }
-
-    // ⭐ Validate email on change
-    fun validateEmail(email: String) {
-        contactEmail = email
-        emailError = when {
-            email.isBlank() -> null
-            !isValidEmail(email) -> "Please enter a valid email address"
-            else -> null
-        }
     }
 
     val uiState by viewModel.uiState.collectAsState()
@@ -95,6 +88,14 @@ fun UploadArtworkScreen(
             selectedImageUri = it
         }
     }
+
+    // Check if all required fields are filled (price is optional)
+    val allFieldsFilled = selectedImageUri != null &&
+            artworkName.isNotBlank() &&
+            description.isNotBlank() &&
+            contactName.isNotBlank() &&
+            contactEmail.isNotBlank() &&
+            isValidEmail(contactEmail)
 
     Scaffold(
         topBar = {
@@ -129,7 +130,11 @@ fun UploadArtworkScreen(
                 modifier = Modifier
                     .size(200.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .border(2.dp, Color(0xFF6200EE), RoundedCornerShape(16.dp))
+                    .border(
+                        2.dp,
+                        if (attemptedSave && selectedImageUri == null) Color.Red else Color(0xFF6200EE),
+                        RoundedCornerShape(16.dp)
+                    )
                     .clickable { pickImageLauncher.launch(arrayOf("image/*")) },
                 contentAlignment = Alignment.Center
             ) {
@@ -148,14 +153,15 @@ fun UploadArtworkScreen(
                         Icon(
                             Icons.Default.Add,
                             contentDescription = "Add image",
-                            tint = Color(0xFF6200EE),
+                            tint = if (attemptedSave && selectedImageUri == null) Color.Red else Color(0xFF6200EE),
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Add Artwork Image",
-                            color = Color(0xFF6200EE),
-                            style = MaterialTheme.typography.bodyMedium
+                            "Add Artwork Image *",
+                            color = if (attemptedSave && selectedImageUri == null) Color.Red else Color(0xFF6200EE),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -200,16 +206,18 @@ fun UploadArtworkScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Artwork Name
+            // Artwork Name (Required)
             OutlinedTextField(
                 value = artworkName,
                 onValueChange = { artworkName = it },
-                label = { Text("Artwork Name") },
+                label = { Text("Artwork Name *") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFF6200EE),
+                    unfocusedBorderColor = if (attemptedSave && artworkName.isBlank()) Color.Red else Color.Gray,
                     focusedLabelColor = Color(0xFF6200EE)
-                )
+                ),
+                isError = attemptedSave && artworkName.isBlank()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -252,24 +260,26 @@ fun UploadArtworkScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Description
+            // Description (Required)
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description") },
+                label = { Text("Description *") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
                 maxLines = 5,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFF6200EE),
+                    unfocusedBorderColor = if (attemptedSave && description.isBlank()) Color.Red else Color.Gray,
                     focusedLabelColor = Color(0xFF6200EE)
-                )
+                ),
+                isError = attemptedSave && description.isBlank()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Price
+            // Price (Optional)
             OutlinedTextField(
                 value = price,
                 onValueChange = { newValue ->
@@ -290,7 +300,8 @@ fun UploadArtworkScreen(
                         }
                     }
                 },
-                label = { Text("Price (e.g., $500 or leave empty if needs to be contacted)") },
+                label = { Text("Price ($)") },
+                placeholder = { Text("Leave empty for 'Contact for price'") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .onFocusChanged { focusState ->
@@ -302,57 +313,73 @@ fun UploadArtworkScreen(
                     },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFF6200EE),
+                    unfocusedBorderColor = Color.Gray,
                     focusedLabelColor = Color(0xFF6200EE)
                 ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                supportingText = {
+                    Text(
+                        "Optional - Leave empty to show 'Contact for price'",
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Contact Name
+            // Contact Name (Required)
             OutlinedTextField(
                 value = contactName,
                 onValueChange = { contactName = it },
-                label = { Text("Contact Name") },
+                label = { Text("Contact Name *") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFF6200EE),
+                    unfocusedBorderColor = if (attemptedSave && contactName.isBlank()) Color.Red else Color.Gray,
                     focusedLabelColor = Color(0xFF6200EE)
-                )
+                ),
+                isError = attemptedSave && contactName.isBlank()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Contact Email - ⭐ WITH VALIDATION
+            // Contact Email (Required with validation)
             OutlinedTextField(
                 value = contactEmail,
-                onValueChange = { validateEmail(it) },  //  Use validation
-                label = { Text("Contact Email") },
+                onValueChange = { contactEmail = it },
+                label = { Text("Contact Email *") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (emailError != null) Color.Red else Color(0xFF6200EE),
-                    unfocusedBorderColor = if (emailError != null) Color.Red else Color.Gray,
-                    focusedLabelColor = if (emailError != null) Color.Red else Color(0xFF6200EE),
-                    errorBorderColor = Color.Red,
-                    errorLabelColor = Color.Red
+                    focusedBorderColor = if (attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail))) Color.Red else Color(0xFF6200EE),
+                    unfocusedBorderColor = if (attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail))) Color.Red else Color.Gray,
+                    focusedLabelColor = Color(0xFF6200EE)
                 ),
-                isError = emailError != null,  //  Show error state
-                supportingText = if (emailError != null) {  // Show error message
-                    { Text(emailError!!, color = Color.Red) }
-                } else null,
+                isError = attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail)),
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,  // Email keyboard
+                    keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Done
                 ),
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Required fields notice
+            Text(
+                text = "* Required fields. Price is optional.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Save Button
             Button(
                 onClick = {
-                    if (selectedImageUri != null && artworkName.isNotBlank()) {
+                    attemptedSave = true
+                    if (allFieldsFilled) {
                         viewModel.uploadArtwork(
                             imageUri = selectedImageUri!!,
                             name = artworkName,
@@ -370,10 +397,7 @@ fun UploadArtworkScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = selectedImageUri != null &&
-                        artworkName.isNotBlank() &&
-                        emailError == null &&  // ⭐ Disable if email invalid
-                        !uiState.isUploading,
+                enabled = !uiState.isUploading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF6200EE)
                 )
@@ -392,14 +416,49 @@ fun UploadArtworkScreen(
                 }
             }
 
-            // Error message
+            // Show missing fields error ONLY after save is attempted
+            if (attemptedSave && !allFieldsFilled && !uiState.isUploading) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFFEBEE)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            "❌ Please fill in all required fields:",
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFC62828)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        if (selectedImageUri == null) Text("• Artwork Image", color = Color(0xFFC62828))
+                        if (artworkName.isBlank()) Text("• Artwork Name", color = Color(0xFFC62828))
+                        if (description.isBlank()) Text("• Description", color = Color(0xFFC62828))
+                        if (contactName.isBlank()) Text("• Contact Name", color = Color(0xFFC62828))
+                        if (contactEmail.isBlank()) Text("• Contact Email", color = Color(0xFFC62828))
+                        else if (!isValidEmail(contactEmail)) Text("• Valid Email Format", color = Color(0xFFC62828))
+                    }
+                }
+            }
+
+            // Error message from upload
             if (uiState.error != null) {
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Error: ${uiState.error}",
-                    color = Color.Red,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFFEBEE)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "Error: ${uiState.error}",
+                        color = Color(0xFFC62828),
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
         }
     }

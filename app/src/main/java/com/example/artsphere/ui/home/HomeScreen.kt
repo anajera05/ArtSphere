@@ -2,53 +2,30 @@ package com.example.artsphere.ui.home
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -57,72 +34,150 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.artsphere.ui.artworks.gallery.GalleryViewModel
-import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
 import com.example.artsphere.data.model.Artwork
 import com.example.artsphere.data.source.remote.NewsViewModel
+import com.example.artsphere.ui.artworks.gallery.GalleryViewModel
+import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onArtworkClick: (Artwork) -> Unit = {},
-    savedViewModel: SavedArtworkViewModel = viewModel()
+    savedViewModel: SavedArtworkViewModel = viewModel(),
+    galleryViewModel: GalleryViewModel = viewModel()
 ) {
     var selectedFilter by remember { mutableStateOf("All") }
-    var searchQuery by remember { mutableStateOf("") }  //  Add search state
+    var searchQuery by remember { mutableStateOf("") }
     val filters = listOf("All", "Painting & Drawing", "Photographic", "Digital", "Other")
 
-    val galleryViewModel: GalleryViewModel = viewModel()
+    // val galleryViewModel: GalleryViewModel = viewModel()
     val galleryState by galleryViewModel.uiState.collectAsState()
-
-    // Use the passed-in savedViewModel instead of creating a new one
     val savedState by savedViewModel.uiState.collectAsState()
+
+    // Animated title
+    var titleVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        titleVisible = true
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(Color(0xFFF8F9FA))
     ) {
-        // Search bar - NOW FUNCTIONAL
-        OutlinedTextField(
-            value = searchQuery,  // ⭐ Bind to state
-            onValueChange = { searchQuery = it },  // ⭐ Update on change
-            placeholder = { Text("Search Artsphere", color = Color.Gray) },
-            trailingIcon = {
-                if (searchQuery.isNotEmpty()) {
-                    // Show X button to clear search
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Clear search",
-                        tint = Color.Gray,
-                        modifier = Modifier.clickable { searchQuery = "" }
+        // Cute Header with Gradient
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shadowElevation = 4.dp
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                Color(0xFF6200EE),
+                                Color(0xFF8E24AA),
+                                Color(0xFFAB47BC)
+                            )
+                        )
                     )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = Color.Gray
+                    .padding(20.dp)
+            ) {
+                Column {
+                    // Animated Title
+                    AnimatedVisibility(
+                        visible = titleVisible,
+                        enter = fadeIn(animationSpec = tween(800)) +
+                                slideInVertically(
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
+                                    )
+                                )
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            // Sparkle emoji with rotation
+                            var rotation by remember { mutableStateOf(0f) }
+                            LaunchedEffect(Unit) {
+                                while (true) {
+                                    animate(
+                                        initialValue = 0f,
+                                        targetValue = 360f,
+                                        animationSpec = tween(3000, easing = LinearEasing)
+                                    ) { value, _ ->
+                                        rotation = value
+                                    }
+                                }
+                            }
+
+                            Text(
+                                text = " 🎨",
+                                style = MaterialTheme.typography.headlineMedium,
+                                modifier = Modifier.rotate(rotation)
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Text(
+                                text = "Discover Art",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Search Bar
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(4.dp, RoundedCornerShape(28.dp)),
+                        placeholder = {
+                            Text("Search for art...", color = Color.Gray)
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = Color(0xFF6200EE)
+                            )
+                        },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Clear",
+                                        tint = Color(0xFF6200EE)
+                                    )
+                                }
+                            }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            cursorColor = Color(0xFF6200EE)
+                        ),
+                        shape = RoundedCornerShape(28.dp),
+                        singleLine = true
                     )
                 }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color.Transparent,
-                focusedBorderColor = Color.Transparent,
-                unfocusedContainerColor = Color.White,
-                focusedContainerColor = Color.White
-            ),
-            singleLine = true  // Keep it single line
-        )
+            }
+        }
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -139,17 +194,18 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Trending Art News",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            text = " Trending Art News",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF6200EE)
                         )
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh news",
-                            modifier = Modifier
-                                .size(20.dp)
-                                .clickable { newsViewModel.loadNews() }
-                        )
+                        IconButton(onClick = { newsViewModel.loadNews() }) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Refresh",
+                                tint = Color(0xFF6200EE)
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -159,13 +215,14 @@ fun HomeScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CircularProgressIndicator()
+                                CircularProgressIndicator(color = Color(0xFF6200EE))
                             }
                         }
 
                         uiState.error != null -> {
                             Text(
-                                text = "Error: ${uiState.error}",
+                                text = "Error loading news",
+                                color = Color.Gray,
                                 modifier = Modifier.padding(16.dp)
                             )
                         }
@@ -185,11 +242,7 @@ fun HomeScreen(
                                                 context.startActivity(intent)
                                             },
                                         shape = RoundedCornerShape(16.dp),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = Color(
-                                                0xFFE0E0E0
-                                            )
-                                        )
+                                        elevation = CardDefaults.cardElevation(4.dp)
                                     ) {
                                         Column(modifier = Modifier.fillMaxSize()) {
                                             article.imageUrl?.let { imageUrl ->
@@ -205,10 +258,12 @@ fun HomeScreen(
                                             Text(
                                                 text = article.title,
                                                 style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium,
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .padding(8.dp),
-                                                maxLines = 2
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                         }
                                     }
@@ -219,13 +274,13 @@ fun HomeScreen(
                 }
             }
 
-            // Filter Chips Header - Purple themed like profile page
+            // Filter Chips - Scrollable Horizontal
             stickyHeader {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFFF5F5F5))
-                        .padding(vertical = 4.dp)
+                        .background(Color(0xFFF8F9FA))
+                        .padding(vertical = 8.dp)
                 ) {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(filters) { filter ->
@@ -234,8 +289,8 @@ fun HomeScreen(
                                 onClick = { selectedFilter = filter },
                                 label = { Text(filter) },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = Color(0xFFE8DEF8),  // Purple background
-                                    selectedLabelColor = Color(0xFF6200EE),      // Purple text
+                                    selectedContainerColor = Color(0xFF6200EE),
+                                    selectedLabelColor = Color.White,
                                     containerColor = Color.White,
                                     labelColor = Color.Gray
                                 ),
@@ -251,7 +306,7 @@ fun HomeScreen(
                 }
             }
 
-            // Artwork Gallery from Firebase
+            // Artwork Gallery
             when {
                 galleryState.isLoading -> {
                     item(span = { GridItemSpan(maxLineSpan) }) {
@@ -274,38 +329,24 @@ fun HomeScreen(
                                 .padding(32.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                "No artworks available yet",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Color.Gray
-                            )
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("🎨", style = MaterialTheme.typography.displayLarge)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("No artworks yet", fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
 
                 else -> {
-                    // Filter artworks based on selected category AND search query
-                    val filteredArtworks = galleryState.artworks
-                        .filter { artwork ->
-                            // Category filter
-                            val matchesCategory = if (selectedFilter == "All") {
-                                true
-                            } else {
+                    val filteredArtworks = galleryState.artworks.filter { artwork ->
+                        val matchesCategory = selectedFilter == "All" ||
                                 artwork.categoryEnum.displayName == selectedFilter
-                            }
-
-                            // Search filter (case-insensitive)
-                            val matchesSearch = if (searchQuery.isBlank()) {
-                                true
-                            } else {
+                        val matchesSearch = searchQuery.isBlank() ||
                                 artwork.name.contains(searchQuery, ignoreCase = true)
-                            }
+                        matchesCategory && matchesSearch
+                    }
 
-                            // Both conditions must be true
-                            matchesCategory && matchesSearch
-                        }
-
-                    // Show message if no results found
                     if (filteredArtworks.isEmpty()) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             Box(
@@ -314,97 +355,161 @@ fun HomeScreen(
                                     .padding(32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        "No artworks found",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("🔍", style = MaterialTheme.typography.displayMedium)
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        if (searchQuery.isNotBlank()) {
-                                            "Try a different search term"
-                                        } else {
-                                            "No artworks in this category"
-                                        },
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.Gray
-                                    )
+                                    Text("No results found", color = Color.Gray)
                                 }
                             }
                         }
                     } else {
                         items(filteredArtworks) { artwork ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp)
-                                    .clickable { onArtworkClick(artwork) },
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            var cardVisible by remember { mutableStateOf(false) }
+
+                            LaunchedEffect(Unit) {
+                                delay(filteredArtworks.indexOf(artwork) * 50L)
+                                cardVisible = true
+                            }
+
+                            AnimatedVisibility(
+                                visible = cardVisible,
+                                enter = fadeIn() + scaleIn(
+                                    initialScale = 0.8f,
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy
+                                    )
+                                )
                             ) {
-                                Box(modifier = Modifier.fillMaxSize()) {
-                                    Column(modifier = Modifier.fillMaxSize()) {
-                                        // Artwork Image
-                                        AsyncImage(
-                                            model = artwork.imageUrl,
-                                            contentDescription = artwork.name,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .weight(1f),
-                                            contentScale = ContentScale.Crop
-                                        )
-
-                                        // Artwork Name
-                                        Text(
-                                            text = artwork.name,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier.padding(12.dp)
-                                        )
-                                    }
-
-                                    // Like Button (top right corner)
-                                    IconButton(
-                                        onClick = {
-                                            savedViewModel.toggleSaveArtwork(artwork.id)
-                                        },
-                                        modifier = Modifier
-                                            .align(Alignment.TopEnd)
-                                            .padding(8.dp)
-                                            .background(
-                                                Color.White.copy(alpha = 0.8f),
-                                                shape = RoundedCornerShape(50)
-                                            )
-                                    ) {
-                                        Icon(
-                                            imageVector = if (savedState.savedArtworkIds.contains(
-                                                    artwork.id
-                                                )
-                                            ) {
-                                                Icons.Filled.Favorite
-                                            } else {
-                                                Icons.Filled.FavoriteBorder
-                                            },
-                                            contentDescription = "Like",
-                                            tint = if (savedState.savedArtworkIds.contains(artwork.id)) {
-                                                Color(0xFFE91E63)  // Pink when liked
-                                            } else {
-                                                Color(0xFF6200EE)  // Purple when not liked
-                                            }
-                                        )
-                                    }
-                                }
+                                CuteArtworkCard(
+                                    artwork = artwork,
+                                    isSaved = savedState.savedArtworkIds.contains(artwork.id),
+                                    onArtworkClick = { onArtworkClick(artwork) },
+                                    onLikeClick = { savedViewModel.toggleSaveArtwork(artwork.id) }
+                                )
                             }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun CuteArtworkCard(
+    artwork: Artwork,
+    isSaved: Boolean,
+    onArtworkClick: () -> Unit,
+    onLikeClick: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "scale"
+    )
+
+    val heartScale by animateFloatAsState(
+        targetValue = if (isSaved) 1.2f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "heartScale"
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(0.8f)
+            .scale(scale)
+            .shadow(8.dp, RoundedCornerShape(20.dp)),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        onClick = {
+            isPressed = true
+            onArtworkClick()
+        }
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            AsyncImage(
+                model = artwork.imageUrl,
+                contentDescription = artwork.name,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.7f)
+                            ),
+                            startY = 400f
+                        )
+                    )
+            )
+
+            // SOLD badge (top left)
+            if (artwork.isSold) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(8.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFE91E63),
+                    shadowElevation = 4.dp
+                ) {
+                    Text(
+                        text = "SOLD",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+
+            // Like Button (top right)
+            IconButton(
+                onClick = onLikeClick,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                    .size(40.dp)
+                    .scale(heartScale)
+                    .shadow(4.dp, CircleShape)
+                    .background(Color.White, CircleShape)
+            ) {
+                Icon(
+                    imageVector = if (isSaved) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                    contentDescription = null,
+                    tint = if (isSaved) Color(0xFFE91E63) else Color(0xFF424242),
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            // Info at bottom
+            Text(
+                text = artwork.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            )
+        }
+    }
+
+    LaunchedEffect(isPressed) {
+        if (isPressed) {
+            delay(100)
+            isPressed = false
         }
     }
 }

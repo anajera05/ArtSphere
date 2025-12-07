@@ -70,6 +70,8 @@ class HomeScreenUITest {
                 onClick = {}
             )
         }
+
+        composeTestRule.onNodeWithText("Artist Name").assertIsDisplayed()
     }
 
     /**

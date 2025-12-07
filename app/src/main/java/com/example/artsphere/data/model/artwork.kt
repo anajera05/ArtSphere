@@ -14,7 +14,9 @@ data class Artwork(
     @PropertyName("createdAt") val createdAt: Long = System.currentTimeMillis(),
     @PropertyName("latitude") val latitude: Double? = null,
     @PropertyName("longitude") val longitude: Double? = null,
-    @PropertyName("userId") val userId: String = ""
+    @PropertyName("userId") val userId: String = "",
+    @get:PropertyName("isSold") @set:PropertyName("isSold") var isSold: Boolean = false,
+    @get:PropertyName("isHidden") @set:PropertyName("isHidden") var isHidden: Boolean = false
 ) {
     val categoryEnum: ArtworkCategory
         get() = try {

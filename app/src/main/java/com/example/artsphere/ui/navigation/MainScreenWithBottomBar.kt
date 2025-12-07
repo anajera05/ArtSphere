@@ -3,43 +3,49 @@ package com.example.artsphere.ui.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import android.net.Uri
-import androidx.compose.material.icons.filled.AddAPhoto
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.artsphere.ui.inbox.InboxScreen
-import com.example.artsphere.ui.profile.ProfileViewModel
 import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.data.model.Conversation
 import com.example.artsphere.ui.artworks.ArtworkDetailScreen
 import com.example.artsphere.ui.artworks.ArtworkViewModel
 import com.example.artsphere.ui.artworks.addArtwork.CameraScreen
 import com.example.artsphere.ui.artworks.addArtwork.UploadArtworkScreen
+import com.example.artsphere.ui.artworks.gallery.GalleryViewModel
 import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
+import com.example.artsphere.ui.auth.LoginScreen
 import com.example.artsphere.ui.home.HomeScreen
+import com.example.artsphere.ui.inbox.ChatScreen
+import com.example.artsphere.ui.inbox.InboxScreen
 import com.example.artsphere.ui.map.MapScreen
 import com.example.artsphere.ui.profile.ProfileScreen
+import com.example.artsphere.ui.profile.ProfileViewModel
 import com.example.artsphere.ui.profile.SettingsScreen
 import com.google.android.gms.maps.model.LatLng
-
+import androidx.compose.runtime.collectAsState
+import com.example.artsphere.data.model.Event
+import com.example.artsphere.ui.events.EventViewModel
+import com.example.artsphere.ui.events.CreateEventScreen
+import com.example.artsphere.ui.events.EventDetailScreen
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     data object Home : Screen("home", "Home", Icons.Default.Home)
@@ -64,17 +70,18 @@ fun MainScreenWithBottomBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    // Create shared ViewModels
     val artworkViewModel: ArtworkViewModel = viewModel()
     val savedArtworkViewModel: SavedArtworkViewModel = viewModel()
+    val galleryViewModel: GalleryViewModel = viewModel() // ADD THIS - Shared instance
+    val eventViewModel: EventViewModel = viewModel()
 
-    // Track selected artwork for detail view
     var selectedArtwork by remember { mutableStateOf<Artwork?>(null) }
+    var selectedConversation by remember { mutableStateOf<Conversation?>(null) }
 
     var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
+    var selectedEvent by remember { mutableStateOf<Event?>(null) }
 
-    // Only show bottom bar on main screens
     val showBottomBar = currentDestination?.route in bottomNavScreens.map { it.route }
 
     Scaffold(
@@ -130,23 +137,32 @@ fun MainScreenWithBottomBar(
                         selectedArtwork = artwork
                         navController.navigate("artwork_detail")
                     },
-                    savedViewModel = savedArtworkViewModel
+                    savedViewModel = savedArtworkViewModel,
+                    galleryViewModel = galleryViewModel  // ADD THIS
                 )
             }
+
             composable(Screen.Map.route) {
                 MapScreen(
-                    onArtworkClick = { artwork ->
-                        selectedArtwork = artwork
-                        navController.navigate("artwork_detail")
+                    onEventClick = { event ->
+                        selectedEvent = event
+                        navController.navigate("event_detail")
                     },
-                    onAddArtworkAtLocation = { latLng ->
+                    onCreateEventAtLocation = { latLng ->
                         selectedLocation = latLng
-                        capturedImageUri = null
-                        navController.navigate("upload_artwork")
+                        navController.navigate("create_event")
                     }
                 )
             }
-            composable(Screen.Inbox.route) { InboxScreen() }
+
+            composable(Screen.Inbox.route) {
+                InboxScreen(
+                    onConversationClick = { conversation ->
+                        selectedConversation = conversation
+                        navController.navigate("chat")
+                    }
+                )
+            }
 
             composable(Screen.Profile.route) {
                 ProfileScreen(
@@ -156,6 +172,7 @@ fun MainScreenWithBottomBar(
                     savedArtworkViewModel = savedArtworkViewModel,
                     onArtworkClick = { artwork ->
                         selectedArtwork = artwork
+                        galleryViewModel.loadAllArtworks() // ADD THIS - Refresh before navigating
                         navController.navigate("artwork_detail")
                     },
                     onUploadClick = {
@@ -173,12 +190,12 @@ fun MainScreenWithBottomBar(
                 )
             }
 
-            // Upload Artwork Screen
             composable("upload_artwork") {
                 UploadArtworkScreen(
                     onBackClick = {
                         capturedImageUri = null
                         selectedLocation = null
+                        galleryViewModel.loadAllArtworks() // REFRESH gallery
                         navController.popBackStack()
                     },
                     viewModel = artworkViewModel,
@@ -187,17 +204,56 @@ fun MainScreenWithBottomBar(
                 )
             }
 
-            // Artwork Detail Screen
             composable("artwork_detail") {
                 selectedArtwork?.let { artwork ->
+                    // Reload artwork from gallery to get latest data
+                    val galleryState by galleryViewModel.uiState.collectAsState()
+                    val currentArtwork = galleryState.artworks.find { it.id == artwork.id } ?: artwork
+
                     ArtworkDetailScreen(
-                        artwork = artwork,
-                        onBackClick = { navController.popBackStack() },
-                        onDeleteClick = {
+                        artwork = currentArtwork,  // Use refreshed artwork
+                        onBackClick = {
+                            galleryViewModel.loadAllArtworks() // Refresh gallery
                             navController.popBackStack()
                         },
+                        onDeleteClick = {
+                            galleryViewModel.loadAllArtworks() // Refresh after delete
+                            navController.popBackStack()
+                        },
+                        onMessageClick = {
+                            selectedConversation = Conversation(
+                                conversationId = "${currentArtwork.userId}_${currentArtwork.id}",
+                                otherUserId = currentArtwork.userId,
+                                otherUserName = currentArtwork.contactName.ifBlank { "Artist" },
+                                artworkId = currentArtwork.id,
+                                artworkName = currentArtwork.name,
+                                artworkImageUrl = currentArtwork.imageUrl,
+                                lastMessage = "",
+                                lastMessageTime = 0,
+                                unreadCount = 0
+                            )
+                            navController.navigate("chat")
+                        },
+                        onNavigateToArtwork = { newArtwork ->
+                            selectedArtwork = newArtwork
+                            galleryViewModel.loadAllArtworks() // Refresh when navigating between artworks
+                        },
                         viewModel = artworkViewModel,
+                        galleryViewModel = galleryViewModel,
                         savedViewModel = savedArtworkViewModel
+                    )
+                }
+            }
+
+            composable("chat") {
+                selectedConversation?.let { conversation ->
+                    ChatScreen(
+                        conversation = conversation,
+                        onBackClick = { navController.popBackStack() },
+                        onNavigateToArtwork = { artwork ->
+                            selectedArtwork = artwork
+                            navController.navigate("artwork_detail")
+                        }
                     )
                 }
             }
@@ -215,6 +271,30 @@ fun MainScreenWithBottomBar(
                         }
                     }
                 )
+            }
+
+            composable("create_event") {
+                selectedLocation?.let { location ->
+                    CreateEventScreen(
+                        location = location,
+                        onBackClick = {
+                            navController.popBackStack()
+                        },
+                        viewModel = eventViewModel
+                    )
+                }
+            }
+
+            composable("event_detail") {
+                selectedEvent?.let { event ->
+                    EventDetailScreen(
+                        event = event,
+                        onBackClick = {
+                            navController.popBackStack()
+                        },
+                        viewModel = eventViewModel
+                    )
+                }
             }
         }
     }
