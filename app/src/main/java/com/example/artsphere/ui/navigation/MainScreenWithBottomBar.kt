@@ -42,6 +42,10 @@ import com.example.artsphere.ui.profile.ProfileViewModel
 import com.example.artsphere.ui.profile.SettingsScreen
 import com.google.android.gms.maps.model.LatLng
 import androidx.compose.runtime.collectAsState
+import com.example.artsphere.data.model.Event
+import com.example.artsphere.ui.events.EventViewModel
+import com.example.artsphere.ui.events.CreateEventScreen
+import com.example.artsphere.ui.events.EventDetailScreen
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     data object Home : Screen("home", "Home", Icons.Default.Home)
@@ -69,12 +73,14 @@ fun MainScreenWithBottomBar(
     val artworkViewModel: ArtworkViewModel = viewModel()
     val savedArtworkViewModel: SavedArtworkViewModel = viewModel()
     val galleryViewModel: GalleryViewModel = viewModel() // ADD THIS - Shared instance
+    val eventViewModel: EventViewModel = viewModel()
 
     var selectedArtwork by remember { mutableStateOf<Artwork?>(null) }
     var selectedConversation by remember { mutableStateOf<Conversation?>(null) }
 
     var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
+    var selectedEvent by remember { mutableStateOf<Event?>(null) }
 
     val showBottomBar = currentDestination?.route in bottomNavScreens.map { it.route }
 
@@ -138,14 +144,13 @@ fun MainScreenWithBottomBar(
 
             composable(Screen.Map.route) {
                 MapScreen(
-                    onArtworkClick = { artwork ->
-                        selectedArtwork = artwork
-                        navController.navigate("artwork_detail")
+                    onEventClick = { event ->
+                        selectedEvent = event
+                        navController.navigate("event_detail")
                     },
-                    onAddArtworkAtLocation = { latLng ->
+                    onCreateEventAtLocation = { latLng ->
                         selectedLocation = latLng
-                        capturedImageUri = null
-                        navController.navigate("upload_artwork")
+                        navController.navigate("create_event")
                     }
                 )
             }
@@ -266,6 +271,30 @@ fun MainScreenWithBottomBar(
                         }
                     }
                 )
+            }
+
+            composable("create_event") {
+                selectedLocation?.let { location ->
+                    CreateEventScreen(
+                        location = location,
+                        onBackClick = {
+                            navController.popBackStack()
+                        },
+                        viewModel = eventViewModel
+                    )
+                }
+            }
+
+            composable("event_detail") {
+                selectedEvent?.let { event ->
+                    EventDetailScreen(
+                        event = event,
+                        onBackClick = {
+                            navController.popBackStack()
+                        },
+                        viewModel = eventViewModel
+                    )
+                }
             }
         }
     }

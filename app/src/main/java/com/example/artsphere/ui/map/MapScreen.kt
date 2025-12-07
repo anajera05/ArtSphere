@@ -2,56 +2,44 @@ package com.example.artsphere.ui.map
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffXfermode
-import android.graphics.Rect
-import android.graphics.RectF
-import android.graphics.drawable.BitmapDrawable
-import android.location.Location
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.ImageLoader
-import coil.request.ImageRequest
-import coil.request.SuccessResult
-import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.data.model.Event
+import com.example.artsphere.ui.events.EventViewModel
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.maps.android.compose.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-
-data class ArtworkMarker(
-    val id: String,
-    val position: LatLng,
-    val title: String,
-    val artist: String,
-    val imageUrl: String,
-    val artwork: Artwork
-)
 
 @Composable
 fun MapScreen(
     modifier: Modifier = Modifier,
-    onArtworkClick: ((Artwork) -> Unit)? = null,
-    onAddArtworkAtLocation: ((LatLng) -> Unit)? = null
+    onEventClick: ((Event) -> Unit)? = null,
+    onCreateEventAtLocation: ((LatLng) -> Unit)? = null
 ) {
     val context = LocalContext.current
     var hasLocationPermission by remember {
@@ -65,24 +53,36 @@ fun MapScreen(
 
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var isLoadingLocation by remember { mutableStateOf(true) }
+    var showPermissionRationale by remember { mutableStateOf(false) }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        hasLocationPermission = isGranted
-        if (isGranted) {
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+
+        hasLocationPermission = fineLocationGranted || coarseLocationGranted
+
+        if (hasLocationPermission) {
+            showPermissionRationale = false
             getCurrentLocation(context) { location ->
                 currentLocation = location
                 isLoadingLocation = false
             }
         } else {
+            showPermissionRationale = true
             isLoadingLocation = false
         }
     }
 
     LaunchedEffect(Unit) {
         if (!hasLocationPermission) {
-            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
         } else {
             getCurrentLocation(context) { location ->
                 currentLocation = location
@@ -98,31 +98,47 @@ fun MapScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = Color(0xFF7B61FF))
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFF7B61FF))
+                        Text(
+                            "Loading map...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                    }
                 }
             }
 
             !hasLocationPermission -> {
                 LocationPermissionDenied(
+                    showRationale = showPermissionRationale,
                     onRequestPermission = {
-                        locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                        locationPermissionLauncher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
                     }
                 )
             }
 
             currentLocation != null -> {
-                MapWithArtwork(
+                MapWithEvents(
                     currentLocation = currentLocation!!,
-                    onArtworkClick = onArtworkClick,
-                    onAddArtworkAtLocation = onAddArtworkAtLocation
+                    onEventClick = onEventClick,
+                    onCreateEventAtLocation = onCreateEventAtLocation
                 )
             }
 
             else -> {
-                MapWithArtwork(
+                MapWithEvents(
                     currentLocation = LatLng(40.7128, -74.0060),
-                    onArtworkClick = onArtworkClick,
-                    onAddArtworkAtLocation = onAddArtworkAtLocation
+                    onEventClick = onEventClick,
+                    onCreateEventAtLocation = onCreateEventAtLocation
                 )
             }
         }
@@ -130,14 +146,13 @@ fun MapScreen(
 }
 
 @Composable
-private fun MapWithArtwork(
+private fun MapWithEvents(
     currentLocation: LatLng,
-    onArtworkClick: ((Artwork) -> Unit)?,
-    onAddArtworkAtLocation: ((LatLng) -> Unit)?
+    onEventClick: ((Event) -> Unit)?,
+    onCreateEventAtLocation: ((LatLng) -> Unit)?
 ) {
-    // ViewModel to load artworks from Firestore
-    val mapViewModel: MapViewModel = viewModel()
-    val uiState by mapViewModel.uiState.collectAsState()
+    val eventViewModel: EventViewModel = viewModel()
+    val uiState by eventViewModel.uiState.collectAsState()
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(currentLocation, 14f)
@@ -162,20 +177,26 @@ private fun MapWithArtwork(
                 showAddDialog = true
             }
         ) {
-            uiState.artworkMarkers.forEach { artworkMarker ->
-                ArtworkImageMarker(
-                    artworkMarker = artworkMarker,
-                    onMarkerClick = {
-                        onArtworkClick?.invoke(artworkMarker.artwork)
+            // Add event markers
+            uiState.events.forEach { event ->
+                Marker(
+                    state = MarkerState(position = LatLng(event.latitude, event.longitude)),
+                    title = event.title,
+                    snippet = "${event.date} at ${event.time}",
+                    icon = BitmapDescriptorFactory.fromBitmap(
+                        createEventMarkerBitmap()
+                    ),
+                    onClick = {
+                        onEventClick?.invoke(event)
                         true
                     }
                 )
             }
         }
 
+        // Floating Action Button
         FloatingActionButton(
             onClick = {
-                // Use current camera position as default location
                 selectedLocation = cameraPositionState.position.target
                 showAddDialog = true
             },
@@ -186,9 +207,38 @@ private fun MapWithArtwork(
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "Add Artwork",
+                contentDescription = "Create Event",
                 tint = Color.White
             )
+        }
+
+        // Event count badge
+        Card(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Event,
+                    contentDescription = null,
+                    tint = Color(0xFF6200EE),
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    "${uiState.events.size} Events",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
 
         if (uiState.isLoading) {
@@ -206,20 +256,26 @@ private fun MapWithArtwork(
         }
     }
 
-    // Dialog to confirm adding artwork at location
     if (showAddDialog && selectedLocation != null) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text("Add Artwork Here?") },
-            text = { Text("Do you want to add artwork at this location on the map?") },
+            icon = {
+                Icon(
+                    Icons.Default.Event,
+                    contentDescription = null,
+                    tint = Color(0xFF6200EE)
+                )
+            },
+            title = { Text("Create Event Here?") },
+            text = { Text("Do you want to create an event at this location?") },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        onAddArtworkAtLocation?.invoke(selectedLocation!!)
+                        onCreateEventAtLocation?.invoke(selectedLocation!!)
                         showAddDialog = false
                     }
                 ) {
-                    Text("Yes, Add Artwork")
+                    Text("Create Event")
                 }
             },
             dismissButton = {
@@ -231,81 +287,34 @@ private fun MapWithArtwork(
     }
 }
 
-@Composable
-private fun ArtworkImageMarker(
-    artworkMarker: ArtworkMarker,
-    onMarkerClick: () -> Boolean
-) {
-    val context = LocalContext.current
-    var markerBitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-    // Load image and convert to bitmap for marker
-    LaunchedEffect(artworkMarker.imageUrl) {
-        withContext(Dispatchers.IO) {
-            try {
-                val loader = ImageLoader(context)
-                val request = ImageRequest.Builder(context)
-                    .data(artworkMarker.imageUrl)
-                    .size(150, 150) // Resize for marker
-                    .allowHardware(false) // Required for bitmap conversion
-                    .build()
-
-                val result = (loader.execute(request) as? SuccessResult)?.drawable
-                val bitmap = (result as? BitmapDrawable)?.bitmap
-
-                bitmap?.let {
-                    // Create rounded bitmap for marker
-                    markerBitmap = createCircularBitmap(it, 150)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    Marker(
-        state = MarkerState(position = artworkMarker.position),
-        title = artworkMarker.title,
-        snippet = "by ${artworkMarker.artist}",
-        icon = markerBitmap?.let { BitmapDescriptorFactory.fromBitmap(it) },
-        onClick = { onMarkerClick() }
-    )
-}
-
-private fun createCircularBitmap(bitmap: Bitmap, size: Int): Bitmap {
+private fun createEventMarkerBitmap(): Bitmap {
+    val size = 100
     val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(output)
 
     val paint = Paint().apply {
         isAntiAlias = true
-        color = android.graphics.Color.WHITE
+        color = android.graphics.Color.parseColor("#6200EE")
     }
 
-    val rect = Rect(0, 0, size, size)
-    val rectF = RectF(rect)
     val radius = size / 2f
-
     canvas.drawCircle(radius, radius, radius, paint)
 
-    paint.color = android.graphics.Color.parseColor("#6200EE")
+    paint.color = android.graphics.Color.WHITE
     paint.style = Paint.Style.STROKE
-    paint.strokeWidth = 8f
-    canvas.drawCircle(radius, radius, radius - 4f, paint)
-
-    paint.reset()
-    paint.isAntiAlias = true
-    paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
-
-    val scaledBitmap = Bitmap.createScaledBitmap(bitmap, size, size, true)
-    canvas.drawBitmap(scaledBitmap, rect, rect, paint)
+    paint.strokeWidth = 6f
+    canvas.drawCircle(radius, radius, radius - 3f, paint)
 
     return output
 }
 
 @Composable
 private fun LocationPermissionDenied(
+    showRationale: Boolean,
     onRequestPermission: () -> Unit
 ) {
+    val context = LocalContext.current
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -322,23 +331,52 @@ private fun LocationPermissionDenied(
 
             Text(
                 text = "Location Permission Required",
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
             )
 
             Text(
-                text = "To show nearby artwork, please grant location permission.",
+                text = if (showRationale) {
+                    "Location permission was denied. Please enable it in app settings to see events on the map."
+                } else {
+                    "To show events and your location, please grant location permission."
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
 
-            Button(
-                onClick = onRequestPermission,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF7B61FF)
-                )
-            ) {
-                Text("Grant Permission")
+            if (showRationale) {
+                Button(
+                    onClick = {
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
+                        }
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF7B61FF)
+                    )
+                ) {
+                    Text("Open Settings")
+                }
+
+                OutlinedButton(
+                    onClick = onRequestPermission,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Try Again")
+                }
+            } else {
+                Button(
+                    onClick = onRequestPermission,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF7B61FF)
+                    )
+                ) {
+                    Text("Grant Permission")
+                }
             }
         }
     }
@@ -351,17 +389,30 @@ private fun getCurrentLocation(
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
     try {
-        fusedLocationClient.lastLocation
-            .addOnSuccessListener { location: Location? ->
-                if (location != null) {
-                    onLocationReceived(LatLng(location.latitude, location.longitude))
-                } else {
-                    onLocationReceived(LatLng(40.7128, -74.0060))
-                }
+        val cancellationTokenSource = CancellationTokenSource()
+
+        fusedLocationClient.getCurrentLocation(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            cancellationTokenSource.token
+        ).addOnSuccessListener { location: android.location.Location? ->
+            if (location != null) {
+                onLocationReceived(LatLng(location.latitude, location.longitude))
+            } else {
+                fusedLocationClient.lastLocation
+                    .addOnSuccessListener { lastLocation: android.location.Location? ->
+                        if (lastLocation != null) {
+                            onLocationReceived(LatLng(lastLocation.latitude, lastLocation.longitude))
+                        } else {
+                            onLocationReceived(LatLng(40.7128, -74.0060))
+                        }
+                    }
+                    .addOnFailureListener {
+                        onLocationReceived(LatLng(40.7128, -74.0060))
+                    }
             }
-            .addOnFailureListener {
-                onLocationReceived(LatLng(40.7128, -74.0060))
-            }
+        }.addOnFailureListener {
+            onLocationReceived(LatLng(40.7128, -74.0060))
+        }
     } catch (e: SecurityException) {
         onLocationReceived(LatLng(40.7128, -74.0060))
     }
