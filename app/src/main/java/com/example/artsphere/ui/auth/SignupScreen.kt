@@ -1,142 +1,220 @@
 package com.example.artsphere.ui.auth
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.artsphere.ui.theme.ArtSphereTheme
+import kotlinx.coroutines.delay
 
 @Composable
 fun SignupScreen(
     onSignupSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit,
+    viewModel: AuthViewModel = viewModel()
 ) {
-    val viewModel: AuthViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
 
+    SignupContent(
+        uiState = uiState,
+        onUsernameChange = viewModel::onUsernameChange,
+        onEmailChange = viewModel::onEmailChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onSignupClick = { viewModel.signup(onSignupSuccess) },
+        onNavigateToLogin = onNavigateToLogin
+    )
+}
+
+@Composable
+fun SignupContent(
+    uiState: AuthUiState,
+    onUsernameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onSignupClick: () -> Unit,
+    onNavigateToLogin: () -> Unit
+) {
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var passwordMismatchError by remember { mutableStateOf(false) }
 
+    // Check if we are in preview mode
+    val isPreview = LocalInspectionMode.current
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.verticalGradient(
+                Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFF6200EE),
-                        Color(0xFF8E24AA),
-                        Color(0xFFAB47BC)
-                    )
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.secondary
+                    ),
+                    start = Offset(0f, Float.POSITIVE_INFINITY),
+                    end = Offset(Float.POSITIVE_INFINITY, 0f)
                 )
             )
     ) {
-        // Decorative circles
-        Box(
-            modifier = Modifier
-                .size(250.dp)
-                .offset(x = 200.dp, y = 50.dp)
-                .background(
-                    Color.White.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(125.dp)
-                )
-                .blur(50.dp)
-        )
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val stroke = Stroke(width = 1.dp.toPx())
+            val circleColor = Color.White.copy(alpha = 0.15f)
 
-        Box(
-            modifier = Modifier
-                .size(200.dp)
-                .offset(x = (-80).dp, y = 600.dp)
-                .background(
-                    Color.White.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(100.dp)
-                )
-                .blur(50.dp)
-        )
+            drawCircle(
+                color = circleColor,
+                radius = size.width * 0.7f,
+                center = Offset(size.width * 0.2f, size.height * 0.5f),
+                style = stroke
+            )
+            drawCircle(
+                color = circleColor,
+                radius = size.width * 0.5f,
+                center = Offset(size.width * 0.8f, size.height * 0.3f),
+                style = stroke
+            )
+            drawLine(
+                color = circleColor,
+                start = Offset(0f, size.height * 0.8f),
+                end = Offset(size.width, size.height * 0.4f),
+                strokeWidth = 1.dp.toPx()
+            )
+        }
+
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Welcome Text
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(bottom = 24.dp)
+            // Animated Welcome Text
+            // If in preview, show immediately. Else start false.
+            var titleVisible by remember { mutableStateOf(isPreview) }
+            LaunchedEffect(Unit) {
+                if (!isPreview) {
+                    delay(200)
+                    titleVisible = true
+                }
+            }
+
+            AnimatedVisibility(
+                visible = titleVisible,
+                enter = fadeIn(animationSpec = tween(1000)) +
+                        slideInVertically(
+                            initialOffsetY = { -100 },
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
             ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(bottom = 32.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Join ArtSphere! 🎨",
+                    text = "Join ArtSphere!",
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Create your account",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White.copy(alpha = 0.9f)
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
                 )
+                }
             }
 
-            // Floating Signup Card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(
-                        elevation = 24.dp,
-                        shape = RoundedCornerShape(32.dp),
-                        spotColor = Color.Black.copy(alpha = 0.4f)
-                    ),
-                shape = RoundedCornerShape(32.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                )
+            // Floating Login Card
+            // If in preview, show immediately. Else start false.
+            var cardVisible by remember { mutableStateOf(isPreview) }
+            LaunchedEffect(Unit) {
+                if (!isPreview) {
+                    delay(400)
+                    cardVisible = true
+                }
+            }
+
+            AnimatedVisibility(
+                visible = cardVisible,
+                enter = fadeIn(animationSpec = tween(800)) +
+                        scaleIn(
+                            initialScale = 0.8f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
             ) {
-                Column(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .shadow(
+                            elevation = 24.dp,
+                            shape = RoundedCornerShape(32.dp),
+                            spotColor = Color.Black.copy(alpha = 0.4f)
+                        ),
+                    shape = RoundedCornerShape(32.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    )
                 ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                     // Username Field
                     OutlinedTextField(
                         value = uiState.username,
-                        onValueChange = { viewModel.onUsernameChange(it) },
+                        onValueChange = onUsernameChange,
                         label = { Text("Username") },
                         leadingIcon = {
                             Icon(
                                 Icons.Default.Person,
                                 contentDescription = null,
-                                tint = Color(0xFF6200EE)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF6200EE),
-                            focusedLabelColor = Color(0xFF6200EE),
-                            cursorColor = Color(0xFF6200EE)
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            cursorColor = MaterialTheme.colorScheme.primary
                         ),
                         singleLine = true
                     )
@@ -146,21 +224,21 @@ fun SignupScreen(
                     // Email Field
                     OutlinedTextField(
                         value = uiState.email,
-                        onValueChange = { viewModel.onEmailChange(it) },
+                        onValueChange = onEmailChange,
                         label = { Text("Email") },
                         leadingIcon = {
                             Icon(
                                 Icons.Default.Email,
                                 contentDescription = null,
-                                tint = Color(0xFF6200EE)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF6200EE),
-                            focusedLabelColor = Color(0xFF6200EE),
-                            cursorColor = Color(0xFF6200EE)
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            cursorColor = MaterialTheme.colorScheme.primary
                         ),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email
@@ -174,7 +252,7 @@ fun SignupScreen(
                     OutlinedTextField(
                         value = uiState.password,
                         onValueChange = {
-                            viewModel.onPasswordChange(it)
+                            onPasswordChange(it)
                             passwordMismatchError = false
                         },
                         label = { Text("Password") },
@@ -182,7 +260,7 @@ fun SignupScreen(
                             Icon(
                                 Icons.Default.Lock,
                                 contentDescription = null,
-                                tint = Color(0xFF6200EE)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         },
                         trailingIcon = {
@@ -198,9 +276,9 @@ fun SignupScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF6200EE),
-                            focusedLabelColor = Color(0xFF6200EE),
-                            cursorColor = Color(0xFF6200EE)
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            cursorColor = MaterialTheme.colorScheme.primary
                         ),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password
@@ -222,7 +300,7 @@ fun SignupScreen(
                             Icon(
                                 Icons.Default.Lock,
                                 contentDescription = null,
-                                tint = Color(0xFF6200EE)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         },
                         trailingIcon = {
@@ -238,9 +316,9 @@ fun SignupScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF6200EE),
-                            focusedLabelColor = Color(0xFF6200EE),
-                            cursorColor = Color(0xFF6200EE)
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            cursorColor = MaterialTheme.colorScheme.primary
                         ),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password
@@ -255,11 +333,11 @@ fun SignupScreen(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            color = Color(0xFFFFEBEE)
+                            color = MaterialTheme.colorScheme.errorContainer
                         ) {
                             Text(
                                 text = "Passwords don't match",
-                                color = Color(0xFFC62828),
+                                color = MaterialTheme.colorScheme.onErrorContainer,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.padding(12.dp)
                             )
@@ -271,11 +349,11 @@ fun SignupScreen(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            color = Color(0xFFFFEBEE)
+                            color = MaterialTheme.colorScheme.errorContainer
                         ) {
                             Text(
                                 text = uiState.error ?: "",
-                                color = Color(0xFFC62828),
+                                color = MaterialTheme.colorScheme.onErrorContainer,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.padding(12.dp)
                             )
@@ -290,7 +368,7 @@ fun SignupScreen(
                                 passwordMismatchError = true
                             } else {
                                 passwordMismatchError = false
-                                viewModel.signup(onSignupSuccess)
+                                onSignupClick()
                             }
                         },
                         modifier = Modifier
@@ -298,13 +376,14 @@ fun SignupScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF6200EE)
+                            containerColor = MaterialTheme.colorScheme.tertiary, // Using theme button color
+                            contentColor = MaterialTheme.colorScheme.onTertiary
                         ),
                         enabled = !uiState.isLoading
                     ) {
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onTertiary,
                                 modifier = Modifier.size(24.dp)
                             )
                         } else {
@@ -329,13 +408,30 @@ fun SignupScreen(
                         TextButton(onClick = onNavigateToLogin) {
                             Text(
                                 text = "Sign In",
-                                color = Color(0xFF6200EE),
+                                color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     }
                 }
             }
+
+            }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SignupScreenPreview() {
+    ArtSphereTheme {
+        SignupContent(
+            uiState = AuthUiState(),
+            onUsernameChange = {},
+            onEmailChange = {},
+            onPasswordChange = {},
+            onSignupClick = {},
+            onNavigateToLogin = {}
+        )
     }
 }

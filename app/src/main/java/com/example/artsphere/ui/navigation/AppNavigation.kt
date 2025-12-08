@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.artsphere.ui.profile.ProfileViewModel
 import com.example.artsphere.ui.auth.AuthViewModel
+import com.example.artsphere.ui.auth.LandingScreen
 import com.example.artsphere.ui.auth.LoginScreen
 import com.example.artsphere.ui.auth.SignupScreen
 import com.google.firebase.auth.FirebaseAuth
@@ -18,8 +19,18 @@ fun ArtSphereApp() {
 
     NavHost(
         navController = navController,
-        startDestination = "login"
+        startDestination = "landing"
     ) {
+        composable("landing"){
+            LandingScreen(
+                onNavigateToLogin = {
+                    navController.navigate("login")
+                },
+                onNavigateToSignup = {
+                    navController.navigate("signup")
+                },
+            )
+        }
         composable("login") {
             LoginScreen(
                 onLoginSuccess = {
@@ -41,7 +52,8 @@ fun ArtSphereApp() {
                     }
                 },
                 onNavigateToLogin = {
-                    navController.popBackStack()
+                    navController.navigate("login")
+
                 }
             )
         }
