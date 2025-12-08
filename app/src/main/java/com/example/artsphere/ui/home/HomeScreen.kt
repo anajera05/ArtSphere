@@ -279,13 +279,13 @@ fun HomeContent(
                                     text = " Trending Art News",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = primaryColor
+                                    color = MaterialTheme.colorScheme.tertiary
                                 )
                                 IconButton(onClick = onRefreshNews) {
                                     Icon(
                                         imageVector = Icons.Default.Refresh,
                                         contentDescription = "Refresh",
-                                        tint = primaryColor
+                                        tint = MaterialTheme.colorScheme.tertiary
                                     )
                                 }
                             }
@@ -362,7 +362,7 @@ fun HomeContent(
                                         onClick = { onFilterChange(filter) },
                                         label = { Text(filter) },
                                         colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = primaryColor,
+                                            selectedContainerColor = MaterialTheme.colorScheme.tertiary,
                                             selectedLabelColor = Color.White,
                                             containerColor = Color.White,
                                             labelColor = secondaryColor

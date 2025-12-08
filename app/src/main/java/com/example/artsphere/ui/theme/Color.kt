@@ -11,7 +11,7 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 // ArtSphere Custom Colors
-val DeepPurple = Color(0xFF2A2359)
-val LighterPurple = Color(0xFF5C5494)
+val DeepPurple = Color(0xFF352D6B)
+val LighterPurple = Color(0xFF6961A1)
 val ButtonPurple = Color(0xFF250E58)
 val White = Color(0xFFFFFFFF)
