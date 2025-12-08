@@ -2,17 +2,21 @@ package com.example.artsphere.ui.home
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.animation.*
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,370 +26,454 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.data.model.ArtworkCategory
+import com.example.artsphere.data.source.remote.Article
+import com.example.artsphere.data.source.remote.NewsUiState
 import com.example.artsphere.data.source.remote.NewsViewModel
+import com.example.artsphere.ui.artworks.gallery.GalleryUiState
 import com.example.artsphere.ui.artworks.gallery.GalleryViewModel
+import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkUiState
 import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
+import com.example.artsphere.ui.profile.ProfileUiState
+import com.example.artsphere.ui.profile.ProfileViewModel
+import com.example.artsphere.ui.theme.ArtSphereTheme
 import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onArtworkClick: (Artwork) -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    onMessagesClick: () -> Unit = {},
     savedViewModel: SavedArtworkViewModel = viewModel(),
-    galleryViewModel: GalleryViewModel = viewModel()
+    galleryViewModel: GalleryViewModel = viewModel(),
+    newsViewModel: NewsViewModel = viewModel(),
+    profileViewModel: ProfileViewModel = viewModel(),
 ) {
+    val galleryState by galleryViewModel.uiState.collectAsState()
+    val savedState by savedViewModel.uiState.collectAsState()
+    val newsUiState by newsViewModel.uiState.collectAsState()
+    val profileState by profileViewModel.uiState.collectAsState()
+
+    // Refresh profile photo when screen opens
+    LaunchedEffect(Unit) {
+        profileViewModel.refreshPhotoFromFirebase()
+    }
+
     var selectedFilter by remember { mutableStateOf("All") }
     var searchQuery by remember { mutableStateOf("") }
     val filters = listOf("All", "Painting & Drawing", "Photographic", "Digital", "Other")
 
-    // val galleryViewModel: GalleryViewModel = viewModel()
-    val galleryState by galleryViewModel.uiState.collectAsState()
-    val savedState by savedViewModel.uiState.collectAsState()
+    HomeContent(
+        modifier = modifier,
+        galleryState = galleryState,
+        savedState = savedState,
+        newsUiState = newsUiState,
+        profileState = profileState,
+        searchQuery = searchQuery,
+        onSearchQueryChange = { searchQuery = it },
+        selectedFilter = selectedFilter,
+        onFilterChange = { selectedFilter = it },
+        filters = filters,
+        onArtworkClick = onArtworkClick,
+        onLikeClick = { savedViewModel.toggleSaveArtwork(it) },
+        onRefreshNews = { newsViewModel.loadNews() },
+        onProfileClick = onProfileClick,
+        onMessagesClick = onMessagesClick
+    )
+}
 
-    // Animated title
-    var titleVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        titleVisible = true
-    }
-
-    Column(
-        modifier = Modifier
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun HomeContent(
+    modifier: Modifier = Modifier,
+    galleryState: GalleryUiState,
+    savedState: SavedArtworkUiState,
+    newsUiState: NewsUiState,
+    profileState: ProfileUiState,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    selectedFilter: String,
+    onFilterChange: (String) -> Unit,
+    filters: List<String>,
+    onArtworkClick: (Artwork) -> Unit,
+    onLikeClick: (String) -> Unit,
+    onRefreshNews: () -> Unit,
+    onProfileClick: () -> Unit,
+    onMessagesClick: () -> Unit
+) {
+    // Theme colors
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val secondaryColor = MaterialTheme.colorScheme.secondary
+    Box(
+        modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F9FA))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.secondary
+                    ),
+                    start = Offset(0f, Float.POSITIVE_INFINITY),
+                    end = Offset(Float.POSITIVE_INFINITY, 0f)
+                )
+            )
     ) {
-        // Cute Header with Gradient
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shadowElevation = 4.dp
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFF6200EE),
-                                Color(0xFF8E24AA),
-                                Color(0xFFAB47BC)
-                            )
-                        )
-                    )
-                    .padding(20.dp)
+                    .padding(horizontal = 24.dp, vertical = 24.dp)
             ) {
-                Column {
-                    // Animated Title
-                    AnimatedVisibility(
-                        visible = titleVisible,
-                        enter = fadeIn(animationSpec = tween(800)) +
-                                slideInVertically(
-                                    animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                                        stiffness = Spring.StiffnessLow
-                                    )
-                                )
+                // Profile Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable(onClick = onProfileClick)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            // Sparkle emoji with rotation
-                            var rotation by remember { mutableStateOf(0f) }
-                            LaunchedEffect(Unit) {
-                                while (true) {
-                                    animate(
-                                        initialValue = 0f,
-                                        targetValue = 360f,
-                                        animationSpec = tween(3000, easing = LinearEasing)
-                                    ) { value, _ ->
-                                        rotation = value
-                                    }
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(CircleShape)
+                                .background(Color.LightGray)
+                                .border(2.dp, Color(0xFF2196F3), CircleShape), // Blue border
+                            contentAlignment = Alignment.Center
+                        ) {
+                            when {
+                                profileState.isUploading -> {
+                                    CircularProgressIndicator(
+                                        color = Color(0xFF6200EE),
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+                                profileState.photoUrl != null -> {
+                                    AsyncImage(
+                                        model = profileState.photoUrl,
+                                        contentDescription = "Profile Photo",
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                                else -> {
+                                    Icon(
+                                        Icons.Filled.Person,
+                                        contentDescription = "Default profile icon",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(30.dp)
+                                    )
                                 }
                             }
+                        }
 
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
                             Text(
-                                text = " 🎨",
-                                style = MaterialTheme.typography.headlineMedium,
-                                modifier = Modifier.rotate(rotation)
+                                text = "Welcome to ",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White.copy(alpha = 0.8f)
                             )
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
                             Text(
-                                text = "Discover Art",
-                                style = MaterialTheme.typography.headlineMedium,
+                                text = "ArtSphere",
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    // Chat Icon
+                    IconButton(onClick = onMessagesClick) {
+                        Icon(
+                            imageVector = Icons.Default.ChatBubbleOutline,
+                            contentDescription = "Messages",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
 
-                    // Search Bar
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(4.dp, RoundedCornerShape(28.dp)),
-                        placeholder = {
-                            Text("Search for art...", color = Color.Gray)
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = Color(0xFF6200EE)
-                            )
-                        },
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { searchQuery = "" }) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Search Bar
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(4.dp, RoundedCornerShape(28.dp)),
+                    placeholder = {
+                        Text("Search Artsphere", color = Color.Gray)
+                    },
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = Color.Gray
+                        )
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        cursorColor = primaryColor
+                    ),
+                    shape = RoundedCornerShape(28.dp),
+                    singleLine = true
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        color = Color(0xFFF8F9FA),
+                        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+                    )
+                    .padding(top = 12.dp)
+            ) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Trending Art News Section (Original Style)
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        val context = LocalContext.current
+
+                        Column(modifier = Modifier.padding(bottom = 8.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = " Trending Art News",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = primaryColor
+                                )
+                                IconButton(onClick = onRefreshNews) {
                                     Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = "Clear",
-                                        tint = Color(0xFF6200EE)
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = "Refresh",
+                                        tint = primaryColor
                                     )
                                 }
                             }
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            cursorColor = Color(0xFF6200EE)
-                        ),
-                        shape = RoundedCornerShape(28.dp),
-                        singleLine = true
-                    )
-                }
-            }
-        }
+                            Spacer(modifier = Modifier.height(12.dp))
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Trending Art News Section
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                val newsViewModel: NewsViewModel = viewModel()
-                val uiState by newsViewModel.uiState.collectAsState()
-                val context = LocalContext.current
-
-                Column(modifier = Modifier.padding(bottom = 8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = " Trending Art News",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF6200EE)
-                        )
-                        IconButton(onClick = { newsViewModel.loadNews() }) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Refresh",
-                                tint = Color(0xFF6200EE)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    when {
-                        uiState.isLoading -> {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(color = Color(0xFF6200EE))
-                            }
-                        }
-
-                        uiState.error != null -> {
-                            Text(
-                                text = "Error loading news",
-                                color = Color.Gray,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-
-                        else -> {
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                items(uiState.articles) { article ->
-                                    Card(
-                                        modifier = Modifier
-                                            .width(200.dp)
-                                            .height(180.dp)
-                                            .clickable {
-                                                val intent = Intent(
-                                                    Intent.ACTION_VIEW,
-                                                    Uri.parse(article.url)
-                                                )
-                                                context.startActivity(intent)
-                                            },
-                                        shape = RoundedCornerShape(16.dp),
-                                        elevation = CardDefaults.cardElevation(4.dp)
-                                    ) {
-                                        Column(modifier = Modifier.fillMaxSize()) {
-                                            article.imageUrl?.let { imageUrl ->
-                                                AsyncImage(
-                                                    model = imageUrl,
-                                                    contentDescription = article.title,
+                            if (newsUiState.isLoading) {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = Color(0xFF6200EE))
+                                }
+                            } else if (newsUiState.error != null) {
+                                Text(text = "Error: ${newsUiState.error}", modifier = Modifier.padding(16.dp))
+                            } else {
+                                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    items(newsUiState.articles) { article ->
+                                        Card(
+                                            modifier = Modifier
+                                                .width(200.dp)
+                                                .height(180.dp)
+                                                .clickable {
+                                                    val intent = Intent(
+                                                        Intent.ACTION_VIEW,
+                                                        Uri.parse(article.url)
+                                                    )
+                                                    context.startActivity(intent)
+                                                },
+                                            shape = RoundedCornerShape(16.dp),
+                                            elevation = CardDefaults.cardElevation(4.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                                        ) {
+                                            Column(modifier = Modifier.fillMaxSize()) {
+                                                article.imageUrl?.let { imageUrl ->
+                                                    AsyncImage(
+                                                        model = imageUrl,
+                                                        contentDescription = article.title,
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .weight(1f),
+                                                        contentScale = ContentScale.Crop
+                                                    )
+                                                }
+                                                Text(
+                                                    text = article.title,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.Medium,
                                                     modifier = Modifier
                                                         .fillMaxWidth()
-                                                        .weight(1f),
-                                                    contentScale = ContentScale.Crop
+                                                        .padding(8.dp),
+                                                    maxLines = 2,
+                                                    overflow = TextOverflow.Ellipsis
                                                 )
                                             }
-                                            Text(
-                                                text = article.title,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.Medium,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(8.dp),
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
-            }
 
-            // Filter Chips - Scrollable Horizontal
-            stickyHeader {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFF8F9FA))
-                        .padding(vertical = 8.dp)
-                ) {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(filters) { filter ->
-                            FilterChip(
-                                selected = selectedFilter == filter,
-                                onClick = { selectedFilter = filter },
-                                label = { Text(filter) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = Color(0xFF6200EE),
-                                    selectedLabelColor = Color.White,
-                                    containerColor = Color.White,
-                                    labelColor = Color.Gray
-                                ),
-                                border = FilterChipDefaults.filterChipBorder(
-                                    enabled = true,
-                                    selected = selectedFilter == filter,
-                                    borderColor = if (selectedFilter == filter) Color(0xFF6200EE) else Color.LightGray,
-                                    selectedBorderColor = Color(0xFF6200EE)
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Artwork Gallery
-            when {
-                galleryState.isLoading -> {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
+                    // Filter Chips (Original Style)
+                    stickyHeader {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
+                                .background(Color(0xFFF8F9FA))
+                                .padding(vertical = 8.dp)
                         ) {
-                            CircularProgressIndicator(color = Color(0xFF6200EE))
-                        }
-                    }
-                }
-
-                galleryState.artworks.isEmpty() -> {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("🎨", style = MaterialTheme.typography.displayLarge)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text("No artworks yet", fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
-
-                else -> {
-                    val filteredArtworks = galleryState.artworks.filter { artwork ->
-                        val matchesCategory = selectedFilter == "All" ||
-                                artwork.categoryEnum.displayName == selectedFilter
-                        val matchesSearch = searchQuery.isBlank() ||
-                                artwork.name.contains(searchQuery, ignoreCase = true)
-                        matchesCategory && matchesSearch
-                    }
-
-                    if (filteredArtworks.isEmpty()) {
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("🔍", style = MaterialTheme.typography.displayMedium)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text("No results found", color = Color.Gray)
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(filters) { filter ->
+                                    FilterChip(
+                                        selected = selectedFilter == filter,
+                                        onClick = { onFilterChange(filter) },
+                                        label = { Text(filter) },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = primaryColor,
+                                            selectedLabelColor = Color.White,
+                                            containerColor = Color.White,
+                                            labelColor = secondaryColor
+                                        ),
+                                        border = FilterChipDefaults.filterChipBorder(
+                                            enabled = true,
+                                            selected = selectedFilter == filter,
+                                            borderColor = if (selectedFilter == filter) primaryColor else secondaryColor,
+                                            selectedBorderColor = primaryColor
+                                        )
+                                    )
                                 }
                             }
                         }
-                    } else {
-                        items(filteredArtworks) { artwork ->
-                            var cardVisible by remember { mutableStateOf(false) }
+                    }
 
-                            LaunchedEffect(Unit) {
-                                delay(filteredArtworks.indexOf(artwork) * 50L)
-                                cardVisible = true
+                    // Artwork Gallery (Original Style)
+                    when {
+                        galleryState.isLoading -> {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(32.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = Color(0xFF6200EE))
+                                }
+                            }
+                        }
+
+                        galleryState.artworks.isEmpty() -> {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(32.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text("🎨", style = MaterialTheme.typography.displayLarge)
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text("No artworks yet", fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+
+                        else -> {
+                            val filteredArtworks = galleryState.artworks.filter { artwork ->
+                                val matchesCategory = selectedFilter == "All" ||
+                                        artwork.categoryEnum.displayName == selectedFilter
+                                val matchesSearch = searchQuery.isBlank() ||
+                                        artwork.name.contains(searchQuery, ignoreCase = true)
+                                matchesCategory && matchesSearch
                             }
 
-                            AnimatedVisibility(
-                                visible = cardVisible,
-                                enter = fadeIn() + scaleIn(
-                                    initialScale = 0.8f,
-                                    animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioMediumBouncy
+                            if (filteredArtworks.isEmpty()) {
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(32.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text("🔍", style = MaterialTheme.typography.displayMedium)
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text("No results found", color = Color.Gray)
+                                        }
+                                    }
+                                }
+                            } else {
+                                // Correct way to animate items in a lazy grid
+                                itemsIndexed(filteredArtworks) { index, artwork ->
+                                    var isVisible by remember { mutableStateOf(false) }
+
+                                    LaunchedEffect(Unit) {
+                                        delay(index * 50L) // Staggered delay
+                                        isVisible = true
+                                    }
+
+                                    val alpha by animateFloatAsState(
+                                        targetValue = if (isVisible) 1f else 0f,
+                                        animationSpec = tween(durationMillis = 500),
+                                        label = "alphaAnimation"
                                     )
-                                )
-                            ) {
-                                CuteArtworkCard(
-                                    artwork = artwork,
-                                    isSaved = savedState.savedArtworkIds.contains(artwork.id),
-                                    onArtworkClick = { onArtworkClick(artwork) },
-                                    onLikeClick = { savedViewModel.toggleSaveArtwork(artwork.id) }
-                                )
+                                    val scale by animateFloatAsState(
+                                        targetValue = if (isVisible) 1f else 0.8f,
+                                        animationSpec = spring(
+                                            dampingRatio = Spring.DampingRatioMediumBouncy
+                                        ),
+                                        label = "scaleAnimation"
+                                    )
+
+                                    Box(
+                                        modifier = Modifier
+                                            .graphicsLayer {
+                                                this.alpha = alpha
+                                                this.scaleX = scale
+                                                this.scaleY = scale
+                                            }
+                                    ) {
+                                        CuteArtworkCard(
+                                            artwork = artwork,
+                                            isSaved = savedState.savedArtworkIds.contains(artwork.id),
+                                            onArtworkClick = { onArtworkClick(artwork) },
+                                            onLikeClick = { onLikeClick(artwork.id) }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -395,6 +483,7 @@ fun HomeScreen(
     }
 }
 
+// Restored Original CuteArtworkCard
 @Composable
 fun CuteArtworkCard(
     artwork: Artwork,
@@ -421,8 +510,8 @@ fun CuteArtworkCard(
             .fillMaxWidth()
             .aspectRatio(0.8f)
             .scale(scale)
-            .shadow(8.dp, RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
+            .shadow(8.dp, RoundedCornerShape(20.dp)), // Original larger shadow
+        shape = RoundedCornerShape(20.dp), // Original corner radius
         colors = CardDefaults.cardColors(containerColor = Color.White),
         onClick = {
             isPressed = true
@@ -477,7 +566,7 @@ fun CuteArtworkCard(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(8.dp)
-                    .size(40.dp)
+                    .size(40.dp) // Original size
                     .scale(heartScale)
                     .shadow(4.dp, CircleShape)
                     .background(Color.White, CircleShape)
@@ -511,5 +600,56 @@ fun CuteArtworkCard(
             delay(100)
             isPressed = false
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview() {
+    ArtSphereTheme {
+        HomeContent(
+            galleryState = GalleryUiState(
+                artworks = listOf(
+                    Artwork(
+                        id = "1",
+                        name = "Starry Night",
+                        category = ArtworkCategory.PAINTING_DRAWING.name,
+                        price = "1000",
+                        imageUrl = "https://example.com/image.jpg"
+                    ),
+                    Artwork(
+                        id = "2",
+                        name = "Mona Lisa",
+                        category = ArtworkCategory.PAINTING_DRAWING.name,
+                        price = "2000",
+                        imageUrl = "https://example.com/image2.jpg",
+                        isSold = true
+                    )
+                )
+            ),
+            savedState = SavedArtworkUiState(
+                savedArtworkIds = setOf("1")
+            ),
+            newsUiState = NewsUiState(
+                articles = listOf(
+                    Article(
+                        title = "New Art Exhibition in NYC",
+                        url = "https://nytimes.com",
+                        imageUrl = null
+                    )
+                )
+            ),
+            profileState = ProfileUiState(),
+            searchQuery = "",
+            onSearchQueryChange = {},
+            selectedFilter = "All",
+            onFilterChange = {},
+            filters = listOf("All", "Painting & Drawing", "Photographic", "Digital", "Other"),
+            onArtworkClick = {},
+            onLikeClick = {},
+            onRefreshNews = {},
+            onProfileClick = {},
+            onMessagesClick = {}
+        )
     }
 }

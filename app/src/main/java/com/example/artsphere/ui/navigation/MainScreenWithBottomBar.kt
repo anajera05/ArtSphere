@@ -32,7 +32,6 @@ import com.example.artsphere.ui.artworks.addArtwork.CameraScreen
 import com.example.artsphere.ui.artworks.addArtwork.UploadArtworkScreen
 import com.example.artsphere.ui.artworks.gallery.GalleryViewModel
 import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
-import com.example.artsphere.ui.auth.LoginScreen
 import com.example.artsphere.ui.home.HomeScreen
 import com.example.artsphere.ui.inbox.ChatScreen
 import com.example.artsphere.ui.inbox.InboxScreen
@@ -138,7 +137,25 @@ fun MainScreenWithBottomBar(
                         navController.navigate("artwork_detail")
                     },
                     savedViewModel = savedArtworkViewModel,
-                    galleryViewModel = galleryViewModel  // ADD THIS
+                    galleryViewModel = galleryViewModel ,
+                    onMessagesClick = {
+                        navController.navigate(Screen.Inbox.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onProfileClick = {
+                        navController.navigate(Screen.Profile.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
 

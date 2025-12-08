@@ -86,6 +86,7 @@ dependencies {
     implementation(libs.androidx.compose.runtime.saveable)
     implementation(libs.androidx.foundation)
     implementation(libs.foundation)
+    implementation(libs.androidx.compose.animation)
     val cameraxVersion = "1.3.1"
     implementation("androidx.camera:camera-core:$cameraxVersion")
     implementation("androidx.camera:camera-camera2:$cameraxVersion")

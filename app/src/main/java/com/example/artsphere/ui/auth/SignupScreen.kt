@@ -1,7 +1,12 @@
 package com.example.artsphere.ui.auth
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -16,9 +21,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -70,19 +77,40 @@ fun SignupContent(
     // Check if we are in preview mode
     val isPreview = LocalInspectionMode.current
 
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val secondaryColor = MaterialTheme.colorScheme.secondary
+    val infiniteTransition = rememberInfiniteTransition(label = "infinite transition")
+    val animatedColor1 by infiniteTransition.animateColor(
+        initialValue = primaryColor,
+        targetValue = secondaryColor,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "animatedColor1"
+    )
+    val animatedColor2 by infiniteTransition.animateColor(
+        initialValue = secondaryColor,
+        targetValue = primaryColor,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "animatedColor2"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.secondary
-                    ),
-                    start = Offset(0f, Float.POSITIVE_INFINITY),
-                    end = Offset(Float.POSITIVE_INFINITY, 0f)
+            .drawBehind {
+                drawRect(
+                    Brush.linearGradient(
+                        colors = listOf(animatedColor1, animatedColor2),
+                        start = Offset.Zero,
+                        end = Offset(size.width, size.height)
+                    )
                 )
-            )
+            }
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val stroke = Stroke(width = 1.dp.toPx())

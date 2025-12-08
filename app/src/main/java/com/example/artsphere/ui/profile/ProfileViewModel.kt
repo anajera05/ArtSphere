@@ -30,7 +30,7 @@ class ProfileViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState
 
-    // Load latest photo when screen opens
+    // Load latest photo and username when screen opens
     fun refreshPhotoFromFirebase() {
         user?.reload()?.addOnSuccessListener {
             val url = user?.photoUrl?.toString()
