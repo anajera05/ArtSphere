@@ -165,7 +165,7 @@ fun ArtworkDetailContent(
                     }
                 }
 
-                // Artist info row - now clickable
+                // Artist info row
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -174,6 +174,7 @@ fun ArtworkDetailContent(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+
                     Column {
                         Text(text = currentArtwork.contactName, fontWeight = FontWeight.Bold)
                         Text(text = currentArtwork.contactEmail, style = MaterialTheme.typography.bodySmall, textDecoration = TextDecoration.Underline)
@@ -281,7 +282,7 @@ fun ArtworkDetailContent(
                     }
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    if (currentArtwork.price.isNotBlank()) {
+
                         Row {
                             Text(
                                 text = "Price",
@@ -290,22 +291,16 @@ fun ArtworkDetailContent(
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("$${currentArtwork.price}")
-                        }
-                    } else {
-                        Row {
-                            Text(
-                                text = "Price",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF6200EE)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Contact for price")
+                            if (currentArtwork.price.isNotBlank()) {
+                            Text("$${currentArtwork.price}")}
+                            else {
+                                    Text("Contact for price")
+                                }
+                            }
                         }
                     }
                 }
-                }
+
             }
 
             // Show Artist Profile Sheet
@@ -345,7 +340,7 @@ fun ArtworkDetailContent(
                 )
             }
         }
-    }
+
 
 
 @Preview(showBackground = true, name = "Personal Detail")
