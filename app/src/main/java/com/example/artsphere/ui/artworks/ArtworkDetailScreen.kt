@@ -1,6 +1,5 @@
 package com.example.artsphere.ui.artworks
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,105 +16,126 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.data.model.ArtworkCategory
 import com.example.artsphere.ui.artworks.gallery.GalleryViewModel
+import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkUiState
 import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
 import com.example.artsphere.ui.profile.ArtistProfileSheet
-import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.ui.theme.ArtSphereTheme
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
-import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArtworkDetailScreen(
     artwork: Artwork,
     onBackClick: () -> Unit,
     onDeleteClick: () -> Unit,
-    onMessageClick: () -> Unit = {},
-    onNavigateToArtwork: (Artwork) -> Unit = {},
-    viewModel: ArtworkViewModel = viewModel(),
-    galleryViewModel: GalleryViewModel = viewModel(),
-    savedViewModel: SavedArtworkViewModel = viewModel()
+    onMessageClick: () -> Unit,
+    onNavigateToArtwork: (Artwork) -> Unit,
+    galleryViewModel: GalleryViewModel,
+    savedViewModel: SavedArtworkViewModel
 ) {
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var showArtistProfile by remember { mutableStateOf(false) }
-    val savedState by savedViewModel.uiState.collectAsState()
-    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
-    val isOwnArtwork = currentUserId == artwork.userId
-
-    // Live artwork data
-    var currentArtwork by remember { mutableStateOf(artwork) }
-    var isLoading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val savedState by savedViewModel.uiState.collectAsState()
+    val galleryState by galleryViewModel.uiState.collectAsState()
 
-
-    // Function to reload artwork from Firestore
-    suspend fun reloadArtwork() {
-        isLoading = true
-        try {
-            val doc = FirebaseFirestore.getInstance()
-                .collection("artworks")
-                .document(artwork.id)
-                .get()
-                .await()
-
-            doc.toObject(Artwork::class.java)?.let {
-                currentArtwork = it.copy(id = doc.id)
-            }
-        } catch (e: Exception) {
-            Log.e("ARTWORK_DETAIL", "Error reloading artwork", e)
-        }
-        isLoading = false
+    var currentArtwork by remember(artwork, galleryState) {
+        mutableStateOf(galleryState.artworks.find { it.id == artwork.id } ?: artwork)
     }
 
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showArtistProfile by remember { mutableStateOf(false) } // State for profile sheet
+    val isOwnArtwork = currentArtwork.userId == FirebaseAuth.getInstance().currentUser?.uid
+    val isLoading = galleryState.isLoading
+
+    fun reloadArtwork() {
+        val refreshedArtwork = galleryViewModel.uiState.value.artworks.find { it.id == artwork.id }
+        if (refreshedArtwork != null) {
+            currentArtwork = refreshedArtwork
+        }
+    }
+
+    ArtworkDetailContent(
+        currentArtwork = currentArtwork,
+        savedState = savedState,
+        isOwnArtwork = isOwnArtwork,
+        isLoading = isLoading,
+        showDeleteDialog = showDeleteDialog,
+        onShowDeleteDialogChange = { showDeleteDialog = it },
+        showArtistProfile = showArtistProfile,
+        onShowArtistProfileChange = { showArtistProfile = it }, // Pass state and callback
+        onBackClick = onBackClick,
+        onLikeClick = { savedViewModel.toggleSaveArtwork(currentArtwork.id) },
+        onMessageClick = onMessageClick,
+        onNavigateToArtwork = onNavigateToArtwork,
+        onToggleHidden = {
+            coroutineScope.launch {
+                galleryViewModel.toggleHiddenStatus(currentArtwork.id, currentArtwork.isHidden)
+                delay(500)
+                reloadArtwork()
+            }
+        },
+        onMarkAsSold = {
+            coroutineScope.launch {
+                galleryViewModel.toggleSoldStatus(currentArtwork.id, currentArtwork.isSold)
+                delay(500)
+                reloadArtwork()
+            }
+        },
+        onDeleteConfirm = onDeleteClick
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ArtworkDetailContent(
+    currentArtwork: Artwork,
+    savedState: SavedArtworkUiState,
+    isOwnArtwork: Boolean,
+    isLoading: Boolean,
+    showDeleteDialog: Boolean,
+    onShowDeleteDialogChange: (Boolean) -> Unit,
+    showArtistProfile: Boolean,
+    onShowArtistProfileChange: (Boolean) -> Unit,
+    onBackClick: () -> Unit,
+    onLikeClick: () -> Unit,
+    onMessageClick: () -> Unit,
+    onNavigateToArtwork: (Artwork) -> Unit,
+    onToggleHidden: () -> Unit,
+    onMarkAsSold: () -> Unit,
+    onDeleteConfirm: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Artwork") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.primary)
                     }
                 },
                 actions = {
                     if (isOwnArtwork) {
-                        // Hide/Show toggle
-                        IconButton(
-                            onClick = {
-                                coroutineScope.launch {
-                                    galleryViewModel.toggleHiddenStatus(currentArtwork.id, currentArtwork.isHidden)
-                                    delay(500)
-                                    reloadArtwork()
-                                }
-                            },
-                            enabled = !isLoading
-                        ) {
+                        IconButton(onClick = onToggleHidden, enabled = !isLoading) {
                             Icon(
                                 imageVector = if (currentArtwork.isHidden) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                 contentDescription = if (currentArtwork.isHidden) "Hidden" else "Visible",
-                                tint = if (currentArtwork.isHidden) Color(0xFFE91E63) else Color.White
+                                tint = if (currentArtwork.isHidden) Color(0xFFE91E63) else MaterialTheme.colorScheme.primary
                             )
                         }
-
-                        // Delete button
-                        IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Delete",
-                                tint = Color.White
-                            )
+                        IconButton(onClick = { onShowDeleteDialogChange(true) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.primary)
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF6200EE),
-                    titleContentColor = Color.White,
+                    containerColor = Color.White,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
                     navigationIconContentColor = Color.White,
                     actionIconContentColor = Color.White
                 ),
@@ -131,81 +151,55 @@ fun ArtworkDetailScreen(
                     .background(Color.White)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Hidden badge
                 if (isOwnArtwork && currentArtwork.isHidden) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = Color(0xFFFFEBEE)
-                    ) {
+                    Surface(modifier = Modifier.fillMaxWidth(), color = Color(0xFFFFEBEE)) {
                         Row(
                             modifier = Modifier.padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Icon(
-                                Icons.Default.VisibilityOff,
-                                contentDescription = null,
-                                tint = Color(0xFFC62828),
-                                modifier = Modifier.size(20.dp)
-                            )
+                            Icon(Icons.Default.VisibilityOff, contentDescription = null, tint = Color(0xFFC62828), modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                "This artwork is hidden from others",
-                                color = Color(0xFFC62828),
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text("This artwork is hidden from others", color = Color(0xFFC62828), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
 
-                // Artist info
+                // Artist info row
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(enabled = !isOwnArtwork) {
-                            if (!isOwnArtwork) {
-                                showArtistProfile = true
-                            }
-                        }
+                        .clickable(enabled = !isOwnArtwork) { onShowArtistProfileChange(true) }
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Spacer(modifier = Modifier.width(12.dp))
+
                     Column {
                         Text(text = currentArtwork.contactName, fontWeight = FontWeight.Bold)
-                        Text(
-                            text = currentArtwork.contactEmail,
-                            style = MaterialTheme.typography.bodySmall,
-                            textDecoration = TextDecoration.Underline
-                        )
-                        if (!isOwnArtwork) {
-                            Text(
-                                text = "Tap to view profile",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF6200EE),
-                                fontWeight = FontWeight.Medium
-                            )
+                        Text(text = currentArtwork.contactEmail, style = MaterialTheme.typography.bodySmall, textDecoration = TextDecoration.Underline)
+
+                    }
+                    if (!isOwnArtwork) {
+                        IconButton(
+                            onClick = onMessageClick,
+                            modifier = Modifier.background(MaterialTheme.colorScheme.secondary, shape = RoundedCornerShape(50))
+                        ) {
+                            Icon(imageVector = Icons.Default.Email, contentDescription = "Message Artist", tint = Color.White)
                         }
                     }
                 }
 
-                // Artwork Image with SOLD badge
                 Box(modifier = Modifier.fillMaxWidth()) {
                     AsyncImage(
                         model = currentArtwork.imageUrl,
                         contentDescription = currentArtwork.name,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(400.dp),
+                        modifier = Modifier.fillMaxWidth().height(400.dp),
                         contentScale = ContentScale.Crop
                     )
-
-                    // SOLD badge
                     if (currentArtwork.isSold) {
                         Surface(
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .padding(16.dp),
+                            modifier = Modifier.align(Alignment.TopStart).padding(16.dp),
                             shape = RoundedCornerShape(8.dp),
                             color = Color(0xFFE91E63),
                             shadowElevation = 4.dp
@@ -225,101 +219,49 @@ fun ArtworkDetailScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = currentArtwork.name,
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold
-                            )
                             Surface(
                                 shape = RoundedCornerShape(20.dp),
-                                color = Color(0xFFE8DEF8),
+                                color =MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.padding(vertical = 8.dp)
                             ) {
                                 Text(
                                     text = currentArtwork.categoryEnum.displayName,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color(0xFF6200EE),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSecondary,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
+                            Text(text = currentArtwork.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+
                         }
-                        Column(
-                            horizontalAlignment = Alignment.End,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            // Like button
                             IconButton(
-                                onClick = {
-                                    savedViewModel.toggleSaveArtwork(currentArtwork.id)
-                                },
-                                modifier = Modifier
-                                    .background(
-                                        Color.White.copy(alpha = 0.8f),
-                                        shape = RoundedCornerShape(50)
-                                    )
+                                onClick = onLikeClick,
+                                modifier = Modifier.background(Color.White.copy(alpha = 0.8f), shape = RoundedCornerShape(50))
                             ) {
                                 Icon(
-                                    imageVector = if (savedState.savedArtworkIds.contains(currentArtwork.id)) {
-                                        Icons.Filled.Favorite
-                                    } else {
-                                        Icons.Filled.FavoriteBorder
-                                    },
+                                    imageVector = if (savedState.savedArtworkIds.contains(currentArtwork.id)) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                                     contentDescription = "Like",
-                                    tint = if (savedState.savedArtworkIds.contains(currentArtwork.id)) {
-                                        Color(0xFFE91E63)
-                                    } else {
-                                        Color(0xFF6200EE)
-                                    }
+                                    tint = if (savedState.savedArtworkIds.contains(currentArtwork.id)) Color(0xFFE91E63) else Color(0xFF6200EE)
                                 )
                             }
 
-                            // Message Artist Button
-                            if (!isOwnArtwork) {
-                                IconButton(
-                                    onClick = onMessageClick,
-                                    modifier = Modifier
-                                        .background(
-                                            Color(0xFF6200EE),
-                                            shape = RoundedCornerShape(50)
-                                        )
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Email,
-                                        contentDescription = "Message Artist",
-                                        tint = Color.White
-                                    )
-                                }
-                            }
-                        }
+
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    // Mark as Sold button (owner only)
                     if (isOwnArtwork) {
                         Button(
-                            onClick = {
-                                coroutineScope.launch {
-                                    galleryViewModel.toggleSoldStatus(currentArtwork.id, currentArtwork.isSold)
-                                    delay(500)
-                                    reloadArtwork()
-                                }
-                            },
+                            onClick = onMarkAsSold,
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (currentArtwork.isSold) Color(0xFF4CAF50) else Color(0xFFE91E63)
-                            ),
+                            colors = ButtonDefaults.buttonColors(containerColor = if (currentArtwork.isSold) Color(0xFF4CAF50) else Color(0xFFE91E63)),
                             enabled = !isLoading
                         ) {
-                            Icon(
-                                imageVector = if (currentArtwork.isSold) Icons.Default.CheckCircle else Icons.Default.Sell,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
+                            Icon(imageVector = if (currentArtwork.isSold) Icons.Default.CheckCircle else Icons.Default.Sell, contentDescription = null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(if (currentArtwork.isSold) "Mark as Available" else "Mark as Sold")
                         }
@@ -332,7 +274,7 @@ fun ArtworkDetailScreen(
                                 text = "Description",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF6200EE)
+                                color = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(currentArtwork.description)
@@ -340,83 +282,131 @@ fun ArtworkDetailScreen(
                     }
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    if (currentArtwork.price.isNotBlank()) {
+
                         Row {
                             Text(
                                 text = "Price",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF6200EE)
+                                color = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("$${currentArtwork.price}")
-                        }
-                    } else {
-                        Row {
-                            Text(
-                                text = "Price",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF6200EE)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Contact for price")
+                            if (currentArtwork.price.isNotBlank()) {
+                            Text("$${currentArtwork.price}")}
+                            else {
+                                    Text("Contact for price")
+                                }
+                            }
                         }
                     }
                 }
 
-                if (showDeleteDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showDeleteDialog = false },
-                        title = { Text("Delete Artwork") },
-                        text = { Text("Are you sure you want to delete \"${currentArtwork.name}\"? This action cannot be undone.") },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    viewModel.deleteArtwork(currentArtwork.id)
-                                    showDeleteDialog = false
-                                    onDeleteClick()
-                                },
-                                colors = ButtonDefaults.textButtonColors(
-                                    contentColor = Color.Red
-                                )
-                            ) {
-                                Text("Delete")
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showDeleteDialog = false }) {
-                                Text("Cancel")
-                            }
-                        }
-                    )
-                }
             }
 
-            // Loading overlay
-            if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color(0xFF6200EE))
-                }
+            // Show Artist Profile Sheet
+            if (showArtistProfile) {
+                ArtistProfileSheet(
+                    userId = currentArtwork.userId,
+                    userName = currentArtwork.contactName,
+                    onDismiss = { onShowArtistProfileChange(false) },
+                    onArtworkClick = {
+                        onShowArtistProfileChange(false)
+                        onNavigateToArtwork(it)
+                    }
+                )
+            }
+
+            // Delete confirmation dialog
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { onShowDeleteDialogChange(false) },
+                    title = { Text("Delete Artwork") },
+                    text = { Text("Are you sure you want to permanently delete this artwork? This action cannot be undone.") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                onShowDeleteDialogChange(false)
+                                onDeleteConfirm()
+                            }
+                        ) {
+                            Text("Delete", color = Color.Red)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { onShowDeleteDialogChange(false) }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
             }
         }
-    }
 
-    // Artist Profile Sheet
-    if (showArtistProfile) {
-        ArtistProfileSheet(
-            userId = currentArtwork.userId,
-            userName = currentArtwork.contactName.ifBlank { "Artist" },
-            onDismiss = { showArtistProfile = false },
-            onArtworkClick = { selectedArtwork ->
-                showArtistProfile = false
-                onNavigateToArtwork(selectedArtwork)
-            }
+
+
+@Preview(showBackground = true, name = "Personal Detail")
+@Composable
+fun ArtworkDetailScreenPreview() {
+    ArtSphereTheme {
+        ArtworkDetailContent(
+            currentArtwork = Artwork(
+                id = "1",
+                name = "Starry Night",
+                category = ArtworkCategory.PAINTING_DRAWING.name,
+                price = "1000",
+                imageUrl = "",
+                description = "A famous painting by Vincent van Gogh.",
+                contactName = "Vincent van Gogh",
+                contactEmail = "vincent@example.com",
+                isSold = true
+            ),
+            savedState = SavedArtworkUiState(savedArtworkIds = setOf("1")),
+            isOwnArtwork = true,
+            isLoading = false,
+            showDeleteDialog = false,
+            onShowDeleteDialogChange = {},
+            showArtistProfile = false,
+            onShowArtistProfileChange = {},
+            onBackClick = {},
+            onLikeClick = {},
+            onMessageClick = {},
+            onNavigateToArtwork = {},
+            onToggleHidden = {},
+            onMarkAsSold = {},
+            onDeleteConfirm = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Not Owned Detail")
+@Composable
+fun ArtworkDetailScreenNotOwnedPreview() {
+    ArtSphereTheme {
+        ArtworkDetailContent(
+            currentArtwork = Artwork(
+                id = "2",
+                name = "The Kiss",
+                category = ArtworkCategory.PAINTING_DRAWING.name,
+                price = "2500",
+                imageUrl = "",
+                description = "An iconic painting by Gustav Klimt.",
+                contactName = "Gustav Klimt",
+                contactEmail = "gustav@example.com",
+                isSold = false
+            ),
+            savedState = SavedArtworkUiState(savedArtworkIds = emptySet()),
+            isOwnArtwork = false,
+            isLoading = false,
+            showDeleteDialog = false,
+            onShowDeleteDialogChange = {},
+            showArtistProfile = false,
+            onShowArtistProfileChange = {},
+            onBackClick = {},
+            onLikeClick = {},
+            onMessageClick = {},
+            onNavigateToArtwork = {},
+            onToggleHidden = {},
+            onMarkAsSold = {},
+            onDeleteConfirm = {}
         )
     }
 }
