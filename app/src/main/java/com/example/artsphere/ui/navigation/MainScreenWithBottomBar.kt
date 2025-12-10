@@ -319,6 +319,18 @@ fun MainScreenWithBottomBar(
                     }
                 }
 
+                composable("event_detail") {
+                    selectedEvent?.let { event ->
+                        EventDetailScreen(
+                            event = event,
+                            onBackClick = {
+                                navController.popBackStack()
+                            },
+                            viewModel = eventViewModel
+                        )
+                    }
+                }
+
             }
         }
     }
