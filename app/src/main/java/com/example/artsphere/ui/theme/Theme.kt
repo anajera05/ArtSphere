@@ -12,32 +12,49 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = DeepPurple,
-    secondary = LighterPurple,
-    tertiary = ButtonPurple,
-    background = DeepPurple,
+    primary = BrightPurple,
     onPrimary = White,
-    onTertiary = White
+    primaryContainer = DeepBlue,
+    onPrimaryContainer = Light,
+    
+    secondary = BrightLightPurple,
+    onSecondary = DeepBlue,
+    secondaryContainer = Light,
+    onSecondaryContainer = DeepBlue,
+
+    tertiary = Light,
+    onTertiary = DeepBlue,
+
+    background = DeepBlue,
+    onBackground = White,
+    
+    surface = DeepPurple,
+    onSurface = White,
+    surfaceVariant = LighterPurple,
+    onSurfaceVariant = White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = DeepPurple,
-    secondary = LighterPurple,
-    tertiary = ButtonPurple,
-    background = White,
+    primary = BrightPurple,
     onPrimary = White,
-    onSecondary = White,
-    onTertiary = White
+    primaryContainer = DeepBlue,
+    onPrimaryContainer = Light,
+    
+    secondary = BrightLightPurple,
+    onSecondary = DeepBlue,
+    secondaryContainer = Light,
+    onSecondaryContainer = DeepBlue,
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    tertiary = Light,
+    onTertiary = DeepBlue,
+
+    background = White,
+    onBackground = DeepBlue,
+    
+    surface = DeepPurple,
+    onSurface = White,
+    surfaceVariant = LighterPurple,
+    onSurfaceVariant = DeepBlue
 )
 
 @Composable

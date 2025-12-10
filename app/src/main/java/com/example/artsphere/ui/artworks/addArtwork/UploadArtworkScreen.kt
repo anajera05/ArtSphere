@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,18 +28,55 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.artsphere.data.model.ArtworkCategory
 import com.example.artsphere.ui.artworks.ArtworkViewModel
 import com.google.android.gms.maps.model.LatLng
+import com.example.artsphere.ui.theme.ArtSphereTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UploadArtworkScreen(
     onBackClick: () -> Unit,
     viewModel: ArtworkViewModel = viewModel(),
+    initialImageUri: Uri? = null,
+    initialLocation: LatLng? = null
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    UploadArtworkContent(
+        onBackClick = onBackClick,
+        isUploading = uiState.isUploading,
+        uploadError = uiState.error,
+        onUploadArtwork = { imageUri, name, category, description, price, contactEmail, contactName, latitude, longitude ->
+            viewModel.uploadArtwork(
+                imageUri = imageUri,
+                name = name,
+                category = category,
+                description = description,
+                price = price,
+                contactEmail = contactEmail,
+                contactName = contactName,
+                latitude = latitude,
+                longitude = longitude,
+                onSuccess = onBackClick
+            )
+        },
+        initialImageUri = initialImageUri,
+        initialLocation = initialLocation
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UploadArtworkContent(
+    onBackClick: () -> Unit,
+    isUploading: Boolean,
+    uploadError: String?,
+    onUploadArtwork: (Uri, String, String, String, String, String, String, Double?, Double?) -> Unit,
     initialImageUri: Uri? = null,
     initialLocation: LatLng? = null
 ) {
@@ -73,7 +111,6 @@ fun UploadArtworkScreen(
         return emailPattern.matches(email)
     }
 
-    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
     val pickImageLauncher = rememberLauncherForActivityResult(
@@ -107,7 +144,7 @@ fun UploadArtworkScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF6200EE),
+                    containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -132,7 +169,7 @@ fun UploadArtworkScreen(
                     .clip(RoundedCornerShape(16.dp))
                     .border(
                         2.dp,
-                        if (attemptedSave && selectedImageUri == null) Color.Red else Color(0xFF6200EE),
+                        if (attemptedSave && selectedImageUri == null) Color.Red else MaterialTheme.colorScheme.primary,
                         RoundedCornerShape(16.dp)
                     )
                     .clickable { pickImageLauncher.launch(arrayOf("image/*")) },
@@ -159,7 +196,7 @@ fun UploadArtworkScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             "Add Artwork Image *",
-                            color = if (attemptedSave && selectedImageUri == null) Color.Red else Color(0xFF6200EE),
+                            color = if (attemptedSave && selectedImageUri == null) Color.Red else MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -168,6 +205,16 @@ fun UploadArtworkScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // Required fields notice
+            Text(
+                text = "* Indicates required fields",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Red,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
 
             // Location Info
             if (location != null) {
@@ -215,7 +262,9 @@ fun UploadArtworkScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFF6200EE),
                     unfocusedBorderColor = if (attemptedSave && artworkName.isBlank()) Color.Red else Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE)
+                    focusedLabelColor = Color(0xFF6200EE),
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
                 ),
                 isError = attemptedSave && artworkName.isBlank()
             )
@@ -238,13 +287,16 @@ fun UploadArtworkScreen(
                         .menuAnchor(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF6200EE),
-                        focusedLabelColor = Color(0xFF6200EE)
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
                     )
                 )
 
                 ExposedDropdownMenu(
                     expanded = showCategoryMenu,
-                    onDismissRequest = { showCategoryMenu = false }
+                    onDismissRequest = { showCategoryMenu = false },
+                    modifier = Modifier.background(Color.White)
                 ) {
                     ArtworkCategory.entries.forEach { category ->
                         DropdownMenuItem(
@@ -252,7 +304,10 @@ fun UploadArtworkScreen(
                             onClick = {
                                 selectedCategory = category
                                 showCategoryMenu = false
-                            }
+                            },
+                            colors = MenuDefaults.itemColors(
+                                textColor = Color.Black
+                            )
                         )
                     }
                 }
@@ -272,7 +327,9 @@ fun UploadArtworkScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFF6200EE),
                     unfocusedBorderColor = if (attemptedSave && description.isBlank()) Color.Red else Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE)
+                    focusedLabelColor = Color(0xFF6200EE),
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
                 ),
                 isError = attemptedSave && description.isBlank()
             )
@@ -314,7 +371,9 @@ fun UploadArtworkScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFF6200EE),
                     unfocusedBorderColor = Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE)
+                    focusedLabelColor = Color(0xFF6200EE),
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 supportingText = {
@@ -337,7 +396,9 @@ fun UploadArtworkScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFF6200EE),
                     unfocusedBorderColor = if (attemptedSave && contactName.isBlank()) Color.Red else Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE)
+                    focusedLabelColor = Color(0xFF6200EE),
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
                 ),
                 isError = attemptedSave && contactName.isBlank()
             )
@@ -353,7 +414,9 @@ fun UploadArtworkScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = if (attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail))) Color.Red else Color(0xFF6200EE),
                     unfocusedBorderColor = if (attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail))) Color.Red else Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE)
+                    focusedLabelColor = Color(0xFF6200EE),
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
                 ),
                 isError = attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail)),
                 keyboardOptions = KeyboardOptions(
@@ -363,46 +426,38 @@ fun UploadArtworkScreen(
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Required fields notice
-            Text(
-                text = "* Required fields. Price is optional.",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray,
-                modifier = Modifier.fillMaxWidth()
-            )
 
-            Spacer(modifier = Modifier.height(24.dp))
 
             // Save Button
             Button(
                 onClick = {
                     attemptedSave = true
                     if (allFieldsFilled) {
-                        viewModel.uploadArtwork(
-                            imageUri = selectedImageUri!!,
-                            name = artworkName,
-                            category = selectedCategory.name,
-                            description = description,
-                            price = price,
-                            contactEmail = contactEmail,
-                            contactName = contactName,
-                            latitude = location?.latitude,
-                            longitude = location?.longitude,
-                            onSuccess = onBackClick
+                        onUploadArtwork(
+                            selectedImageUri!!,
+                            artworkName,
+                            selectedCategory.name,
+                            description,
+                            price,
+                            contactEmail,
+                            contactName,
+                            location?.latitude,
+                            location?.longitude
                         )
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = !uiState.isUploading,
+                enabled = !isUploading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF6200EE)
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             ) {
-                if (uiState.isUploading) {
+                if (isUploading) {
                     CircularProgressIndicator(
                         color = Color.White,
                         modifier = Modifier.size(24.dp)
@@ -417,7 +472,7 @@ fun UploadArtworkScreen(
             }
 
             // Show missing fields error ONLY after save is attempted
-            if (attemptedSave && !allFieldsFilled && !uiState.isUploading) {
+            if (attemptedSave && !allFieldsFilled && !isUploading) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -444,7 +499,7 @@ fun UploadArtworkScreen(
             }
 
             // Error message from upload
-            if (uiState.error != null) {
+            if (uploadError != null) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -454,12 +509,25 @@ fun UploadArtworkScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = "Error: ${uiState.error}",
+                        text = "Error: $uploadError",
                         color = Color(0xFFC62828),
                         modifier = Modifier.padding(16.dp)
                     )
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun UploadArtworkScreenPreview() {
+    ArtSphereTheme {
+        UploadArtworkContent(
+            onBackClick = {},
+            isUploading = false,
+            uploadError = null,
+            onUploadArtwork = { _, _, _, _, _, _, _, _, _ -> }
+        )
     }
 }

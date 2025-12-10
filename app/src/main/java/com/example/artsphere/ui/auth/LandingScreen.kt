@@ -36,14 +36,34 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.artsphere.R
+import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.ui.artworks.gallery.GalleryViewModel
 import com.example.artsphere.ui.theme.ArtSphereTheme
 
 
 @Composable
 fun LandingScreen(
     onNavigateToLogin: () -> Unit,
-    onNavigateToSignup: () -> Unit
+    onNavigateToSignup: () -> Unit,
+    viewModel: GalleryViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    LandingScreenContent(
+        onNavigateToLogin = onNavigateToLogin,
+        onNavigateToSignup = onNavigateToSignup,
+        artworks = uiState.artworks
+    )
+}
+
+@Composable
+fun LandingScreenContent(
+    onNavigateToLogin: () -> Unit,
+    onNavigateToSignup: () -> Unit,
+    artworks: List<Artwork>
 ) {
     Box(
         modifier = Modifier
@@ -51,8 +71,8 @@ fun LandingScreen(
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.secondary
+                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.colorScheme.surfaceVariant
                     ),
                     start = Offset(0f, Float.POSITIVE_INFINITY),
                     end = Offset(Float.POSITIVE_INFINITY, 0f)
@@ -88,32 +108,32 @@ fun LandingScreen(
         ){
             Spacer(modifier = Modifier.height(70.dp))
 
-            MarqueeEffect()
-            MarqueeEffect(direction = -30)
-            MarqueeEffect()
+            MarqueeEffect(artworks = artworks)
+            MarqueeEffect(direction = -30, artworks = artworks)
+            MarqueeEffect(artworks = artworks)
 
             Spacer(modifier = Modifier.height(40.dp))
 
             Text(
                 text = "EXPAND YOUR",
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.displayMedium
             )
             Text(
                 text = "ARTSPHERE",
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.displayMedium
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Explore different art pieces",
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
                 text = " all in one place",
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -126,8 +146,8 @@ fun LandingScreen(
                     .padding(horizontal = 24.dp)
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -146,8 +166,8 @@ fun LandingScreen(
                     .padding(horizontal = 24.dp)
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.onPrimary,
-                    contentColor = MaterialTheme.colorScheme.tertiary
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -163,29 +183,54 @@ fun LandingScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MarqueeEffect(
-    direction: Int = 30
+    direction: Int = 30,
+    artworks: List<Artwork>
 ) {
+    val shuffledArtworks = remember(artworks) { artworks.shuffled() }
+    val randomInitialDelay = remember { (0..1500).random() }
 
     Box(modifier = Modifier.padding(top = 10.dp)) {
         Row(
             modifier = Modifier.basicMarquee(
                 iterations = Int.MAX_VALUE,
-                initialDelayMillis = 0,
+                initialDelayMillis = randomInitialDelay,
                 repeatDelayMillis = 0,
                 spacing = MarqueeSpacing(0.dp),
                 velocity = (direction).dp
             )
         ) {
-            repeat(10) {
-                Image(
-                    painter = painterResource(id = R.drawable.madamemonet),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(130.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+            if (shuffledArtworks.isNotEmpty()) {
+                val displayList = if (shuffledArtworks.size < 10) {
+                    List(10) { shuffledArtworks[it % shuffledArtworks.size] }
+                } else {
+                    shuffledArtworks.take(20)
+                }
+
+                displayList.forEach { artwork ->
+                    AsyncImage(
+                        model = artwork.imageUrl,
+                        contentDescription = artwork.name,
+                        placeholder = painterResource(id = R.drawable.madamemonet),
+                        error = painterResource(id = R.drawable.dickson),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(130.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+            } else {
+                repeat(10) {
+                    Image(
+                        painter = painterResource(id = R.drawable.dickson),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(130.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
             }
         }
     }
@@ -196,9 +241,10 @@ private fun MarqueeEffect(
 @Composable
 fun LandingScreenPreview() {
     ArtSphereTheme {
-        LandingScreen(
+        LandingScreenContent(
             onNavigateToLogin = {},
-            onNavigateToSignup = {}
+            onNavigateToSignup = {},
+            artworks = emptyList()
         )
     }
 }

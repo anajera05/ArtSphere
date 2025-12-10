@@ -116,7 +116,7 @@ fun ArtworkDetailContent(
                 title = { Text("Artwork") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
                 actions = {
@@ -125,19 +125,18 @@ fun ArtworkDetailContent(
                             Icon(
                                 imageVector = if (currentArtwork.isHidden) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                 contentDescription = if (currentArtwork.isHidden) "Hidden" else "Visible",
-                                tint = if (currentArtwork.isHidden) Color(0xFFE91E63) else MaterialTheme.colorScheme.primary
+                                tint = if (currentArtwork.isHidden) Color(0xFFE91E63) else Color.White
                             )
                         }
                         IconButton(onClick = { onShowDeleteDialogChange(true) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                    navigationIconContentColor = Color.White,
-                    actionIconContentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -224,14 +223,14 @@ fun ArtworkDetailContent(
                         Column(modifier = Modifier.weight(1f)) {
                             Surface(
                                 shape = RoundedCornerShape(20.dp),
-                                color =MaterialTheme.colorScheme.secondary,
+                                color =MaterialTheme.colorScheme.secondaryContainer,
                                 modifier = Modifier.padding(vertical = 8.dp)
                             ) {
                                 Text(
                                     text = currentArtwork.categoryEnum.displayName,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSecondary,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                                     fontWeight = FontWeight.Medium
                                 )
                             }

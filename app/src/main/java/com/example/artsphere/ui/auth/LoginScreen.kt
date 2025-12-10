@@ -63,12 +63,10 @@ fun LoginContent(
     // Check if we are in preview mode
     val isPreview = LocalInspectionMode.current
 
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val secondaryColor = MaterialTheme.colorScheme.secondary
     val infiniteTransition = rememberInfiniteTransition(label = "infinite transition")
     val animatedColor1 by infiniteTransition.animateColor(
-        initialValue = primaryColor,
-        targetValue = secondaryColor,
+        initialValue = MaterialTheme.colorScheme.surface,
+        targetValue = MaterialTheme.colorScheme.surfaceVariant,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 3000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -76,8 +74,8 @@ fun LoginContent(
         label = "animatedColor1"
     )
     val animatedColor2 by infiniteTransition.animateColor(
-        initialValue = secondaryColor,
-        targetValue = primaryColor,
+        initialValue = MaterialTheme.colorScheme.surfaceVariant,
+        targetValue = MaterialTheme.colorScheme.surface,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 3000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -161,13 +159,13 @@ fun LoginContent(
                         text = "Welcome Back!",
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Log in to continue",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White.copy(alpha = 0.9f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                     )
                 }
             }
@@ -203,7 +201,7 @@ fun LoginContent(
                         ),
                     shape = RoundedCornerShape(32.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.White
+                        containerColor = Color.White.copy(alpha = 0.8f)
                     )
                 ) {
                     Column(
@@ -229,7 +227,9 @@ fun LoginContent(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                                 focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                cursorColor = MaterialTheme.colorScheme.primary
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
                             ),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Email
@@ -266,7 +266,9 @@ fun LoginContent(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                                 focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                cursorColor = MaterialTheme.colorScheme.primary
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
                             ),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Password
@@ -303,14 +305,14 @@ fun LoginContent(
                                 .height(56.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiary,
-                                contentColor = MaterialTheme.colorScheme.onTertiary
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             ),
                             enabled = !uiState.isLoading
                         ) {
                             if (uiState.isLoading) {
                                 CircularProgressIndicator(
-                                    color = MaterialTheme.colorScheme.onTertiary,
+                                    color = MaterialTheme.colorScheme.primaryContainer,
                                     modifier = Modifier.size(24.dp)
                                 )
                             } else {
