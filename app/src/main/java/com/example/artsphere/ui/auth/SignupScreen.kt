@@ -77,12 +77,11 @@ fun SignupContent(
     // Check if we are in preview mode
     val isPreview = LocalInspectionMode.current
 
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val secondaryColor = MaterialTheme.colorScheme.secondary
+
     val infiniteTransition = rememberInfiniteTransition(label = "infinite transition")
     val animatedColor1 by infiniteTransition.animateColor(
-        initialValue = primaryColor,
-        targetValue = secondaryColor,
+        initialValue = MaterialTheme.colorScheme.surface,
+        targetValue = MaterialTheme.colorScheme.surfaceVariant,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 3000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -90,8 +89,8 @@ fun SignupContent(
         label = "animatedColor1"
     )
     val animatedColor2 by infiniteTransition.animateColor(
-        initialValue = secondaryColor,
-        targetValue = primaryColor,
+        initialValue = MaterialTheme.colorScheme.surfaceVariant,
+        targetValue = MaterialTheme.colorScheme.surface,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 3000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -180,7 +179,7 @@ fun SignupContent(
                 Text(
                     text = "Create your account",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                 )
                 }
             }
@@ -216,7 +215,7 @@ fun SignupContent(
                         ),
                     shape = RoundedCornerShape(32.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.White
+                        containerColor = Color.White.copy(alpha = 0.8f)
                     )
                 ) {
                     Column(
@@ -242,7 +241,9 @@ fun SignupContent(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             focusedLabelColor = MaterialTheme.colorScheme.primary,
-                            cursorColor = MaterialTheme.colorScheme.primary
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
                         ),
                         singleLine = true
                     )
@@ -266,7 +267,9 @@ fun SignupContent(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             focusedLabelColor = MaterialTheme.colorScheme.primary,
-                            cursorColor = MaterialTheme.colorScheme.primary
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
                         ),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email
@@ -306,7 +309,9 @@ fun SignupContent(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             focusedLabelColor = MaterialTheme.colorScheme.primary,
-                            cursorColor = MaterialTheme.colorScheme.primary
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
                         ),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password
@@ -346,7 +351,9 @@ fun SignupContent(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             focusedLabelColor = MaterialTheme.colorScheme.primary,
-                            cursorColor = MaterialTheme.colorScheme.primary
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
                         ),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password
@@ -404,8 +411,8 @@ fun SignupContent(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiary, // Using theme button color
-                            contentColor = MaterialTheme.colorScheme.onTertiary
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                         ),
                         enabled = !uiState.isLoading
                     ) {

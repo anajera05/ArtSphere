@@ -119,17 +119,14 @@ fun HomeContent(
     onProfileClick: () -> Unit,
     onMessagesClick: () -> Unit
 ) {
-    // Theme colors
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val secondaryColor = MaterialTheme.colorScheme.secondary
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.secondary
+                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.colorScheme.surfaceVariant
                     ),
                     start = Offset(0f, Float.POSITIVE_INFINITY),
                     end = Offset(Float.POSITIVE_INFINITY, 0f)
@@ -196,13 +193,13 @@ fun HomeContent(
                             Text(
                                 text = "Welcome to ",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White.copy(alpha = 0.8f)
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                             )
                             Text(
                                 text = "ArtSphere",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -212,7 +209,7 @@ fun HomeContent(
                         Icon(
                             imageVector = Icons.Default.ChatBubbleOutline,
                             contentDescription = "Messages",
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(28.dp)
                         )
                     }
@@ -242,7 +239,9 @@ fun HomeContent(
                         unfocusedBorderColor = Color.Transparent,
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
-                        cursorColor = primaryColor
+                        focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                        cursorColor = MaterialTheme.colorScheme.primary
                     ),
                     shape = RoundedCornerShape(28.dp),
                     singleLine = true
@@ -253,7 +252,7 @@ fun HomeContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
-                        color = Color(0xFFF8F9FA),
+                        color = MaterialTheme.colorScheme.background,
                         shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
                     )
                     .padding(top = 12.dp)
@@ -279,13 +278,13 @@ fun HomeContent(
                                     text = " Trending Art News",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.tertiary
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
                                 IconButton(onClick = onRefreshNews) {
                                     Icon(
                                         imageVector = Icons.Default.Refresh,
                                         contentDescription = "Refresh",
-                                        tint = MaterialTheme.colorScheme.tertiary
+                                        tint = MaterialTheme.colorScheme.onBackground
                                     )
                                 }
                             }
@@ -362,16 +361,16 @@ fun HomeContent(
                                         onClick = { onFilterChange(filter) },
                                         label = { Text(filter) },
                                         colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = MaterialTheme.colorScheme.tertiary,
+                                            selectedContainerColor = MaterialTheme.colorScheme.primary,
                                             selectedLabelColor = Color.White,
                                             containerColor = Color.White,
-                                            labelColor = secondaryColor
+                                            labelColor = MaterialTheme.colorScheme.secondary
                                         ),
                                         border = FilterChipDefaults.filterChipBorder(
                                             enabled = true,
                                             selected = selectedFilter == filter,
-                                            borderColor = if (selectedFilter == filter) primaryColor else secondaryColor,
-                                            selectedBorderColor = primaryColor
+                                            borderColor = if (selectedFilter == filter) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                                            selectedBorderColor = MaterialTheme.colorScheme.primary
                                         )
                                     )
                                 }

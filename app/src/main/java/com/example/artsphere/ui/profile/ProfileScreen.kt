@@ -23,16 +23,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.artsphere.ui.profile.ProfileViewModel
 import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.ui.artworks.ArtworkUiState
 import com.example.artsphere.ui.artworks.ArtworkViewModel
 import com.example.artsphere.ui.artworks.myArtworks.MyArtworkScreen
 import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkScreen
 import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,15 +45,44 @@ fun ProfileScreen(
     onUploadClick: () -> Unit,
     onArtworkClick: (Artwork) -> Unit
 ) {
-    var state by remember { mutableIntStateOf(0) }
-    val titles = listOf("Shop", "Saved")
     val uiState by profileViewModel.uiState.collectAsState()
-    val context = LocalContext.current
     val artworkUiState by artViewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
         profileViewModel.refreshPhotoFromFirebase()
     }
+
+    ProfileScreenContent(
+        modifier = modifier,
+        profileUiState = uiState,
+        artworkUiState = artworkUiState,
+        savedArtworkViewModel = savedArtworkViewModel,
+        artViewModel = artViewModel,
+        onNavigateToUpload = { navController.navigate("upload_artwork") },
+        onNavigateToSettings = { navController.navigate("settings") },
+        onUploadProfilePhoto = { uri -> profileViewModel.uploadProfilePhoto(uri) },
+        onUploadClick = onUploadClick,
+        onArtworkClick = onArtworkClick
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProfileScreenContent(
+    modifier: Modifier = Modifier,
+    profileUiState: ProfileUiState,
+    artworkUiState: ArtworkUiState,
+    savedArtworkViewModel: SavedArtworkViewModel? = null,
+    artViewModel: ArtworkViewModel? = null,
+    onNavigateToUpload: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onUploadProfilePhoto: (Uri) -> Unit,
+    onUploadClick: () -> Unit,
+    onArtworkClick: (Artwork) -> Unit
+) {
+    var state by remember { mutableIntStateOf(0) }
+    val titles = listOf("Shop", "Saved")
+    val context = LocalContext.current
 
     val pickImageLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -64,7 +93,7 @@ fun ProfileScreen(
                     it, Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
             } catch(_: Exception) {}
-            profileViewModel.uploadProfilePhoto(uri)
+            onUploadProfilePhoto(it)
         }
     }
 
@@ -91,7 +120,7 @@ fun ProfileScreen(
                     modifier = Modifier.align(Alignment.CenterEnd)
                 ) {
                     IconButton(
-                        onClick = { navController.navigate("upload_artwork") },
+                        onClick = onNavigateToUpload,
                     ){
                         Icon(
                             imageVector = Icons.Default.Add,
@@ -101,9 +130,7 @@ fun ProfileScreen(
                         )
                     }
                     IconButton(
-                        onClick = {
-                            navController.navigate("settings")
-                        },
+                        onClick = onNavigateToSettings,
                     ){
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -132,16 +159,16 @@ fun ProfileScreen(
                         .clickable { pickImageLauncher.launch(arrayOf("image/*")) },
                 ){
                     when {
-                        uiState.isUploading -> {
+                        profileUiState.isUploading -> {
                             CircularProgressIndicator(
                                 color = Color(0xFF6200EE),
                                 modifier = Modifier.size(40.dp)
                             )
                         }
 
-                        uiState.photoUrl != null -> {
+                        profileUiState.photoUrl != null -> {
                             AsyncImage(
-                                model = uiState.photoUrl,
+                                model = profileUiState.photoUrl,
                                 contentDescription = "Profile Photo",
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -180,7 +207,11 @@ fun ProfileScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
             Column {
-                SecondaryTabRow(selectedTabIndex = state) {
+                SecondaryTabRow(
+                    selectedTabIndex = state,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ) {
                     titles.forEachIndexed { index, title ->
                         Tab(
                             selected = state == index,
@@ -191,17 +222,21 @@ fun ProfileScreen(
                 }
                 when (state) {
                     0 -> {
-                        MyArtworkScreen(
-                            onUploadClick = onUploadClick,
-                            onArtworkClick = onArtworkClick,
-                            viewModel = artViewModel
-                        )
+                        if (artViewModel != null) {
+                            MyArtworkScreen(
+                                onUploadClick = onUploadClick,
+                                onArtworkClick = onArtworkClick,
+                                viewModel = artViewModel
+                            )
+                        }
                     }
                     1 -> {
-                        SavedArtworkScreen(
-                            onArtworkClick = onArtworkClick,
-                            viewModel = savedArtworkViewModel
-                        )
+                        if (savedArtworkViewModel != null) {
+                            SavedArtworkScreen(
+                                onArtworkClick = onArtworkClick,
+                                viewModel = savedArtworkViewModel
+                            )
+                        }
                     }
                 }
 
@@ -209,4 +244,20 @@ fun ProfileScreen(
 
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProfileScreenPreview() {
+    ProfileScreenContent(
+        profileUiState = ProfileUiState(photoUrl = null),
+        artworkUiState = ArtworkUiState(artworks = emptyList()),
+        savedArtworkViewModel = null,
+        artViewModel = null,
+        onNavigateToUpload = {},
+        onNavigateToSettings = {},
+        onUploadProfilePhoto = {},
+        onUploadClick = {},
+        onArtworkClick = {}
+    )
 }
