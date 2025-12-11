@@ -52,6 +52,8 @@ import com.example.artsphere.data.model.Event
 import com.example.artsphere.ui.events.EventViewModel
 import com.example.artsphere.ui.events.CreateEventScreen
 import com.example.artsphere.ui.events.EventDetailScreen
+import com.example.artsphere.ui.news.WebViewScreen
+import com.example.artsphere.data.source.remote.Article
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     data object Home : Screen("home", "Home", Icons.Default.Home)
@@ -87,6 +89,9 @@ fun MainScreenWithBottomBar(
     var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
     var selectedEvent by remember { mutableStateOf<Event?>(null) }
+
+    var selectedArticle by remember { mutableStateOf<Article?>(null) }
+    var showWebView by remember { mutableStateOf(false) }
 
     val showBottomBar = currentDestination?.route in bottomNavScreens.map { it.route }
     Box(
@@ -173,6 +178,10 @@ fun MainScreenWithBottomBar(
                                 launchSingleTop = true
                                 restoreState = true
                             }
+                        },
+                        onArticleClick = { article ->
+                            selectedArticle = article
+                            showWebView = true
                         }
                     )
                 }
@@ -332,6 +341,16 @@ fun MainScreenWithBottomBar(
                 }
 
             }
+        }
+        if (showWebView && selectedArticle != null) {
+            WebViewScreen(
+                url = selectedArticle!!.url,
+                title = selectedArticle!!.title,
+                onBackClick = {
+                    showWebView = false
+                    selectedArticle = null
+                }
+            )
         }
     }
 }

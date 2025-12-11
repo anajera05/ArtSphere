@@ -62,6 +62,7 @@ fun HomeScreen(
     onArtworkClick: (Artwork) -> Unit = {},
     onProfileClick: () -> Unit = {},
     onMessagesClick: () -> Unit = {},
+    onArticleClick: (Article) -> Unit = {},
     savedViewModel: SavedArtworkViewModel = viewModel(),
     galleryViewModel: GalleryViewModel = viewModel(),
     newsViewModel: NewsViewModel = viewModel(),
@@ -96,7 +97,8 @@ fun HomeScreen(
         onLikeClick = { savedViewModel.toggleSaveArtwork(it) },
         onRefreshNews = { newsViewModel.loadNews() },
         onProfileClick = onProfileClick,
-        onMessagesClick = onMessagesClick
+        onMessagesClick = onMessagesClick,
+                onArticleClick = onArticleClick
     )
 }
 
@@ -117,7 +119,8 @@ fun HomeContent(
     onLikeClick: (String) -> Unit,
     onRefreshNews: () -> Unit,
     onProfileClick: () -> Unit,
-    onMessagesClick: () -> Unit
+    onMessagesClick: () -> Unit,
+    onArticleClick: (Article) -> Unit
 ) {
     Box(
         modifier = modifier
@@ -266,7 +269,7 @@ fun HomeContent(
                 ) {
                     // Trending Art News Section (Original Style)
                     item(span = { GridItemSpan(maxLineSpan) }) {
-                        val context = LocalContext.current
+//                        val context = LocalContext.current
 
                         Column(modifier = Modifier.padding(bottom = 8.dp)) {
                             Row(
@@ -307,11 +310,7 @@ fun HomeContent(
                                                 .width(200.dp)
                                                 .height(180.dp)
                                                 .clickable {
-                                                    val intent = Intent(
-                                                        Intent.ACTION_VIEW,
-                                                        Uri.parse(article.url)
-                                                    )
-                                                    context.startActivity(intent)
+                                                    onArticleClick(article)
                                                 },
                                             shape = RoundedCornerShape(16.dp),
                                             elevation = CardDefaults.cardElevation(4.dp),
@@ -601,54 +600,54 @@ fun CuteArtworkCard(
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    ArtSphereTheme {
-        HomeContent(
-            galleryState = GalleryUiState(
-                artworks = listOf(
-                    Artwork(
-                        id = "1",
-                        name = "Starry Night",
-                        category = ArtworkCategory.PAINTING_DRAWING.name,
-                        price = "1000",
-                        imageUrl = "https://example.com/image.jpg"
-                    ),
-                    Artwork(
-                        id = "2",
-                        name = "Mona Lisa",
-                        category = ArtworkCategory.PAINTING_DRAWING.name,
-                        price = "2000",
-                        imageUrl = "https://example.com/image2.jpg",
-                        isSold = true
-                    )
-                )
-            ),
-            savedState = SavedArtworkUiState(
-                savedArtworkIds = setOf("1")
-            ),
-            newsUiState = NewsUiState(
-                articles = listOf(
-                    Article(
-                        title = "New Art Exhibition in NYC",
-                        url = "https://nytimes.com",
-                        imageUrl = null
-                    )
-                )
-            ),
-            profileState = ProfileUiState(),
-            searchQuery = "",
-            onSearchQueryChange = {},
-            selectedFilter = "All",
-            onFilterChange = {},
-            filters = listOf("All", "Painting & Drawing", "Photographic", "Digital", "Other"),
-            onArtworkClick = {},
-            onLikeClick = {},
-            onRefreshNews = {},
-            onProfileClick = {},
-            onMessagesClick = {}
-        )
-    }
-}
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun HomeScreenPreview() {
+//    ArtSphereTheme {
+//        HomeContent(
+//            galleryState = GalleryUiState(
+//                artworks = listOf(
+//                    Artwork(
+//                        id = "1",
+//                        name = "Starry Night",
+//                        category = ArtworkCategory.PAINTING_DRAWING.name,
+//                        price = "1000",
+//                        imageUrl = "https://example.com/image.jpg"
+//                    ),
+//                    Artwork(
+//                        id = "2",
+//                        name = "Mona Lisa",
+//                        category = ArtworkCategory.PAINTING_DRAWING.name,
+//                        price = "2000",
+//                        imageUrl = "https://example.com/image2.jpg",
+//                        isSold = true
+//                    )
+//                )
+//            ),
+//            savedState = SavedArtworkUiState(
+//                savedArtworkIds = setOf("1")
+//            ),
+//            newsUiState = NewsUiState(
+//                articles = listOf(
+//                    Article(
+//                        title = "New Art Exhibition in NYC",
+//                        url = "https://nytimes.com",
+//                        imageUrl = null
+//                    )
+//                )
+//            ),
+//            profileState = ProfileUiState(),
+//            searchQuery = "",
+//            onSearchQueryChange = {},
+//            selectedFilter = "All",
+//            onFilterChange = {},
+//            filters = listOf("All", "Painting & Drawing", "Photographic", "Digital", "Other"),
+//            onArtworkClick = {},
+//            onLikeClick = {},
+//            onRefreshNews = {},
+//            onProfileClick = {},
+//            onMessagesClick = {}
+//        )
+//    }
+//}
