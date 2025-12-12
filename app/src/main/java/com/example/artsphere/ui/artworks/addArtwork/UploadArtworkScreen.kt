@@ -28,15 +28,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.artsphere.data.model.Artwork
 import com.example.artsphere.data.model.ArtworkCategory
 import com.example.artsphere.ui.artworks.ArtworkViewModel
 import com.example.artsphere.ui.components.StyledTextField
 import com.google.android.gms.maps.model.LatLng
-import com.example.artsphere.ui.theme.ArtSphereTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,27 +43,48 @@ fun UploadArtworkScreen(
     onBackClick: () -> Unit,
     viewModel: ArtworkViewModel = viewModel(),
     initialImageUri: Uri? = null,
-    initialLocation: LatLng? = null
+    initialLocation: LatLng? = null,
+    existingArtwork: Artwork? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isEditMode = existingArtwork != null
 
     UploadArtworkContent(
         onBackClick = onBackClick,
         isUploading = uiState.isUploading,
         uploadError = uiState.error,
+        isEditMode = isEditMode,
+        existingArtwork = existingArtwork,
         onUploadArtwork = { imageUri, name, category, description, price, contactEmail, contactName, latitude, longitude ->
-            viewModel.uploadArtwork(
-                imageUri = imageUri,
-                name = name,
-                category = category,
-                description = description,
-                price = price,
-                contactEmail = contactEmail,
-                contactName = contactName,
-                latitude = latitude,
-                longitude = longitude,
-                onSuccess = onBackClick
-            )
+            if (isEditMode && existingArtwork != null) {
+                viewModel.updateArtwork(
+                    artworkId = existingArtwork.id,
+                    imageUri = imageUri,
+                    name = name,
+                    category = category,
+                    description = description,
+                    price = price,
+                    contactEmail = contactEmail,
+                    contactName = contactName,
+                    latitude = latitude,
+                    longitude = longitude,
+                    currentImageUrl = existingArtwork.imageUrl,
+                    onSuccess = onBackClick
+                )
+            } else {
+                viewModel.uploadArtwork(
+                    imageUri = imageUri!!,
+                    name = name,
+                    category = category,
+                    description = description,
+                    price = price,
+                    contactEmail = contactEmail,
+                    contactName = contactName,
+                    latitude = latitude,
+                    longitude = longitude,
+                    onSuccess = onBackClick
+                )
+            }
         },
         initialImageUri = initialImageUri,
         initialLocation = initialLocation
@@ -77,20 +97,14 @@ fun UploadArtworkContent(
     onBackClick: () -> Unit,
     isUploading: Boolean,
     uploadError: String?,
-    onUploadArtwork: (Uri, String, String, String, String, String, String, Double?, Double?) -> Unit,
+    onUploadArtwork: (Uri?, String, String, String, String, String, String, Double?, Double?) -> Unit,
     initialImageUri: Uri? = null,
-    initialLocation: LatLng? = null
+    initialLocation: LatLng? = null,
+    isEditMode: Boolean = false,
+    existingArtwork: Artwork? = null
 ) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var location by remember { mutableStateOf<LatLng?>(null) }
-    LaunchedEffect(initialImageUri) {
-        if (initialImageUri != null) {
-            selectedImageUri = initialImageUri
-        }
-        if (initialLocation != null) {
-            location = initialLocation
-        }
-    }
     var artworkName by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(ArtworkCategory.PAINTING_DRAWING) }
     var description by remember { mutableStateOf("") }
@@ -106,7 +120,27 @@ fun UploadArtworkContent(
     // Track if user has attempted to save (to show errors)
     var attemptedSave by remember { mutableStateOf(false) }
 
-    // Email validation function
+    // Initialize with existing artwork data if editing
+    LaunchedEffect(existingArtwork) {
+        if (existingArtwork != null) {
+            artworkName = existingArtwork.name
+            selectedCategory = existingArtwork.categoryEnum
+            description = existingArtwork.description
+            price = existingArtwork.price
+            contactEmail = existingArtwork.contactEmail
+            contactName = existingArtwork.contactName
+            if (existingArtwork.latitude != null && existingArtwork.longitude != null) {
+                location = LatLng(existingArtwork.latitude!!, existingArtwork.longitude!!)
+            }
+        }
+        if (initialImageUri != null) {
+            selectedImageUri = initialImageUri
+        }
+        if (initialLocation != null) {
+            location = initialLocation
+        }
+    }
+
     fun isValidEmail(email: String): Boolean {
         if (email.isBlank()) return false
         val emailPattern = "[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}".toRegex()
@@ -128,8 +162,7 @@ fun UploadArtworkContent(
         }
     }
 
-    // Check if all required fields are filled (price is optional)
-    val allFieldsFilled = selectedImageUri != null &&
+    val allFieldsFilled = (isEditMode || selectedImageUri != null) &&
             artworkName.isNotBlank() &&
             description.isNotBlank() &&
             contactName.isNotBlank() &&
@@ -139,14 +172,14 @@ fun UploadArtworkContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Upload Artwork") },
+                title = { Text(if (isEditMode) "Edit Artwork" else "Upload Artwork") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBack, "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
+                    containerColor = Color(0xFF6200EE),
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -171,16 +204,18 @@ fun UploadArtworkContent(
                     .clip(RoundedCornerShape(16.dp))
                     .border(
                         2.dp,
-                        if (attemptedSave && selectedImageUri == null) Color.Red else MaterialTheme.colorScheme.primary,
+                        if (attemptedSave && !isEditMode && selectedImageUri == null) Color.Red else Color(0xFF6200EE),
                         RoundedCornerShape(16.dp)
                     )
                     .clickable { pickImageLauncher.launch(arrayOf("image/*")) },
                 contentAlignment = Alignment.Center
             ) {
-                if (selectedImageUri != null) {
+                val displayImageUri = selectedImageUri ?: existingArtwork?.imageUrl
+
+                if (displayImageUri != null) {
                     AsyncImage(
-                        model = selectedImageUri,
-                        contentDescription = "Selected artwork",
+                        model = displayImageUri,
+                        contentDescription = "Artwork image",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
@@ -197,8 +232,8 @@ fun UploadArtworkContent(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Add Artwork Image *",
-                            color = if (attemptedSave && selectedImageUri == null) Color.Red else MaterialTheme.colorScheme.primary,
+                            if (isEditMode) "Change Image (optional)" else "Add Artwork Image *",
+                            color = if (attemptedSave && !isEditMode && selectedImageUri == null) Color.Red else Color(0xFF6200EE),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -207,16 +242,6 @@ fun UploadArtworkContent(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            // Required fields notice
-            Text(
-                text = "* Indicates required fields",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Red,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
 
             // Location Info
             if (location != null) {
@@ -297,14 +322,11 @@ fun UploadArtworkContent(
                 ) {
                     ArtworkCategory.entries.forEach { category ->
                         DropdownMenuItem(
-                            text = { Text(category.displayName) },
+                            text = { Text(category.displayName, color = Color.Black) },
                             onClick = {
                                 selectedCategory = category
                                 showCategoryMenu = false
-                            },
-                            colors = MenuDefaults.itemColors(
-                                textColor = Color.Black
-                            )
+                            }
                         )
                     }
                 }
@@ -398,9 +420,17 @@ fun UploadArtworkContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Required fields notice
+            Text(
+                text = "* Required fields. Price is optional.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+                modifier = Modifier.fillMaxWidth()
+            )
 
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Save Button
+            // Save/Update Button
             Button(
                 onClick = {
                     attemptedSave = true
@@ -412,7 +442,7 @@ fun UploadArtworkContent(
                     
                     if (allFieldsFilled) {
                         onUploadArtwork(
-                            selectedImageUri!!,
+                            selectedImageUri,
                             artworkName,
                             selectedCategory.name,
                             description,
@@ -429,8 +459,7 @@ fun UploadArtworkContent(
                     .height(56.dp),
                 enabled = !isUploading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color(0xFF6200EE)
                 )
             ) {
                 if (isUploading) {
@@ -440,7 +469,7 @@ fun UploadArtworkContent(
                     )
                 } else {
                     Text(
-                        "Save Artwork",
+                        if (isEditMode) "Update Artwork" else "Save Artwork",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -448,7 +477,7 @@ fun UploadArtworkContent(
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Show missing fields error ONLY after save is attempted
+            // Missing fields error
             if (attemptedSave && !allFieldsFilled && !isUploading) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Card(
@@ -462,20 +491,20 @@ fun UploadArtworkContent(
                         Text(
                             "❌ Please fill in all required fields:",
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.error
+                            color = Color(0xFFC62828)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        if (selectedImageUri == null) Text("• Artwork Image", color = MaterialTheme.colorScheme.error)
-                        if (artworkName.isBlank()) Text("• Artwork Name", color = MaterialTheme.colorScheme.error)
-                        if (description.isBlank()) Text("• Description", color = MaterialTheme.colorScheme.error)
-                        if (contactName.isBlank()) Text("• Contact Name", color = MaterialTheme.colorScheme.error)
-                        if (contactEmail.isBlank()) Text("• Contact Email", color = MaterialTheme.colorScheme.error)
-                        else if (!isValidEmail(contactEmail)) Text("• Valid Email Format", color = MaterialTheme.colorScheme.error)
+                        if (selectedImageUri == null && !isEditMode) Text("• Artwork Image", color = Color(0xFFC62828))
+                        if (artworkName.isBlank()) Text("• Artwork Name", color = Color(0xFFC62828))
+                        if (description.isBlank()) Text("• Description", color = Color(0xFFC62828))
+                        if (contactName.isBlank()) Text("• Contact Name", color = Color(0xFFC62828))
+                        if (contactEmail.isBlank()) Text("• Contact Email", color = Color(0xFFC62828))
+                        else if (!isValidEmail(contactEmail)) Text("• Valid Email Format", color = Color(0xFFC62828))
                     }
                 }
             }
 
-            // Error message from upload
+            // Upload error
             if (uploadError != null) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Card(
@@ -487,24 +516,11 @@ fun UploadArtworkContent(
                 ) {
                     Text(
                         text = "Error: $uploadError",
-                        color = MaterialTheme.colorScheme.error,
+                        color = Color(0xFFC62828),
                         modifier = Modifier.padding(16.dp)
                     )
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun UploadArtworkScreenPreview() {
-    ArtSphereTheme {
-        UploadArtworkContent(
-            onBackClick = {},
-            isUploading = false,
-            uploadError = null,
-            onUploadArtwork = { _, _, _, _, _, _, _, _, _ -> }
-        )
     }
 }

@@ -1,8 +1,6 @@
 package com.example.artsphere.data.source.remote
 
 import com.example.artsphere.BuildConfig
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -73,10 +70,13 @@ class NewsViewModel : ViewModel() {
         }
     }
 }
+
 @Composable
-fun ArtNewsScreen(viewModel: NewsViewModel = viewModel()) {
+fun ArtNewsScreen(
+    viewModel: NewsViewModel = viewModel(),
+    onArticleClick: (Article) -> Unit = {}
+) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Latest Art News", style = MaterialTheme.typography.headlineMedium)
@@ -102,10 +102,10 @@ fun ArtNewsScreen(viewModel: NewsViewModel = viewModel()) {
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp)
                                 .clickable {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(article.url))
-                                    context.startActivity(intent)
+                                    onArticleClick(article)
                                 }
                         ) {
+                            // Display article image if available
                             article.imageUrl?.let { url ->
                                 AsyncImage(
                                     model = url,
@@ -117,6 +117,7 @@ fun ArtNewsScreen(viewModel: NewsViewModel = viewModel()) {
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
 
+                            // Display article title
                             Text(
                                 text = article.title,
                                 style = MaterialTheme.typography.headlineSmall
@@ -128,6 +129,7 @@ fun ArtNewsScreen(viewModel: NewsViewModel = viewModel()) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Refresh button to reload articles
                 Button(
                     onClick = { viewModel.loadNews() },
                     modifier = Modifier.fillMaxWidth()

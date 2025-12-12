@@ -33,7 +33,6 @@ class ArtworkViewModel : ViewModel() {
     val artworkCount: Int
         get() = _uiState.value.artworks.size
 
-
     init {
         loadArtworks()
     }
@@ -52,7 +51,7 @@ class ArtworkViewModel : ViewModel() {
 
                 val artworkList = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Artwork::class.java)?.copy(id = doc.id)
-                }.sortedByDescending { it.createdAt }  // Sort in code instead
+                }.sortedByDescending { it.createdAt }
 
                 _uiState.value = _uiState.value.copy(
                     artworks = artworkList,
@@ -138,6 +137,80 @@ class ArtworkViewModel : ViewModel() {
 
             } catch (e: Exception) {
                 Log.e("ARTWORK_VM", "Upload failed", e)
+                _uiState.value = _uiState.value.copy(
+                    error = e.message,
+                    isUploading = false
+                )
+            }
+        }
+    }
+
+    // NEW: Update existing artwork
+    fun updateArtwork(
+        artworkId: String,
+        imageUri: Uri?,
+        name: String,
+        category: String,
+        description: String,
+        price: String,
+        contactEmail: String,
+        contactName: String,
+        latitude: Double? = null,
+        longitude: Double? = null,
+        currentImageUrl: String,
+        onSuccess: () -> Unit
+    ) {
+        val userId = user?.uid ?: return
+
+        viewModelScope.launch {
+            try {
+                Log.d("ARTWORK_VM", "Starting artwork update")
+                _uiState.value = _uiState.value.copy(isUploading = true, error = null)
+
+                // Determine final image URL
+                val finalImageUrl = if (imageUri != null) {
+                    // User selected a new image - upload it
+                    val imageRef = storageRef.child("$userId/$artworkId.jpg")
+                    imageRef.putFile(imageUri).await()
+                    imageRef.downloadUrl.await().toString()
+                } else {
+                    // Keep existing image
+                    currentImageUrl
+                }
+
+                // Update artwork data
+                val artworkData = mutableMapOf<String, Any>(
+                    "imageUrl" to finalImageUrl,
+                    "name" to name,
+                    "category" to category,
+                    "description" to description,
+                    "price" to price,
+                    "contactEmail" to contactEmail,
+                    "contactName" to contactName
+                )
+
+                // Add location if provided
+                if (latitude != null && longitude != null) {
+                    artworkData["latitude"] = latitude
+                    artworkData["longitude"] = longitude
+                }
+
+                // Update in Firestore
+                db.collection("artworks")
+                    .document(artworkId)
+                    .update(artworkData)
+                    .await()
+
+                Log.d("ARTWORK_VM", "Artwork updated successfully")
+
+                // Reload artworks
+                loadArtworks()
+
+                _uiState.value = _uiState.value.copy(isUploading = false)
+                onSuccess()
+
+            } catch (e: Exception) {
+                Log.e("ARTWORK_VM", "Update failed", e)
                 _uiState.value = _uiState.value.copy(
                     error = e.message,
                     isUploading = false

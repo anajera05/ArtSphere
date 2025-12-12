@@ -35,6 +35,7 @@ fun ArtworkDetailScreen(
     artwork: Artwork,
     onBackClick: () -> Unit,
     onDeleteClick: () -> Unit,
+    onEditClick: () -> Unit = {},
     onMessageClick: () -> Unit,
     onNavigateToArtwork: (Artwork) -> Unit,
     galleryViewModel: GalleryViewModel,
@@ -49,7 +50,7 @@ fun ArtworkDetailScreen(
     }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var showArtistProfile by remember { mutableStateOf(false) } // State for profile sheet
+    var showArtistProfile by remember { mutableStateOf(false) }
     val isOwnArtwork = currentArtwork.userId == FirebaseAuth.getInstance().currentUser?.uid
     val isLoading = galleryState.isLoading
 
@@ -68,8 +69,9 @@ fun ArtworkDetailScreen(
         showDeleteDialog = showDeleteDialog,
         onShowDeleteDialogChange = { showDeleteDialog = it },
         showArtistProfile = showArtistProfile,
-        onShowArtistProfileChange = { showArtistProfile = it }, // Pass state and callback
+        onShowArtistProfileChange = { showArtistProfile = it },
         onBackClick = onBackClick,
+        onEditClick = onEditClick,
         onLikeClick = { savedViewModel.toggleSaveArtwork(currentArtwork.id) },
         onMessageClick = onMessageClick,
         onNavigateToArtwork = onNavigateToArtwork,
@@ -103,6 +105,7 @@ fun ArtworkDetailContent(
     showArtistProfile: Boolean,
     onShowArtistProfileChange: (Boolean) -> Unit,
     onBackClick: () -> Unit,
+    onEditClick: () -> Unit = {},
     onLikeClick: () -> Unit,
     onMessageClick: () -> Unit,
     onNavigateToArtwork: (Artwork) -> Unit,
@@ -121,6 +124,16 @@ fun ArtworkDetailContent(
                 },
                 actions = {
                     if (isOwnArtwork) {
+                        // Edit button
+                        IconButton(onClick = onEditClick) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit",
+                                tint = Color.White
+                            )
+                        }
+
+                        // Hide/Show button
                         IconButton(onClick = onToggleHidden, enabled = !isLoading) {
                             Icon(
                                 imageVector = if (currentArtwork.isHidden) Icons.Default.VisibilityOff else Icons.Default.Visibility,
@@ -128,6 +141,8 @@ fun ArtworkDetailContent(
                                 tint = if (currentArtwork.isHidden) Color(0xFFE91E63) else Color.White
                             )
                         }
+
+                        // Delete button
                         IconButton(onClick = { onShowDeleteDialogChange(true) }) {
                             Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
                         }
@@ -173,11 +188,9 @@ fun ArtworkDetailContent(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-
                     Column {
                         Text(text = currentArtwork.contactName, fontWeight = FontWeight.Bold)
                         Text(text = currentArtwork.contactEmail, style = MaterialTheme.typography.bodySmall, textDecoration = TextDecoration.Underline)
-
                     }
                     if (!isOwnArtwork) {
                         IconButton(
@@ -223,7 +236,7 @@ fun ArtworkDetailContent(
                         Column(modifier = Modifier.weight(1f)) {
                             Surface(
                                 shape = RoundedCornerShape(20.dp),
-                                color =MaterialTheme.colorScheme.secondaryContainer,
+                                color = MaterialTheme.colorScheme.secondaryContainer,
                                 modifier = Modifier.padding(vertical = 8.dp)
                             ) {
                                 Text(
@@ -235,20 +248,17 @@ fun ArtworkDetailContent(
                                 )
                             }
                             Text(text = currentArtwork.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-
                         }
-                            IconButton(
-                                onClick = onLikeClick,
-                                modifier = Modifier.background(Color.White.copy(alpha = 0.8f), shape = RoundedCornerShape(50))
-                            ) {
-                                Icon(
-                                    imageVector = if (savedState.savedArtworkIds.contains(currentArtwork.id)) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                                    contentDescription = "Like",
-                                    tint = if (savedState.savedArtworkIds.contains(currentArtwork.id)) Color(0xFFE91E63) else Color(0xFF6200EE)
-                                )
-                            }
-
-
+                        IconButton(
+                            onClick = onLikeClick,
+                            modifier = Modifier.background(Color.White.copy(alpha = 0.8f), shape = RoundedCornerShape(50))
+                        ) {
+                            Icon(
+                                imageVector = if (savedState.savedArtworkIds.contains(currentArtwork.id)) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                contentDescription = "Like",
+                                tint = if (savedState.savedArtworkIds.contains(currentArtwork.id)) Color(0xFFE91E63) else Color(0xFF6200EE)
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -281,66 +291,62 @@ fun ArtworkDetailContent(
                     }
                     Spacer(modifier = Modifier.height(4.dp))
 
-
-                        Row {
-                            Text(
-                                text = "Price",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            if (currentArtwork.price.isNotBlank()) {
-                            Text("$${currentArtwork.price}")}
-                            else {
-                                    Text("Contact for price")
-                                }
-                            }
+                    Row {
+                        Text(
+                            text = "Price",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        if (currentArtwork.price.isNotBlank()) {
+                            Text("$${currentArtwork.price}")
+                        } else {
+                            Text("Contact for price")
                         }
                     }
                 }
-
-            }
-
-            // Show Artist Profile Sheet
-            if (showArtistProfile) {
-                ArtistProfileSheet(
-                    userId = currentArtwork.userId,
-                    userName = currentArtwork.contactName,
-                    onDismiss = { onShowArtistProfileChange(false) },
-                    onArtworkClick = {
-                        onShowArtistProfileChange(false)
-                        onNavigateToArtwork(it)
-                    }
-                )
-            }
-
-            // Delete confirmation dialog
-            if (showDeleteDialog) {
-                AlertDialog(
-                    onDismissRequest = { onShowDeleteDialogChange(false) },
-                    title = { Text(text ="Delete Artwork", color = MaterialTheme.colorScheme.onSecondary) },
-                    text = { Text("Are you sure you want to permanently delete this artwork? This action cannot be undone.") },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                onShowDeleteDialogChange(false)
-                                onDeleteConfirm()
-                            }
-                        ) {
-                            Text("Delete", color = Color.Red)
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { onShowDeleteDialogChange(false) }) {
-                            Text("Cancel")
-                        }
-                    }
-                )
             }
         }
 
+        // Show Artist Profile Sheet
+        if (showArtistProfile) {
+            ArtistProfileSheet(
+                userId = currentArtwork.userId,
+                userName = currentArtwork.contactName,
+                onDismiss = { onShowArtistProfileChange(false) },
+                onArtworkClick = {
+                    onShowArtistProfileChange(false)
+                    onNavigateToArtwork(it)
+                }
+            )
+        }
 
+        // Delete confirmation dialog
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { onShowDeleteDialogChange(false) },
+                title = { Text(text = "Delete Artwork", color = MaterialTheme.colorScheme.onSecondary) },
+                text = { Text("Are you sure you want to permanently delete this artwork? This action cannot be undone.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            onShowDeleteDialogChange(false)
+                            onDeleteConfirm()
+                        }
+                    ) {
+                        Text("Delete", color = Color.Red)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { onShowDeleteDialogChange(false) }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+    }
+}
 
 @Preview(showBackground = true, name = "Personal Detail")
 @Composable
@@ -366,6 +372,7 @@ fun ArtworkDetailScreenPreview() {
             showArtistProfile = false,
             onShowArtistProfileChange = {},
             onBackClick = {},
+            onEditClick = {},
             onLikeClick = {},
             onMessageClick = {},
             onNavigateToArtwork = {},
@@ -400,6 +407,7 @@ fun ArtworkDetailScreenNotOwnedPreview() {
             showArtistProfile = true,
             onShowArtistProfileChange = {},
             onBackClick = {},
+            onEditClick = {},
             onLikeClick = {},
             onMessageClick = {},
             onNavigateToArtwork = {},
