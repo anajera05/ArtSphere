@@ -240,6 +240,18 @@ fun MainScreenWithBottomBar(
                         initialLocation = selectedLocation
                     )
                 }
+                composable("edit_artwork") {
+                    selectedArtwork?.let { artwork ->
+                        UploadArtworkScreen(
+                            onBackClick = {
+                                galleryViewModel.loadAllArtworks()
+                                navController.popBackStack()
+                            },
+                            viewModel = artworkViewModel,
+                            existingArtwork = artwork
+                        )
+                    }
+                }
 
                 composable("artwork_detail") {
                     selectedArtwork?.let { artwork ->
@@ -256,6 +268,9 @@ fun MainScreenWithBottomBar(
                             onDeleteClick = {
                                 galleryViewModel.loadAllArtworks()
                                 navController.popBackStack()
+                            },
+                            onEditClick = {
+                                navController.navigate("edit_artwork")
                             },
                             onMessageClick = {
                                 selectedConversation = Conversation(
