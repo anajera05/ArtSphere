@@ -18,38 +18,33 @@
 Our app facilitates the exchange and collaboration of artwork. It allows users to sell their own creations while also discovering and purchasing art from other artists. By providing a platform for both buying and selling, the app encourages creative collaboration and helps artists reach a wider audience.
 
 Features: 
-* User Authentication (Completed):
+* User Authentication:
   * Users can create their accounts and log in with the same credentials
   * Passwords must be +6 characters
   * User can sign out of their account and log back in
 * Interactive Feed:
-  * News Integration (Completed): displays recent news and trends from the art industry using the NYTimes API.
-  * Gallery (Completed): Ability to view all listed artwork and filter based on preexisting categories
-  * Camera (Completed): Quick action to make a new listing from taking photo
-  * Search (WIP): Search for specific art pieces and profiles 
+  * News Integration: displays recent news and trends from the art industry using the NYTimes API.
+  * Gallery: Ability to view all listed artwork and filter based on preexisting categories
+  * Camera: Quick action to make a new listing from taking a photo
+  * Search: Search for specific art pieces and profiles 
 * Map:
-  * See pins for artworks being sold in the area
-  * Add new pins 
-* Navigation (Completed):
+  * See pins for events in your area
+* Events:
+  * Add events in your area
+  * Add yourself to different events  
+* Navigation :
   * Navigate between the 4 main screens: Home, Map, Inbox, and Profile
 * Profile:
-  * View your profile picture and the number of listings (Completed)
-  * View Posted Art pieces (Completed)
-  * View saved Art pieces (Completed)
-  * Settings page (WIP): log out function, ability to edit username and contact information
-  * Add listings (Completed)
+  * View your profile picture and the number of listings 
+  * View Posted Art pieces 
+  * View saved Art pieces 
+  * Add listings
 * Add listing:
-  * Add listing from Camera Quick Action or the Add button on Profile (Completed)
-  * If no price, contact seller (Completed)
-  * Choose if you want this piece to be featured on the map (WIP)
-* Transactions (WIP):
-  * View Art pieces in your cart
-  * In-App Purchasing
-  * View previously bought items
-  * View items sold
- 
-* Stretch Features:
-  * Add art events in the map 
+  * Add listing from Camera Quick Action or the Add button on Profile 
+  * If no price, contact seller 
+* Inbox:
+  * Start chats with artists from their art pieces
+  * Chat with multiple artists in the app
 
 
 <!-- build/run instructions -->
