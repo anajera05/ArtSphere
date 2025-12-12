@@ -17,6 +17,6 @@ val BrightPurple = Color(0xFF765FEB)
 val BrightLightPurple = Color(0xFFAF7CF4)
 val DeepBlue = Color(0xFF250E58)
 val Light = Color(0xFFD0D0F9)
-val White = Color(0xFFFFFFFF)
+val White = Color(0xFFF6F1FF)
 
 val Red = Color(0xFFFF607D)
