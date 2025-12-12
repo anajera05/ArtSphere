@@ -3,6 +3,7 @@ package com.example.artsphere.ui.events
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,9 +21,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.artsphere.data.model.EventCategory
+import com.example.artsphere.ui.components.StyledTextField
+import com.example.artsphere.ui.theme.ArtSphereTheme
 import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,6 +38,37 @@ fun CreateEventScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    CreateEventScreenContent(
+        location = location,
+        onBackClick = onBackClick,
+        uiState = uiState,
+        onCreateEvent = {
+            title, description, date, time, locationName, category, maxParticipants, imageUri ->
+            viewModel.createEvent(
+                title = title,
+                description = description,
+                date = date,
+                time = time,
+                location = locationName,
+                latitude = location.latitude,
+                longitude = location.longitude,
+                category = category,
+                maxParticipants = maxParticipants,
+                imageUri = imageUri,
+                onSuccess = onBackClick
+            )
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreateEventScreenContent(
+    location: LatLng,
+    onBackClick: () -> Unit,
+    uiState: EventUiState,
+    onCreateEvent: (String, String, String, String, String, String, Int, Uri?) -> Unit
+) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var date by remember { mutableStateOf("") }
@@ -43,6 +78,13 @@ fun CreateEventScreen(
     var maxParticipants by remember { mutableStateOf("0") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var expandedCategory by remember { mutableStateOf(false) }
+    var attemptedSave by remember { mutableStateOf(false) }
+
+    val allFieldsFilled = title.isNotBlank() &&
+            description.isNotBlank() &&
+            date.isNotBlank() &&
+            time.isNotBlank() &&
+            locationName.isNotBlank()
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -71,9 +113,10 @@ fun CreateEventScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .background(Color(0xFFF4F1FA))
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Image picker
             Card(
@@ -114,88 +157,65 @@ fun CreateEventScreen(
                 }
             }
 
-            OutlinedTextField(
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Required fields notice
+            Text(
+                text = "* Indicates required fields",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Red,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+            StyledTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text("Event Title") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                ),
+                label = "Event Title *",
+                isSubmitted = attemptedSave,
+                modifier = Modifier.fillMaxWidth()
             )
 
-            OutlinedTextField(
+            Spacer(modifier = Modifier.height(16.dp))
+
+            StyledTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                maxLines = 5,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                ),
+                label = "Description *",
+                isSubmitted = attemptedSave,
+                lines = 5,
+                modifier = Modifier.fillMaxWidth().height(120.dp)
             )
 
-            OutlinedTextField(
+            Spacer(modifier = Modifier.height(16.dp))
+            StyledTextField(
                 value = date,
                 onValueChange = { date = it },
-                label = { Text("Date (e.g., Dec 25, 2024)") },
-                leadingIcon = {
-                    Icon(Icons.Default.CalendarToday, contentDescription = null)
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                ),
+                label = "Date (e.g., Dec 25, 2024) *",
+                isSubmitted = attemptedSave,
+                icon = Icons.Default.CalendarToday
             )
 
-            OutlinedTextField(
+            Spacer(modifier = Modifier.height(16.dp))
+
+            StyledTextField(
                 value = time,
                 onValueChange = { time = it },
-                label = { Text("Time (e.g., 6:00 PM)") },
-                leadingIcon = {
-                    Icon(Icons.Default.Schedule, contentDescription = null)
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                ),
+                label = "Time (e.g., 6:00 PM) *",
+                isSubmitted = attemptedSave,
+                icon = Icons.Default.Schedule
             )
 
-            OutlinedTextField(
+            Spacer(modifier = Modifier.height(16.dp))
+
+            StyledTextField(
                 value = locationName,
                 onValueChange = { locationName = it },
-                label = { Text("Location Name/Address") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                ),
+                label = "Location Name/Address *",
+                isSubmitted = attemptedSave,
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             ExposedDropdownMenuBox(
                 expanded = expandedCategory,
@@ -217,14 +237,18 @@ fun CreateEventScreen(
                         focusedTextColor = Color.Black,
                         unfocusedTextColor = Color.Black
                     ),
+                    shape = RoundedCornerShape(16.dp),
+
                 )
 
                 ExposedDropdownMenu(
                     expanded = expandedCategory,
                     onDismissRequest = { expandedCategory = false },
+                    shape = RoundedCornerShape(16.dp),
 
-                ) {
-                    EventCategory.values().forEach { cat ->
+
+                    ) {
+                    EventCategory.entries.forEach { cat ->
                         DropdownMenuItem(
                             text = { Text(cat.displayName) },
                             onClick = {
@@ -240,25 +264,21 @@ fun CreateEventScreen(
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedTextField(
+
+            StyledTextField(
                 value = maxParticipants,
                 onValueChange = {
                     if (it.isEmpty() || it.all { char -> char.isDigit() }) {
                         maxParticipants = it
                     }
                 },
-                label = { Text("Max Participants (0 = Unlimited)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                ),
+                label = "Max Participants (0 = Unlimited)",
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -285,6 +305,8 @@ fun CreateEventScreen(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
+
 
             if (uiState.error != null) {
                 Text(
@@ -296,31 +318,27 @@ fun CreateEventScreen(
 
             Button(
                 onClick = {
-                    if (title.isNotBlank() && description.isNotBlank() &&
-                        date.isNotBlank() && time.isNotBlank() && locationName.isNotBlank()) {
-                        viewModel.createEvent(
-                            title = title,
-                            description = description,
-                            date = date,
-                            time = time,
-                            location = locationName,
-                            latitude = location.latitude,
-                            longitude = location.longitude,
-                            category = category,
-                            maxParticipants = maxParticipants.toIntOrNull() ?: 0,
-                            imageUri = imageUri,
-                            onSuccess = onBackClick
+                    attemptedSave = true
+                    if (allFieldsFilled) {
+                        onCreateEvent(
+                            title,
+                            description,
+                            date,
+                            time,
+                            locationName,
+                            category,
+                            maxParticipants.toIntOrNull() ?: 0,
+                            imageUri
                         )
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = !uiState.isCreating && title.isNotBlank() &&
-                        description.isNotBlank() && date.isNotBlank() &&
-                        time.isNotBlank() && locationName.isNotBlank(),
+                enabled = !uiState.isCreating,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF6200EE)
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             ) {
                 if (uiState.isCreating) {
@@ -332,8 +350,43 @@ fun CreateEventScreen(
                     Text("Create Event", fontWeight = FontWeight.Bold)
                 }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
+
+            if (attemptedSave && !allFieldsFilled) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            "❌ Please fill in all required fields:",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        if (title.isBlank()) Text("• Event Title", color = MaterialTheme.colorScheme.error)
+                        if (description.isBlank()) Text("• Description", color = MaterialTheme.colorScheme.error)
+                        if (date.isBlank()) Text("• Date", color = MaterialTheme.colorScheme.error)
+                        if (time.isBlank()) Text("• Time", color = MaterialTheme.colorScheme.error)
+                        if (locationName.isBlank()) Text("• Location Name/Address", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
+
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CreateEventScreenPreview() {
+    ArtSphereTheme {
+        CreateEventScreenContent(
+            location = LatLng(0.0, 0.0),
+            onBackClick = {},
+            uiState = EventUiState(),
+            onCreateEvent = { _, _, _, _, _, _, _, _ -> }
+        )
     }
 }

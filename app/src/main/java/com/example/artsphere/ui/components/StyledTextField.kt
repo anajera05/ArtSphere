@@ -72,7 +72,7 @@ fun StyledTextField(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = if (isSubmitted && value.isBlank()) Color.Red else Color.Gray,
             focusedLabelColor = MaterialTheme.colorScheme.primary,
-            unfocusedLabelColor = if (icon != null) Color.Gray else MaterialTheme.colorScheme.onSecondary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSecondary,
             cursorColor = MaterialTheme.colorScheme.primary,
             focusedTextColor = MaterialTheme.colorScheme.onSecondary,
             unfocusedTextColor = MaterialTheme.colorScheme.onSecondary

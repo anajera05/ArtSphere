@@ -283,8 +283,8 @@ fun UploadArtworkContent(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.secondary,
                         focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black
+                        focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
 
                     )
                 )
@@ -446,6 +446,7 @@ fun UploadArtworkContent(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Show missing fields error ONLY after save is attempted
             if (attemptedSave && !allFieldsFilled && !isUploading) {
