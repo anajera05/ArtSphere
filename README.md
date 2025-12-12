@@ -62,11 +62,12 @@ Those who love art and/or want to sell!
 
 
 <!-- APIs Used -->
-## Planned API  
+## APIs Used  
 
 Google Maps
+New York 
 
-New York Times API
+Times API
 
 ## Navigation routes:
 
