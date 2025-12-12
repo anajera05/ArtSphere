@@ -30,6 +30,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.artsphere.ui.components.StyledTextField
 import kotlinx.coroutines.delay
 import com.example.artsphere.ui.theme.ArtSphereTheme
 
@@ -211,70 +212,28 @@ fun LoginContent(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         // Email Field
-                        OutlinedTextField(
+                        StyledTextField(
                             value = uiState.email,
                             onValueChange = { onEmailChange(it) },
-                            label = { Text("Email") },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Email,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                cursorColor = MaterialTheme.colorScheme.primary,
-                                focusedTextColor = MaterialTheme.colorScheme.onSecondary,
-                                unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Email
-                            ),
-                            singleLine = true
+                            label = "Email",
+                            icon = Icons.Default.Email,
+                            keyboardType = KeyboardType.Email
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Password Field
-                        OutlinedTextField(
+                        StyledTextField(
                             value = uiState.password,
                             onValueChange = { onPasswordChange(it) },
-                            label = { Text("Password") },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Lock,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            trailingIcon = {
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(
-                                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                                        tint = Color.Gray
-                                    )
-                                }
-                            },
-                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                cursorColor = MaterialTheme.colorScheme.primary,
-                                focusedTextColor = MaterialTheme.colorScheme.onSecondary,
-                                unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Password
-                            ),
-                            singleLine = true
+                            label = "Password",
+                            icon = Icons.Default.Lock,
+                            keyboardType = KeyboardType.Password,
+                            isPassword = true,
+                            passwordVisible = passwordVisible,
+                            onPasswordVisibilityChange = { passwordVisible = !passwordVisible }
                         )
+
 
                         Spacer(modifier = Modifier.height(24.dp))
 

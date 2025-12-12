@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -101,6 +100,7 @@ fun UploadArtworkContent(
 
     // Email validation
     var emailError by remember { mutableStateOf<String?>(null) }
+    var isEmailModified by remember { mutableStateOf(false) }
 
     // Track if user has attempted to save (to show errors)
     var attemptedSave by remember { mutableStateOf(false) }
@@ -409,20 +409,23 @@ fun UploadArtworkContent(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Contact Email (Required with validation)
+            val showEmailError = attemptedSave && !isEmailModified && (contactEmail.isBlank() || !isValidEmail(contactEmail))
             OutlinedTextField(
                 value = contactEmail,
-                onValueChange = { contactEmail = it },
+                onValueChange = { 
+                    contactEmail = it
+                    isEmailModified = true
+                },
                 label = { Text("Contact Email *") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail))) Color.Red else Color(0xFF6200EE),
-                    unfocusedBorderColor =if (attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail))) Color.Red else Color.Gray,
+                    focusedBorderColor = if (showEmailError) Color.Red else Color(0xFF6200EE),
+                    unfocusedBorderColor = if (showEmailError) Color.Red else Color.Gray,
                     focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-
+                    focusedTextColor = if (showEmailError) Color.Red else Color.Black,
+                    unfocusedTextColor = if (showEmailError) Color.Red else Color.Black
                 ),
-                isError = attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail)),
+                isError = showEmailError,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Done
@@ -438,6 +441,12 @@ fun UploadArtworkContent(
             Button(
                 onClick = {
                     attemptedSave = true
+                    isEmailModified = false
+                    
+                    if (contactEmail.isNotBlank() && !isValidEmail(contactEmail)) {
+                        contactEmail = ""
+                    }
+                    
                     if (allFieldsFilled) {
                         onUploadArtwork(
                             selectedImageUri!!,
