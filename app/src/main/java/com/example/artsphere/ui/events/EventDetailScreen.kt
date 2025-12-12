@@ -17,12 +17,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.artsphere.data.model.Event
+import com.example.artsphere.ui.theme.ArtSphereTheme
 import com.google.firebase.auth.FirebaseAuth
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetailScreen(
     event: Event,
@@ -32,6 +33,41 @@ fun EventDetailScreen(
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
     val isOrganizer = event.organizerId == currentUserId
     val isParticipant = event.participantIds.contains(currentUserId)
+
+    EventDetailScreenContent(
+        event = event,
+        isOrganizer = isOrganizer,
+        isParticipant = isParticipant,
+        currentUserId = currentUserId,
+        onBackClick = onBackClick,
+        onDeleteClick = {
+             viewModel.deleteEvent(event.id) {
+                 onBackClick()
+             }
+        },
+        onJoinClick = {
+             if (!event.isFull) {
+                 viewModel.joinEvent(event.id)
+             }
+        },
+        onLeaveClick = {
+            viewModel.leaveEvent(event.id)
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EventDetailScreenContent(
+    event: Event,
+    isOrganizer: Boolean,
+    isParticipant: Boolean,
+    currentUserId: String?,
+    onBackClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onJoinClick: () -> Unit,
+    onLeaveClick: () -> Unit
+) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showParticipantsSheet by remember { mutableStateOf(false) }
 
@@ -92,7 +128,7 @@ fun EventDetailScreen(
                         imageVector = Icons.Default.Event,
                         contentDescription = null,
                         modifier = Modifier.size(80.dp),
-                        tint = Color(0xFF6200EE)
+                        tint = MaterialTheme.colorScheme.secondary
                     )
                 }
             }
@@ -111,17 +147,19 @@ fun EventDetailScreen(
                         Text(
                             text = event.title,
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         AssistChip(
                             onClick = { },
-                            label = { Text(event.categoryEnum.displayName) },
+                            label = { Text(event.categoryEnum.displayName, color = MaterialTheme.colorScheme.onSecondary ) },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Category,
                                     contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         )
@@ -142,7 +180,7 @@ fun EventDetailScreen(
                             Icon(
                                 Icons.Default.CalendarToday,
                                 contentDescription = null,
-                                tint = Color(0xFF6200EE)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                             Column {
                                 Text(
@@ -167,7 +205,7 @@ fun EventDetailScreen(
                             Icon(
                                 Icons.Default.Schedule,
                                 contentDescription = null,
-                                tint = Color(0xFF6200EE)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                             Column {
                                 Text(
@@ -200,7 +238,7 @@ fun EventDetailScreen(
                         Icon(
                             Icons.Default.LocationOn,
                             contentDescription = null,
-                            tint = Color(0xFF6200EE),
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(24.dp)
                         )
                         Column {
@@ -240,7 +278,7 @@ fun EventDetailScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFE8DEF8)
+                        containerColor = MaterialTheme.colorScheme.tertiary
                     )
                 ) {
                     Row(
@@ -252,7 +290,7 @@ fun EventDetailScreen(
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF6200EE)),
+                                .background(MaterialTheme.colorScheme.primary),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -270,7 +308,8 @@ fun EventDetailScreen(
                             Text(
                                 event.organizerName,
                                 style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onTertiary
                             )
                             Text(
                                 event.organizerEmail,
@@ -303,7 +342,7 @@ fun EventDetailScreen(
                             Icon(
                                 Icons.Default.Group,
                                 contentDescription = null,
-                                tint = Color(0xFF6200EE),
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(24.dp)
                             )
                             Column {
@@ -314,9 +353,9 @@ fun EventDetailScreen(
                                 )
                                 Text(
                                     if (event.maxParticipants > 0) {
-                                        "${event.participantCount} / ${event.maxParticipants}"
+                                        "${event.participantIds.size} / ${event.maxParticipants}"
                                     } else {
-                                        "${event.participantCount} registered"
+                                        "${event.participantIds.size} registered"
                                     },
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold
@@ -336,25 +375,25 @@ fun EventDetailScreen(
                     Button(
                         onClick = {
                             if (isParticipant) {
-                                viewModel.leaveEvent(event.id)
+                                onLeaveClick()
                             } else {
-                                if (!event.isFull) {
-                                    viewModel.joinEvent(event.id)
-                                }
+                                onJoinClick()
                             }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isParticipant) Color.Gray else Color(0xFF6200EE),
+                            containerColor = if (isParticipant) Color.Gray else MaterialTheme.colorScheme.primary,
                             disabledContainerColor = Color.LightGray
                         ),
                         enabled = isParticipant || !event.isFull
                     ) {
                         Icon(
                             imageVector = if (isParticipant) Icons.Default.PersonRemove else Icons.Default.PersonAdd,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
@@ -377,14 +416,12 @@ fun EventDetailScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Event") },
+            title = { Text(text="Delete Event", color = MaterialTheme.colorScheme.onSecondary) },
             text = { Text("Are you sure you want to delete this event? This action cannot be undone.") },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.deleteEvent(event.id) {
-                            onBackClick()
-                        }
+                        onDeleteClick()
                         showDeleteDialog = false
                     },
                     colors = ButtonDefaults.textButtonColors(
@@ -412,9 +449,10 @@ fun EventDetailScreen(
                     .padding(16.dp)
             ) {
                 Text(
-                    "Participants (${event.participantCount})",
+                    "Participants (${event.participantIds.size})",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondary
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -485,5 +523,35 @@ fun EventDetailScreen(
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun EventDetailScreenPreview() {
+    val dummyEvent = Event(
+        id = "1",
+        title = "Gallery Opening Night",
+        description = "Join us for an evening of fine art and wine. Meet the artists and explore the latest collection.",
+        date = "Oct 25, 2023",
+        time = "18:00",
+        location = "ArtSphere Gallery, Downtown",
+        organizerName = "ArtSphere Team",
+        organizerEmail = "events@artsphere.com",
+        maxParticipants = 50,
+        participantIds = List(12) { "user_$it" }
+    )
+
+    ArtSphereTheme {
+        EventDetailScreenContent(
+            event = dummyEvent,
+            isOrganizer = false,
+            isParticipant = false,
+            currentUserId = null,
+            onBackClick = {},
+            onDeleteClick = {},
+            onJoinClick = {},
+            onLeaveClick = {}
+        )
     }
 }

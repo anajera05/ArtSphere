@@ -42,7 +42,6 @@ import com.example.artsphere.ui.inbox.InboxScreen
 import com.example.artsphere.ui.map.MapScreen
 import com.example.artsphere.ui.profile.ProfileScreen
 import com.example.artsphere.ui.profile.ProfileViewModel
-import com.example.artsphere.ui.profile.SettingsScreen
 import com.google.android.gms.maps.model.LatLng
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.draw.drawBehind
@@ -224,13 +223,7 @@ fun MainScreenWithBottomBar(
                             selectedLocation = null
                             navController.navigate("upload_artwork")
                         },
-                    )
-                }
-
-                composable("settings") {
-                    SettingsScreen(
                         onSignOut = onSignOut,
-                        onBackClick = { navController.popBackStack() },
                     )
                 }
 

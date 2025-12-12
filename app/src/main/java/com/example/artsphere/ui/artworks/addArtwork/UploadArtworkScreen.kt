@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -260,9 +261,9 @@ fun UploadArtworkContent(
                 label = { Text("Artwork Name *") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF6200EE),
+                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
                     unfocusedBorderColor = if (attemptedSave && artworkName.isBlank()) Color.Red else Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE),
+                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black
                 ),
@@ -286,10 +287,11 @@ fun UploadArtworkContent(
                         .fillMaxWidth()
                         .menuAnchor(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF6200EE),
-                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                        focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
                         focusedTextColor = Color.Black,
                         unfocusedTextColor = Color.Black
+
                     )
                 )
 
@@ -325,11 +327,12 @@ fun UploadArtworkContent(
                     .height(120.dp),
                 maxLines = 5,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF6200EE),
+                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
                     unfocusedBorderColor = if (attemptedSave && description.isBlank()) Color.Red else Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE),
+                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black
+
                 ),
                 isError = attemptedSave && description.isBlank()
             )
@@ -369,9 +372,9 @@ fun UploadArtworkContent(
                         }
                     },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF6200EE),
+                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
                     unfocusedBorderColor = Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE),
+                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black
                 ),
@@ -394,9 +397,9 @@ fun UploadArtworkContent(
                 label = { Text("Contact Name *") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF6200EE),
+                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
                     unfocusedBorderColor = if (attemptedSave && contactName.isBlank()) Color.Red else Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE),
+                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black
                 ),
@@ -413,10 +416,11 @@ fun UploadArtworkContent(
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = if (attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail))) Color.Red else Color(0xFF6200EE),
-                    unfocusedBorderColor = if (attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail))) Color.Red else Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE),
+                    unfocusedBorderColor =if (attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail))) Color.Red else Color.Gray,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black
+
                 ),
                 isError = attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail)),
                 keyboardOptions = KeyboardOptions(
@@ -485,15 +489,15 @@ fun UploadArtworkContent(
                         Text(
                             "❌ Please fill in all required fields:",
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFC62828)
+                            color = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        if (selectedImageUri == null) Text("• Artwork Image", color = Color(0xFFC62828))
-                        if (artworkName.isBlank()) Text("• Artwork Name", color = Color(0xFFC62828))
-                        if (description.isBlank()) Text("• Description", color = Color(0xFFC62828))
-                        if (contactName.isBlank()) Text("• Contact Name", color = Color(0xFFC62828))
-                        if (contactEmail.isBlank()) Text("• Contact Email", color = Color(0xFFC62828))
-                        else if (!isValidEmail(contactEmail)) Text("• Valid Email Format", color = Color(0xFFC62828))
+                        if (selectedImageUri == null) Text("• Artwork Image", color = MaterialTheme.colorScheme.error)
+                        if (artworkName.isBlank()) Text("• Artwork Name", color = MaterialTheme.colorScheme.error)
+                        if (description.isBlank()) Text("• Description", color = MaterialTheme.colorScheme.error)
+                        if (contactName.isBlank()) Text("• Contact Name", color = MaterialTheme.colorScheme.error)
+                        if (contactEmail.isBlank()) Text("• Contact Email", color = MaterialTheme.colorScheme.error)
+                        else if (!isValidEmail(contactEmail)) Text("• Valid Email Format", color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -510,7 +514,7 @@ fun UploadArtworkContent(
                 ) {
                     Text(
                         text = "Error: $uploadError",
-                        color = Color(0xFFC62828),
+                        color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(16.dp)
                     )
                 }

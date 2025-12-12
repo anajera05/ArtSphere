@@ -319,7 +319,7 @@ fun ArtworkDetailContent(
             if (showDeleteDialog) {
                 AlertDialog(
                     onDismissRequest = { onShowDeleteDialogChange(false) },
-                    title = { Text("Delete Artwork") },
+                    title = { Text(text ="Delete Artwork", color = MaterialTheme.colorScheme.onSecondary) },
                     text = { Text("Are you sure you want to permanently delete this artwork? This action cannot be undone.") },
                     confirmButton = {
                         TextButton(
@@ -397,7 +397,7 @@ fun ArtworkDetailScreenNotOwnedPreview() {
             isLoading = false,
             showDeleteDialog = false,
             onShowDeleteDialogChange = {},
-            showArtistProfile = false,
+            showArtistProfile = true,
             onShowArtistProfileChange = {},
             onBackClick = {},
             onLikeClick = {},
