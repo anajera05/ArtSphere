@@ -179,9 +179,10 @@ fun UploadArtworkContent(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF6200EE),
+                    containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    navigationIconContentColor = Color.White,
+                    actionIconContentColor = Color.White
                 )
             )
         }
@@ -191,7 +192,7 @@ fun UploadArtworkContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFF4F1FA))
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -204,7 +205,7 @@ fun UploadArtworkContent(
                     .clip(RoundedCornerShape(16.dp))
                     .border(
                         2.dp,
-                        if (attemptedSave && !isEditMode && selectedImageUri == null) Color.Red else Color(0xFF6200EE),
+                        if (attemptedSave && !isEditMode && selectedImageUri == null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                         RoundedCornerShape(16.dp)
                     )
                     .clickable { pickImageLauncher.launch(arrayOf("image/*")) },
@@ -227,13 +228,13 @@ fun UploadArtworkContent(
                         Icon(
                             Icons.Default.Add,
                             contentDescription = "Add image",
-                            tint = if (attemptedSave && selectedImageUri == null) Color.Red else Color(0xFF6200EE),
+                            tint = if (attemptedSave && selectedImageUri == null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             if (isEditMode) "Change Image (optional)" else "Add Artwork Image *",
-                            color = if (attemptedSave && !isEditMode && selectedImageUri == null) Color.Red else Color(0xFF6200EE),
+                            color = if (attemptedSave && !isEditMode && selectedImageUri == null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -248,7 +249,7 @@ fun UploadArtworkContent(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFE8DEF8)
+                        containerColor = MaterialTheme.colorScheme.secondary
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -266,19 +267,27 @@ fun UploadArtworkContent(
                                 text = "Location Selected",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF6200EE)
+                                color = MaterialTheme.colorScheme.primary
                             )
                             Text(
                                 text = "Lat: ${String.format("%.4f", location!!.latitude)}, " +
                                         "Lng: ${String.format("%.4f", location!!.longitude)}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF6200EE)
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
+            // Required fields notice
+            Text(
+                text = "* Required fields. Price is optional.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(4.dp))
 
             // Artwork Name (Required)
             StyledTextField(
@@ -420,13 +429,7 @@ fun UploadArtworkContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Required fields notice
-            Text(
-                text = "* Required fields. Price is optional.",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray,
-                modifier = Modifier.fillMaxWidth()
-            )
+
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -459,7 +462,8 @@ fun UploadArtworkContent(
                     .height(56.dp),
                 enabled = !isUploading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF6200EE)
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             ) {
                 if (isUploading) {
@@ -491,15 +495,15 @@ fun UploadArtworkContent(
                         Text(
                             "❌ Please fill in all required fields:",
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFC62828)
+                            color = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        if (selectedImageUri == null && !isEditMode) Text("• Artwork Image", color = Color(0xFFC62828))
-                        if (artworkName.isBlank()) Text("• Artwork Name", color = Color(0xFFC62828))
-                        if (description.isBlank()) Text("• Description", color = Color(0xFFC62828))
-                        if (contactName.isBlank()) Text("• Contact Name", color = Color(0xFFC62828))
-                        if (contactEmail.isBlank()) Text("• Contact Email", color = Color(0xFFC62828))
-                        else if (!isValidEmail(contactEmail)) Text("• Valid Email Format", color = Color(0xFFC62828))
+                        if (selectedImageUri == null && !isEditMode) Text("• Artwork Image", color = MaterialTheme.colorScheme.error)
+                        if (artworkName.isBlank()) Text("• Artwork Name", color =MaterialTheme.colorScheme.error)
+                        if (description.isBlank()) Text("• Description", color = MaterialTheme.colorScheme.error)
+                        if (contactName.isBlank()) Text("• Contact Name", color = MaterialTheme.colorScheme.error)
+                        if (contactEmail.isBlank()) Text("• Contact Email", color = MaterialTheme.colorScheme.error)
+                        else if (!isValidEmail(contactEmail)) Text("• Valid Email Format", color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -516,7 +520,7 @@ fun UploadArtworkContent(
                 ) {
                     Text(
                         text = "Error: $uploadError",
-                        color = Color(0xFFC62828),
+                        color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(16.dp)
                     )
                 }

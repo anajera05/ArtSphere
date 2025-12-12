@@ -113,7 +113,7 @@ fun CreateEventScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFF4F1FA))
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -283,7 +283,8 @@ fun CreateEventScreenContent(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFE8DEF8)
+                    containerColor = MaterialTheme.colorScheme.tertiary
+
                 )
             ) {
                 Column(
