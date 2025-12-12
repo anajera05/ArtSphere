@@ -1,6 +1,5 @@
 package com.example.artsphere.ui.inbox
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,21 +21,42 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.artsphere.data.model.Conversation
-import java.text.SimpleDateFormat
-import java.util.*
+import com.example.artsphere.ui.theme.ArtSphereTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InboxScreen(
-    modifier: Modifier = Modifier,
     onConversationClick: (Conversation) -> Unit = {},
     viewModel: InboxViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    InboxScreenContent(
+        uiState = uiState,
+        onConversationClick = { conversation ->
+            viewModel.markConversationAsRead(conversation.conversationId)
+            onConversationClick(conversation)
+        },
+        onDeleteConversations = { conversationIds ->
+            conversationIds.forEach { id ->
+                viewModel.deleteConversation(id)
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InboxScreenContent(
+    uiState: InboxUiState,
+    onConversationClick: (Conversation) -> Unit,
+    onDeleteConversations: (Set<String>) -> Unit
+) {
     var isSelectMode by remember { mutableStateOf(false) }
     var selectedConversations by remember { mutableStateOf(setOf<String>()) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -50,10 +70,10 @@ fun InboxScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White,
-                    actionIconContentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 actions = {
                     if (isSelectMode) {
@@ -99,7 +119,7 @@ fun InboxScreen(
                 uiState.isLoading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = Color(0xFF6200EE)
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
 
@@ -149,7 +169,6 @@ fun InboxScreen(
                                             selectedConversations + conversation.conversationId
                                         }
                                     } else {
-                                        viewModel.markConversationAsRead(conversation.conversationId)
                                         onConversationClick(conversation)
                                     }
                                 }
@@ -171,9 +190,7 @@ fun InboxScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        selectedConversations.forEach { conversationId ->
-                            viewModel.deleteConversation(conversationId)
-                        }
+                        onDeleteConversations(selectedConversations)
                         showDeleteDialog = false
                         isSelectMode = false
                         selectedConversations = setOf()
@@ -214,7 +231,7 @@ fun ConversationCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFFE8DEF8) else Color.White
+            containerColor = if (isSelected) MaterialTheme.colorScheme.tertiary else Color.White
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -230,11 +247,11 @@ fun ConversationCard(
                         .size(24.dp)
                         .clip(CircleShape)
                         .background(
-                            if (isSelected) Color(0xFF6200EE) else Color.Transparent
+                            if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
                         )
                         .border(
                             width = 2.dp,
-                            color = if (isSelected) Color(0xFF6200EE) else Color.Gray,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray,
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -295,7 +312,7 @@ fun ConversationCard(
                 Text(
                     text = conversation.artworkName,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF6200EE),
+                    color = MaterialTheme.colorScheme.onSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -329,3 +346,39 @@ fun ConversationCard(
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun InboxScreenPreview() {
+    ArtSphereTheme {
+        InboxScreenContent(
+            uiState = InboxUiState(
+                conversations = listOf(
+                    Conversation(
+                        conversationId = "1",
+                        otherUserId = "u1",
+                        otherUserName = "Alice Artist",
+                        artworkId = "a1",
+                        artworkName = "Sunset in Paris",
+                        artworkImageUrl = "",
+                        lastMessage = "Is this still available?",
+                        lastMessageTime = System.currentTimeMillis() - 1000 * 60 * 5, // 5 mins ago
+                        unreadCount = 2
+                    ),
+                    Conversation(
+                        conversationId = "2",
+                        otherUserId = "u2",
+                        otherUserName = "Bob Painter",
+                        artworkId = "a2",
+                        artworkName = "Abstract Blue",
+                        artworkImageUrl = "",
+                        lastMessage = "Thanks for your interest!",
+                        lastMessageTime = System.currentTimeMillis() - 1000 * 60 * 60 * 24, // 1 day ago
+                        unreadCount = 0
+                    )
+                )
+            ),
+            onConversationClick = {},
+            onDeleteConversations = {}
+        )
+    }
+}

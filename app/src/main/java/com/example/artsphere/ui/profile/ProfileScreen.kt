@@ -12,13 +12,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -33,6 +35,7 @@ import com.example.artsphere.ui.artworks.ArtworkViewModel
 import com.example.artsphere.ui.artworks.myArtworks.MyArtworkScreen
 import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkScreen
 import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
+import com.example.artsphere.ui.theme.ArtSphereTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,10 +46,13 @@ fun ProfileScreen(
     savedArtworkViewModel: SavedArtworkViewModel,
     artViewModel: ArtworkViewModel,
     onUploadClick: () -> Unit,
-    onArtworkClick: (Artwork) -> Unit
+    onArtworkClick: (Artwork) -> Unit,
+    onSignOut: () -> Unit
 ) {
     val uiState by profileViewModel.uiState.collectAsState()
     val artworkUiState by artViewModel.uiState.collectAsState()
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
 
     LaunchedEffect(Unit) {
         profileViewModel.refreshPhotoFromFirebase()
@@ -59,10 +65,12 @@ fun ProfileScreen(
         savedArtworkViewModel = savedArtworkViewModel,
         artViewModel = artViewModel,
         onNavigateToUpload = { navController.navigate("upload_artwork") },
-        onNavigateToSettings = { navController.navigate("settings") },
         onUploadProfilePhoto = { uri -> profileViewModel.uploadProfilePhoto(uri) },
         onUploadClick = onUploadClick,
-        onArtworkClick = onArtworkClick
+        onArtworkClick = onArtworkClick,
+        onSignOut = onSignOut,
+        showLogoutDialog = showLogoutDialog,
+        onShowLogoutDialogChange = { showLogoutDialog = it },
     )
 }
 
@@ -75,10 +83,12 @@ fun ProfileScreenContent(
     savedArtworkViewModel: SavedArtworkViewModel? = null,
     artViewModel: ArtworkViewModel? = null,
     onNavigateToUpload: () -> Unit,
-    onNavigateToSettings: () -> Unit,
     onUploadProfilePhoto: (Uri) -> Unit,
     onUploadClick: () -> Unit,
-    onArtworkClick: (Artwork) -> Unit
+    onArtworkClick: (Artwork) -> Unit,
+    onSignOut: () -> Unit,
+    showLogoutDialog: Boolean,
+    onShowLogoutDialogChange: (Boolean) -> Unit,
 ) {
     var state by remember { mutableIntStateOf(0) }
     val titles = listOf("Shop", "Saved")
@@ -98,8 +108,19 @@ fun ProfileScreenContent(
     }
 
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize()
+            .background(
+            Brush.linearGradient(
+                colors = listOf(
+                    MaterialTheme.colorScheme.surface,
+                    MaterialTheme.colorScheme.surfaceVariant
+                ),
+                start = Offset(0f, Float.POSITIVE_INFINITY),
+                end = Offset(Float.POSITIVE_INFINITY, 0f)
+            )
+        ),
         contentAlignment = Alignment.TopCenter
+
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -114,7 +135,8 @@ fun ProfileScreenContent(
                     text = "My Profile",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Row(
                     modifier = Modifier.align(Alignment.CenterEnd)
@@ -125,17 +147,17 @@ fun ProfileScreenContent(
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Add",
-                            tint = Color.Black,
+                            tint = Color.White,
                             modifier = Modifier.size(32.dp)
                         )
                     }
                     IconButton(
-                        onClick = onNavigateToSettings,
+                        onClick = { onShowLogoutDialogChange(true) },
                     ){
                         Icon(
-                            imageVector = Icons.Default.Settings,
+                            imageVector = Icons.Default.Logout,
                             contentDescription = "Settings",
-                            tint = Color.Black,
+                            tint = Color.White,
                             modifier = Modifier.size(32.dp)
                         )
                     }
@@ -199,8 +221,8 @@ fun ProfileScreenContent(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = artworkUiState.artworks.size.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text("artworks", style = MaterialTheme.typography.bodySmall)
+                    Text(text = artworkUiState.artworks.size.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("artworks", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                 }
 
 
@@ -209,8 +231,9 @@ fun ProfileScreenContent(
             Column {
                 SecondaryTabRow(
                     selectedTabIndex = state,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+
                 ) {
                     titles.forEachIndexed { index, title ->
                         Tab(
@@ -243,21 +266,48 @@ fun ProfileScreenContent(
             }
 
         }
+        if (showLogoutDialog) {
+            AlertDialog(
+                onDismissRequest = { onShowLogoutDialogChange(false) },
+                title = { Text(text ="Log Out", color = MaterialTheme.colorScheme.onSecondary) },
+                text = { Text("Are you sure you want to Log Out?") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            onShowLogoutDialogChange(false)
+                            onSignOut()
+                        }
+                    ) {
+                        Text("Logout", color = Color.Red)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { onShowLogoutDialogChange(false) }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
-    ProfileScreenContent(
-        profileUiState = ProfileUiState(photoUrl = null),
-        artworkUiState = ArtworkUiState(artworks = emptyList()),
-        savedArtworkViewModel = null,
-        artViewModel = null,
-        onNavigateToUpload = {},
-        onNavigateToSettings = {},
-        onUploadProfilePhoto = {},
-        onUploadClick = {},
-        onArtworkClick = {}
-    )
+    ArtSphereTheme{
+        ProfileScreenContent(
+            profileUiState = ProfileUiState(photoUrl = null),
+            artworkUiState = ArtworkUiState(artworks = emptyList()),
+            savedArtworkViewModel = null,
+            artViewModel = null,
+            onNavigateToUpload = {},
+            onUploadProfilePhoto = {},
+            onUploadClick = {},
+            onArtworkClick = {},
+            onSignOut = {},
+            showLogoutDialog = true,
+            onShowLogoutDialogChange = {}
+        )
+    }
 }
+

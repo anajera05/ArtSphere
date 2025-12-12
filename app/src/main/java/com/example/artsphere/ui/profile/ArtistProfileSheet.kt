@@ -22,11 +22,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.ui.theme.ArtSphereTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -78,6 +80,25 @@ fun ArtistProfileSheet(
         }
     }
 
+    ArtistProfileSheetContent(
+        userName = userName,
+        artworks = artworks,
+        isLoading = isLoading,
+        profileImageUrl = profileImageUrl,
+        onDismiss = onDismiss,
+        onArtworkClick = onArtworkClick
+    )
+}
+
+@Composable
+fun ArtistProfileSheetContent(
+    userName: String,
+    artworks: List<Artwork>,
+    isLoading: Boolean,
+    profileImageUrl: String?,
+    onDismiss: () -> Unit,
+    onArtworkClick: (Artwork) -> Unit
+) {
     // Animated dialog with slide up effect
     Dialog(
         onDismissRequest = onDismiss,
@@ -134,7 +155,7 @@ fun ArtistProfileSheet(
                         .fillMaxWidth()
                         .weight(0.7f),
                     shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.surface,
                     shadowElevation = 24.dp
                 ) {
                     Column(
@@ -156,18 +177,9 @@ fun ArtistProfileSheet(
                             ) {}
                         }
 
-                        // Header with gradient background
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(
-                                    Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color(0xFF6200EE),
-                                            Color(0xFF8E24AA)
-                                        )
-                                    )
-                                )
                                 .padding(24.dp)
                         ) {
                             Row(
@@ -246,74 +258,96 @@ fun ArtistProfileSheet(
                                 }
                             }
                         }
+                        Spacer(modifier = Modifier.height(4.dp))
 
                         // Artworks grid
-                        if (isLoading) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(32.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    shape = RoundedCornerShape(20.dp),
+                                    color = Color.White
+                                ),
+                            contentAlignment = Alignment.Center
+                        ){
+                            if (isLoading) {
                                 CircularProgressIndicator(color = Color(0xFF6200EE))
-                            }
-                        } else if (artworks.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(32.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
+                            } else if (artworks.isEmpty()) {
                                 Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        "🎨",
-                                        style = MaterialTheme.typography.displayMedium
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        "No artworks yet",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = Color.Gray
-                                    )
-                                }
-                            }
-                        } else {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(2),
-                                contentPadding = PaddingValues(16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                items(artworks) { artwork ->
-                                    // Staggered animation for grid items
-                                    var itemVisible by remember { mutableStateOf(false) }
-
-                                    LaunchedEffect(Unit) {
-                                        kotlinx.coroutines.delay((artworks.indexOf(artwork) * 50L))
-                                        itemVisible = true
-                                    }
-
-                                    AnimatedVisibility(
-                                        visible = itemVisible,
-                                        enter = fadeIn(
-                                            animationSpec = tween(400)
-                                        ) + scaleIn(
-                                            initialScale = 0.8f,
-                                            animationSpec = tween(400)
-                                        )
+                                        horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        ArtworkGridItem(
-                                            artwork = artwork,
-                                            onClick = {
-                                                onArtworkClick(artwork)
-                                            }
+                                        Text(
+                                            "🎨",
+                                            style = MaterialTheme.typography.displayMedium
                                         )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            "No artworks yet",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = Color.Gray
+                                        )
+
+                                }
+                            } else {
+
+                                LazyVerticalGrid(
+                                    columns = GridCells.Fixed(2),
+                                    contentPadding = PaddingValues(16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.fillMaxSize()
+
+                                ) {
+                                    items(artworks) { artwork ->
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .aspectRatio(0.8f)
+                                                .clickable { onArtworkClick(artwork) },
+                                            shape = RoundedCornerShape(16.dp),
+                                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                        ) {
+                                            Box(modifier = Modifier.fillMaxSize()) {
+                                                AsyncImage(
+                                                    model = artwork.imageUrl,
+                                                    contentDescription = artwork.name,
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentScale = ContentScale.Crop
+                                                )
+
+                                                // Gradient overlay at bottom
+                                                Box(
+                                                    modifier = Modifier
+                                                        .align(Alignment.BottomCenter)
+                                                        .fillMaxWidth()
+                                                        .height(60.dp)
+                                                        .background(
+                                                            Brush.verticalGradient(
+                                                                colors = listOf(
+                                                                    Color.Transparent,
+                                                                    Color.Black.copy(alpha = 0.7f)
+                                                                )
+                                                            )
+                                                        )
+                                                )
+
+                                                Text(
+                                                    text = artwork.name,
+                                                    color = Color.White,
+                                                    fontWeight = FontWeight.Bold,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    maxLines = 1,
+                                                    modifier = Modifier
+                                                        .align(Alignment.BottomStart)
+                                                        .padding(12.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
+
                     }
                 }
             }
@@ -321,54 +355,21 @@ fun ArtistProfileSheet(
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-fun ArtworkGridItem(
-    artwork: Artwork,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Box {
-            AsyncImage(
-                model = artwork.imageUrl,
-                contentDescription = artwork.name,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-
-            // Gradient overlay at bottom
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.7f)
-                            )
-                        )
-                    )
-            )
-
-            // Artwork name
-            Text(
-                text = artwork.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(12.dp),
-                maxLines = 2
-            )
-        }
+fun ArtistProfileSheetPreview() {
+    ArtSphereTheme {
+        ArtistProfileSheetContent(
+            userName = "Artist Name",
+            artworks = listOf(
+                Artwork(id = "1", name = "Artwork 1", imageUrl = ""),
+                Artwork(id = "2", name = "Artwork 2", imageUrl = ""),
+                Artwork(id = "3", name = "Artwork 3", imageUrl = "")
+            ),
+            isLoading = false,
+            profileImageUrl = null,
+            onDismiss = {},
+            onArtworkClick = {}
+        )
     }
 }

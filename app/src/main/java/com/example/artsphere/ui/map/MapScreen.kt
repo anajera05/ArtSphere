@@ -266,7 +266,7 @@ private fun MapWithEvents(
                     tint = Color(0xFF6200EE)
                 )
             },
-            title = { Text("Create Event Here?") },
+            title = { Text(text= "Create Event Here?", color = MaterialTheme.colorScheme.onSecondary) },
             text = { Text("Do you want to create an event at this location?") },
             confirmButton = {
                 TextButton(
@@ -282,7 +282,10 @@ private fun MapWithEvents(
                 TextButton(onClick = { showAddDialog = false }) {
                     Text("Cancel")
                 }
-            }
+            },
+            textContentColor = MaterialTheme.colorScheme.onSecondary,
+
+
         )
     }
 }

@@ -54,7 +54,9 @@ private val LightColorScheme = lightColorScheme(
     surface = DeepPurple,
     onSurface = White,
     surfaceVariant = LighterPurple,
-    onSurfaceVariant = DeepBlue
+    onSurfaceVariant = DeepBlue,
+
+    error = Red
 )
 
 @Composable

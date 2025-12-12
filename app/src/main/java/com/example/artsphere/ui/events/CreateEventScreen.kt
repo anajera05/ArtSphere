@@ -60,7 +60,7 @@ fun CreateEventScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF6200EE),
+                    containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -82,9 +82,6 @@ fun CreateEventScreen(
                     .height(200.dp)
                     .clickable { imagePickerLauncher.launch("image/*") },
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFF5F5F5)
-                )
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -122,7 +119,14 @@ fun CreateEventScreen(
                 onValueChange = { title = it },
                 label = { Text("Event Title") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                ),
             )
 
             OutlinedTextField(
@@ -132,7 +136,14 @@ fun CreateEventScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
-                maxLines = 5
+                maxLines = 5,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                ),
             )
 
             OutlinedTextField(
@@ -143,7 +154,14 @@ fun CreateEventScreen(
                     Icon(Icons.Default.CalendarToday, contentDescription = null)
                 },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                ),
             )
 
             OutlinedTextField(
@@ -154,7 +172,14 @@ fun CreateEventScreen(
                     Icon(Icons.Default.Schedule, contentDescription = null)
                 },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                ),
             )
 
             OutlinedTextField(
@@ -162,7 +187,14 @@ fun CreateEventScreen(
                 onValueChange = { locationName = it },
                 label = { Text("Location Name/Address") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                ),
             )
 
             ExposedDropdownMenuBox(
@@ -177,12 +209,20 @@ fun CreateEventScreen(
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor()
+                        .menuAnchor(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                        unfocusedBorderColor = Color.Gray,
+                        focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    ),
                 )
 
                 ExposedDropdownMenu(
                     expanded = expandedCategory,
-                    onDismissRequest = { expandedCategory = false }
+                    onDismissRequest = { expandedCategory = false },
+
                 ) {
                     EventCategory.values().forEach { cat ->
                         DropdownMenuItem(
@@ -190,8 +230,13 @@ fun CreateEventScreen(
                             onClick = {
                                 category = cat.name
                                 expandedCategory = false
-                            }
+                            },
+                            colors = MenuDefaults.itemColors(
+                                textColor = Color.Black,
+                            )
+
                         )
+
                     }
                 }
             }
@@ -205,7 +250,14 @@ fun CreateEventScreen(
                 },
                 label = { Text("Max Participants (0 = Unlimited)") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                ),
             )
 
             Card(
