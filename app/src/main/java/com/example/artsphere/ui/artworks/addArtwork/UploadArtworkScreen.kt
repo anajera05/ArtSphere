@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +34,7 @@ import coil.compose.AsyncImage
 import com.example.artsphere.data.model.Artwork
 import com.example.artsphere.data.model.ArtworkCategory
 import com.example.artsphere.ui.artworks.ArtworkViewModel
+import com.example.artsphere.ui.components.StyledTextField
 import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -110,6 +112,12 @@ fun UploadArtworkContent(
     var contactEmail by remember { mutableStateOf("") }
     var contactName by remember { mutableStateOf("") }
     var showCategoryMenu by remember { mutableStateOf(false) }
+
+    // Email validation
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var isEmailModified by remember { mutableStateOf(false) }
+
+    // Track if user has attempted to save (to show errors)
     var attemptedSave by remember { mutableStateOf(false) }
 
     // Initialize with existing artwork data if editing
@@ -272,21 +280,12 @@ fun UploadArtworkContent(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Artwork Name
-            OutlinedTextField(
+            // Artwork Name (Required)
+            StyledTextField(
                 value = artworkName,
                 onValueChange = { artworkName = it },
-                label = { Text("Artwork Name *") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF6200EE),
-                    unfocusedBorderColor = if (attemptedSave && artworkName.isBlank()) Color.Red else Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE),
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-                    cursorColor = Color(0xFF6200EE)
-                ),
-                isError = attemptedSave && artworkName.isBlank()
+                label = "Artwork Name *",
+                isSubmitted = attemptedSave,
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -305,18 +304,21 @@ fun UploadArtworkContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor(),
+                    shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF6200EE),
-                        unfocusedBorderColor = Color.Gray,
-                        focusedLabelColor = Color(0xFF6200EE),
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black
+                        focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                        focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
+                        focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
+
                     )
                 )
 
                 ExposedDropdownMenu(
                     expanded = showCategoryMenu,
-                    onDismissRequest = { showCategoryMenu = false }
+                    onDismissRequest = { showCategoryMenu = false },
+                    modifier = Modifier.background(Color.White),
+                    shape = RoundedCornerShape(16.dp),
                 ) {
                     ArtworkCategory.entries.forEach { category ->
                         DropdownMenuItem(
@@ -332,31 +334,21 @@ fun UploadArtworkContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Description
-            OutlinedTextField(
+            // Description (Required)
+            StyledTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description *") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                maxLines = 5,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF6200EE),
-                    unfocusedBorderColor = if (attemptedSave && description.isBlank()) Color.Red else Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE),
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-                    cursorColor = Color(0xFF6200EE)
-                ),
-                isError = attemptedSave && description.isBlank()
+                label = "Description *",
+                isSubmitted = attemptedSave,
+                lines = 5,
+                modifier = Modifier.fillMaxWidth().height(120.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Price
-            OutlinedTextField(
-                value = price,
+            // Price (Optional)
+            StyledTextField(
+                value = description,
                 onValueChange = { newValue ->
                     price = when {
                         newValue.isEmpty() -> ""
@@ -375,71 +367,50 @@ fun UploadArtworkContent(
                         }
                     }
                 },
-                label = { Text("Price ($)") },
-                placeholder = { Text("Leave empty for 'Contact for price'") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onFocusChanged { focusState ->
-                        if (!focusState.isFocused && price.isNotEmpty()) {
-                            price.toDoubleOrNull()?.let {
-                                price = String.format("%.2f", it)
-                            }
+                label = "Price ($)",
+                keyboardType = KeyboardType.Decimal,
+                modifier = Modifier.fillMaxWidth().onFocusChanged { focusState ->
+                    if (!focusState.isFocused && price.isNotEmpty()) {
+                        price.toDoubleOrNull()?.let {
+                            price = String.format("%.2f", it)
                         }
-                    },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF6200EE),
-                    unfocusedBorderColor = Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE),
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-                    cursorColor = Color(0xFF6200EE)
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                supportingText = {
-                    Text(
-                        "Optional - Leave empty to show 'Contact for price'",
-                        color = Color.Gray,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            )
+                    }
+                },
+                supportingText = "Optional - Leave empty for 'Contact for price'"
 
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Contact Name
-            OutlinedTextField(
+            // Contact Name (Required)
+            StyledTextField(
                 value = contactName,
                 onValueChange = { contactName = it },
-                label = { Text("Contact Name *") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF6200EE),
-                    unfocusedBorderColor = if (attemptedSave && contactName.isBlank()) Color.Red else Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE),
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-                    cursorColor = Color(0xFF6200EE)
-                ),
-                isError = attemptedSave && contactName.isBlank()
+                label = "Contact Name *",
+                isSubmitted = attemptedSave,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Contact Email
+            // Contact Email (Required with validation)
+            val showEmailError = attemptedSave && !isEmailModified && (contactEmail.isBlank() || !isValidEmail(contactEmail))
             OutlinedTextField(
                 value = contactEmail,
-                onValueChange = { contactEmail = it },
+                onValueChange = { 
+                    contactEmail = it
+                    isEmailModified = true
+                },
                 label = { Text("Contact Email *") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail))) Color.Red else Color(0xFF6200EE),
-                    unfocusedBorderColor = if (attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail))) Color.Red else Color.Gray,
-                    focusedLabelColor = Color(0xFF6200EE),
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-                    cursorColor = Color(0xFF6200EE)
+                    focusedBorderColor = if (showEmailError) Color.Red else MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = if (showEmailError) Color.Red else Color.Gray,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
+                    focusedTextColor = if (showEmailError) Color.Red else MaterialTheme.colorScheme.onSecondary,
+                    unfocusedTextColor = if (showEmailError) Color.Red else MaterialTheme.colorScheme.onSecondary
                 ),
-                isError = attemptedSave && (contactEmail.isBlank() || !isValidEmail(contactEmail)),
+                shape = RoundedCornerShape(16.dp),
+                isError = showEmailError,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Done
@@ -447,7 +418,7 @@ fun UploadArtworkContent(
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Required fields notice
             Text(
@@ -463,6 +434,12 @@ fun UploadArtworkContent(
             Button(
                 onClick = {
                     attemptedSave = true
+                    isEmailModified = false
+                    
+                    if (contactEmail.isNotBlank() && !isValidEmail(contactEmail)) {
+                        contactEmail = ""
+                    }
+                    
                     if (allFieldsFilled) {
                         onUploadArtwork(
                             selectedImageUri,
@@ -498,6 +475,7 @@ fun UploadArtworkContent(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Missing fields error
             if (attemptedSave && !allFieldsFilled && !isUploading) {

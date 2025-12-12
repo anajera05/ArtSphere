@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
@@ -109,9 +110,9 @@ fun LandingScreenContent(
         }
 
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ){
-            Spacer(modifier = Modifier.height(70.dp))
 
             MarqueeEffect(artworks = artworks)
             MarqueeEffect(direction = -30, artworks = artworks)
@@ -216,20 +217,21 @@ private fun MarqueeEffect(
                     MarqueeArtworkImage(artwork = artwork)
                     Spacer(modifier = Modifier.width(8.dp))
                 }
-            } else {
-                // if no artworks, display placeholder
-                repeat(10) {
-                    Image(
-                        painter = painterResource(id = R.drawable.dickson),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(130.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
             }
+//            else {
+//                // if no artworks, display placeholder
+//                repeat(10) {
+//                    Image(
+//                        painter = painterResource(id = R.drawable.dickson),
+//                        contentDescription = null,
+//                        contentScale = ContentScale.Crop,
+//                        modifier = Modifier
+//                            .size(130.dp)
+//                            .clip(RoundedCornerShape(10.dp))
+//                    )
+//                    Spacer(modifier = Modifier.width(8.dp))
+//                }
+//            }
         }
     }
 }
