@@ -1,6 +1,7 @@
 package com.example.artsphere.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -30,7 +31,11 @@ fun StyledTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     isPassword: Boolean = false,
     passwordVisible: Boolean = false,
-    onPasswordVisibilityChange: () -> Unit = {}
+    onPasswordVisibilityChange: () -> Unit = {},
+    isSubmitted: Boolean = false,
+    lines: Int = 1,
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    supportingText: String? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -59,12 +64,15 @@ fun StyledTextField(
             }
         },
         visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
+        maxLines = lines,
+        singleLine = (lines <= 1),
         shape = RoundedCornerShape(16.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = if (isSubmitted && value.isBlank()) Color.Red else Color.Gray,
             focusedLabelColor = MaterialTheme.colorScheme.primary,
-            unfocusedLabelColor = Color.Gray,
+            unfocusedLabelColor = if (icon != null) Color.Gray else MaterialTheme.colorScheme.onSecondary,
             cursorColor = MaterialTheme.colorScheme.primary,
             focusedTextColor = MaterialTheme.colorScheme.onSecondary,
             unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
@@ -72,6 +80,17 @@ fun StyledTextField(
         keyboardOptions = KeyboardOptions(
             keyboardType = keyboardType
         ),
-        singleLine = true
+        isError = isSubmitted && value.isBlank(),
+        supportingText = if (supportingText != null) {
+            {
+                Text(
+                    text = supportingText,
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        } else {
+            null
+        }
     )
 }

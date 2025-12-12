@@ -13,10 +13,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -34,8 +32,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -243,7 +239,7 @@ fun SignupContent(
                             onValueChange = onEmailChange,
                             label = "Email",
                             icon = Icons.Default.Email,
-                            keyboardType = KeyboardType.Email
+                            keyboardType = KeyboardType.Email,
                         )
 
 
@@ -261,7 +257,7 @@ fun SignupContent(
                             keyboardType = KeyboardType.Password,
                             isPassword = true,
                             passwordVisible = passwordVisible,
-                            onPasswordVisibilityChange = { passwordVisible = !passwordVisible }
+                            onPasswordVisibilityChange = { passwordVisible = !passwordVisible },
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -277,8 +273,8 @@ fun SignupContent(
                             icon = Icons.Default.Lock,
                             keyboardType = KeyboardType.Password,
                             isPassword = true,
-                            passwordVisible = passwordVisible,
-                            onPasswordVisibilityChange = { passwordVisible = !passwordVisible }
+                            passwordVisible = confirmPasswordVisible,
+                            onPasswordVisibilityChange = { confirmPasswordVisible = !confirmPasswordVisible },
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))

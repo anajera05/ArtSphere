@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.artsphere.data.model.ArtworkCategory
 import com.example.artsphere.ui.artworks.ArtworkViewModel
+import com.example.artsphere.ui.components.StyledTextField
 import com.google.android.gms.maps.model.LatLng
 import com.example.artsphere.ui.theme.ArtSphereTheme
 
@@ -255,19 +256,11 @@ fun UploadArtworkContent(
             }
 
             // Artwork Name (Required)
-            OutlinedTextField(
+            StyledTextField(
                 value = artworkName,
                 onValueChange = { artworkName = it },
-                label = { Text("Artwork Name *") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                    unfocusedBorderColor = if (attemptedSave && artworkName.isBlank()) Color.Red else Color.Gray,
-                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                ),
-                isError = attemptedSave && artworkName.isBlank()
+                label = "Artwork Name *",
+                isSubmitted = attemptedSave,
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -286,6 +279,7 @@ fun UploadArtworkContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor(),
+                    shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.secondary,
                         focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
@@ -298,7 +292,8 @@ fun UploadArtworkContent(
                 ExposedDropdownMenu(
                     expanded = showCategoryMenu,
                     onDismissRequest = { showCategoryMenu = false },
-                    modifier = Modifier.background(Color.White)
+                    modifier = Modifier.background(Color.White),
+                    shape = RoundedCornerShape(16.dp),
                 ) {
                     ArtworkCategory.entries.forEach { category ->
                         DropdownMenuItem(
@@ -318,30 +313,20 @@ fun UploadArtworkContent(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Description (Required)
-            OutlinedTextField(
+            StyledTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description *") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                maxLines = 5,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                    unfocusedBorderColor = if (attemptedSave && description.isBlank()) Color.Red else Color.Gray,
-                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-
-                ),
-                isError = attemptedSave && description.isBlank()
+                label = "Description *",
+                isSubmitted = attemptedSave,
+                lines = 5,
+                modifier = Modifier.fillMaxWidth().height(120.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Price (Optional)
-            OutlinedTextField(
-                value = price,
+            StyledTextField(
+                value = description,
                 onValueChange = { newValue ->
                     price = when {
                         newValue.isEmpty() -> ""
@@ -360,50 +345,27 @@ fun UploadArtworkContent(
                         }
                     }
                 },
-                label = { Text("Price ($)") },
-                placeholder = { Text("Leave empty for 'Contact for price'") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onFocusChanged { focusState ->
-                        if (!focusState.isFocused && price.isNotEmpty()) {
-                            price.toDoubleOrNull()?.let {
-                                price = String.format("%.2f", it)
-                            }
+                label = "Price ($)",
+                keyboardType = KeyboardType.Decimal,
+                modifier = Modifier.fillMaxWidth().onFocusChanged { focusState ->
+                    if (!focusState.isFocused && price.isNotEmpty()) {
+                        price.toDoubleOrNull()?.let {
+                            price = String.format("%.2f", it)
                         }
-                    },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                supportingText = {
-                    Text(
-                        "Optional - Leave empty to show 'Contact for price'",
-                        color = Color.Gray,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            )
+                    }
+                },
+                supportingText = "Optional - Leave empty for 'Contact for price'"
 
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
             // Contact Name (Required)
-            OutlinedTextField(
+            StyledTextField(
                 value = contactName,
                 onValueChange = { contactName = it },
-                label = { Text("Contact Name *") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                    unfocusedBorderColor = if (attemptedSave && contactName.isBlank()) Color.Red else Color.Gray,
-                    focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                ),
-                isError = attemptedSave && contactName.isBlank()
+                label = "Contact Name *",
+                isSubmitted = attemptedSave,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -419,12 +381,13 @@ fun UploadArtworkContent(
                 label = { Text("Contact Email *") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (showEmailError) Color.Red else Color(0xFF6200EE),
+                    focusedBorderColor = if (showEmailError) Color.Red else MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = if (showEmailError) Color.Red else Color.Gray,
                     focusedLabelColor = MaterialTheme.colorScheme.onSecondary,
-                    focusedTextColor = if (showEmailError) Color.Red else Color.Black,
-                    unfocusedTextColor = if (showEmailError) Color.Red else Color.Black
+                    focusedTextColor = if (showEmailError) Color.Red else MaterialTheme.colorScheme.onSecondary,
+                    unfocusedTextColor = if (showEmailError) Color.Red else MaterialTheme.colorScheme.onSecondary
                 ),
+                shape = RoundedCornerShape(16.dp),
                 isError = showEmailError,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
@@ -433,7 +396,7 @@ fun UploadArtworkContent(
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
 
 
