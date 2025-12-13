@@ -134,7 +134,7 @@ fun MainScreenWithBottomBar(
                         onClick = {
                             navController.navigate("camera")
                         },
-                        containerColor = Color(0xFF7B61FF)
+                        containerColor = MaterialTheme.colorScheme.primary
                     ) {
                         Icon(
                             imageVector = Icons.Default.AddAPhoto,

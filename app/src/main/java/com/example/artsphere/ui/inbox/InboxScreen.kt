@@ -288,6 +288,7 @@ fun ConversationCard(
                     Text(
                         text = conversation.otherUserName,
                         style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSecondary,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -352,30 +353,30 @@ fun InboxScreenPreview() {
     ArtSphereTheme {
         InboxScreenContent(
             uiState = InboxUiState(
-                conversations = listOf(
-                    Conversation(
-                        conversationId = "1",
-                        otherUserId = "u1",
-                        otherUserName = "Alice Artist",
-                        artworkId = "a1",
-                        artworkName = "Sunset in Paris",
-                        artworkImageUrl = "",
-                        lastMessage = "Is this still available?",
-                        lastMessageTime = System.currentTimeMillis() - 1000 * 60 * 5, // 5 mins ago
-                        unreadCount = 2
-                    ),
-                    Conversation(
-                        conversationId = "2",
-                        otherUserId = "u2",
-                        otherUserName = "Bob Painter",
-                        artworkId = "a2",
-                        artworkName = "Abstract Blue",
-                        artworkImageUrl = "",
-                        lastMessage = "Thanks for your interest!",
-                        lastMessageTime = System.currentTimeMillis() - 1000 * 60 * 60 * 24, // 1 day ago
-                        unreadCount = 0
-                    )
-                )
+//                conversations = listOf(
+//                    Conversation(
+//                        conversationId = "1",
+//                        otherUserId = "u1",
+//                        otherUserName = "Alice Artist",
+//                        artworkId = "a1",
+//                        artworkName = "Sunset in Paris",
+//                        artworkImageUrl = "",
+//                        lastMessage = "Is this still available?",
+//                        lastMessageTime = System.currentTimeMillis() - 1000 * 60 * 5, // 5 mins ago
+//                        unreadCount = 2
+//                    ),
+//                    Conversation(
+//                        conversationId = "2",
+//                        otherUserId = "u2",
+//                        otherUserName = "Bob Painter",
+//                        artworkId = "a2",
+//                        artworkName = "Abstract Blue",
+//                        artworkImageUrl = "",
+//                        lastMessage = "Thanks for your interest!",
+//                        lastMessageTime = System.currentTimeMillis() - 1000 * 60 * 60 * 24, // 1 day ago
+//                        unreadCount = 0
+//                    )
+//                )
             ),
             onConversationClick = {},
             onDeleteConversations = {}

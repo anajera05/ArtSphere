@@ -145,7 +145,7 @@ private fun CameraPreview(
             Icon(
                 imageVector = Icons.Default.AddAPhoto,
                 contentDescription = "Take Photo",
-                tint = Color.Black,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp)
             )
         }
@@ -177,7 +177,8 @@ private fun PermissionDeniedScreen(
 
             Text(
                 text = "Camera Permission Required",
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSecondary
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -196,7 +197,8 @@ private fun PermissionDeniedScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF7B61FF)
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             ) {
                 Text("Grant Permission")
@@ -210,7 +212,7 @@ private fun PermissionDeniedScreen(
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Go Back")
+                Text("Go Back", color = MaterialTheme.colorScheme.onSecondary)
             }
         }
     }

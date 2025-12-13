@@ -298,7 +298,7 @@ fun HomeContent(
                                     modifier = Modifier.fillMaxWidth(),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    CircularProgressIndicator(color = Color(0xFF6200EE))
+                                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                                 }
                             } else if (newsUiState.error != null) {
                                 Text(text = "Error: ${newsUiState.error}", modifier = Modifier.padding(16.dp))
@@ -335,7 +335,8 @@ fun HomeContent(
                                                         .fillMaxWidth()
                                                         .padding(8.dp),
                                                     maxLines = 2,
-                                                    overflow = TextOverflow.Ellipsis
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    color = MaterialTheme.colorScheme.onSecondary
                                                 )
                                             }
                                         }

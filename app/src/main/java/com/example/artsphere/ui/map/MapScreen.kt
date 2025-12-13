@@ -102,7 +102,7 @@ fun MapScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        CircularProgressIndicator(color = Color(0xFF7B61FF))
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         Text(
                             "Loading map...",
                             style = MaterialTheme.typography.bodyMedium,
@@ -189,7 +189,8 @@ private fun MapWithEvents(
                     onClick = {
                         onEventClick?.invoke(event)
                         true
-                    }
+                    },
+
                 )
             }
         }
@@ -218,7 +219,8 @@ private fun MapWithEvents(
                 .align(Alignment.TopCenter)
                 .padding(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
@@ -230,7 +232,6 @@ private fun MapWithEvents(
                 Icon(
                     Icons.Default.Event,
                     contentDescription = null,
-                    tint = Color(0xFF6200EE),
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
@@ -250,7 +251,8 @@ private fun MapWithEvents(
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(32.dp),
-                    color = Color(0xFF7B61FF)
+                    color = MaterialTheme.colorScheme.primary
+
                 )
             }
         }
@@ -263,7 +265,7 @@ private fun MapWithEvents(
                 Icon(
                     Icons.Default.Event,
                     contentDescription = null,
-                    tint = Color(0xFF6200EE)
+                    tint = MaterialTheme.colorScheme.primary
                 )
             },
             title = { Text(text= "Create Event Here?", color = MaterialTheme.colorScheme.onSecondary) },
