@@ -42,6 +42,19 @@ import coil.compose.AsyncImage
 import com.example.artsphere.data.model.Artwork
 import kotlinx.coroutines.delay
 
+/**
+ * A reusable component representing a single artwork card.
+ *
+ * @param artwork specific artwork the card is displaying holding the information about the artwork.
+ * @param isSaved checks whether the user has this specific artwork saved.
+ * @param onArtworkClick callback triggered when card is tapped or clicked.
+ * @param onLikeClick callback triggered when heart/favorite icon is tapped or clicked.
+ * @param isGallery checks if the card is being displayed in the gallery.
+ *                  if true, the name text overlay shown.
+ * @param isShop checks if the card is being displayed in the shop.
+ *               if true, only the image of the artwork is shown
+ *
+ */
 @Composable
 fun ArtworkCard(
     artwork: Artwork,
@@ -51,20 +64,24 @@ fun ArtworkCard(
     isGallery: Boolean = false,
     isShop: Boolean = false,
 ) {
+    // checks if the card is pressed
     var isPressed by remember { mutableStateOf(false) }
 
+    // card animation
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "scale"
     )
 
+    // favorite animation
     val heartScale by animateFloatAsState(
         targetValue = if (isSaved) 1.2f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "heartScale"
     )
 
+    // Card
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -80,6 +97,7 @@ fun ArtworkCard(
         }
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
+            // retrieve image from Database
             AsyncImage(
                 model = artwork.imageUrl,
                 contentDescription = artwork.name,
@@ -107,7 +125,9 @@ fun ArtworkCard(
                 }
             }
 
+            // only applies if the card is being displayed in the gallery or saved
             if(!isShop){
+                // only shows name of artwork if in gallery
                 if (isGallery){
                     Box(
                         modifier = Modifier
@@ -122,10 +142,19 @@ fun ArtworkCard(
                                 )
                             )
                     )
+                    Text(
+                        text = artwork.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                    )
                 }
-
-
-
 
                 // Like Button (top right)
                 IconButton(
@@ -146,20 +175,6 @@ fun ArtworkCard(
                     )
                 }
 
-                if(isGallery) {
-                    Text(
-                        text = artwork.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .fillMaxWidth()
-                            .padding(12.dp)
-                    )
-                }
             }
 
         }
@@ -173,6 +188,8 @@ fun ArtworkCard(
     }
 }
 
+
+// previews for testing
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFFF0F0F0)
 @Composable
 fun ArtworkCardPreview() {// Mock data for preview
@@ -183,7 +200,7 @@ fun ArtworkCardPreview() {// Mock data for preview
         category = "Painting",
         description = "A beautiful sunset.",
         price = "150.00",
-        imageUrl = "", // Network images won't load in preview without specific config
+        imageUrl = "",
         contactEmail = "test@example.com",
         contactName = "John Doe",
         createdAt = System.currentTimeMillis(),
@@ -198,11 +215,12 @@ fun ArtworkCardPreview() {// Mock data for preview
                 isSaved = true,
                 onArtworkClick = {},
                 onLikeClick = {},
-                isGallery = true // Shows the name text overlay
+                isGallery = true
             )
         }
     }
 }
+
 
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true, backgroundColor = 0xFFF0F0F0)
 @Composable
@@ -218,7 +236,7 @@ fun ArtworkCardSoldPreview() {
         contactEmail = "test@example.com",
         contactName = "Jane Doe",
         createdAt = System.currentTimeMillis(),
-        isSold = true, // Enables the SOLD badge
+        isSold = true,
         isHidden = false
     )
 
@@ -229,7 +247,7 @@ fun ArtworkCardSoldPreview() {
                 isSaved = false,
                 onArtworkClick = {},
                 onLikeClick = {},
-                isGallery = false // Hides the name overlay (clean view)
+                isGallery = false
             )
         }
     }
