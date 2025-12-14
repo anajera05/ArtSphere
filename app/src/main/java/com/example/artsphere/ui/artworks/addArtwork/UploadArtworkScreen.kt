@@ -357,7 +357,7 @@ fun UploadArtworkContent(
 
             // Price (Optional)
             StyledTextField(
-                value = description,
+                value = price,
                 onValueChange = { newValue ->
                     price = when {
                         newValue.isEmpty() -> ""
