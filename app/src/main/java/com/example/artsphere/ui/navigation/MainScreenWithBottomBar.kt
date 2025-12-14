@@ -215,7 +215,7 @@ fun MainScreenWithBottomBar(
                         savedArtworkViewModel = savedArtworkViewModel,
                         onArtworkClick = { artwork ->
                             selectedArtwork = artwork
-                            galleryViewModel.loadAllArtworks() // ADD THIS - Refresh before navigating
+                            galleryViewModel.loadAllArtworks()
                             navController.navigate("artwork_detail")
                         },
                         onUploadClick = {
@@ -266,9 +266,12 @@ fun MainScreenWithBottomBar(
                                 navController.popBackStack()
                             },
                             onDeleteClick = {
+                                artworkViewModel.deleteArtwork(currentArtwork.id)
                                 galleryViewModel.loadAllArtworks()
+                                artworkViewModel.loadArtworks()
                                 navController.popBackStack()
                             },
+
                             onEditClick = {
                                 navController.navigate("edit_artwork")
                             },

@@ -1,27 +1,41 @@
 package com.example.artsphere.ui.artworks.savedArtworks
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.ui.components.ArtworkCard
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,68 +48,113 @@ fun SavedArtworkScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFCE4EC))  // Light pink background
+            .background(Color(0xFFFCE4EC))
     ) {
-        Spacer(modifier = Modifier.height(20.dp))
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            when{
+                uiState.isLoading -> {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.align(Alignment.Center),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
 
-        when {
-            uiState.isLoading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = Color(0xFFE91E63)
-                )
-            }
-
-            uiState.savedArtworks.isEmpty() -> {
-                // Empty state
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        Icons.Filled.Favorite,
-                        contentDescription = "No saved artwork",
-                        modifier = Modifier.size(80.dp),
-                        tint = Color(0xFFE91E63)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "No Saved Artwork Yet",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "Start exploring and save your favorite artworks!",
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        color = Color.Gray
-                    )
                 }
-            }
 
-            else -> {
+                uiState.savedArtworks.isEmpty() -> {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    Icons.Filled.Favorite,
+                                    contentDescription = "No saved artwork",
+                                    modifier = Modifier.size(80.dp),
+                                    tint = Color(0xFFE91E63)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    "No Saved Artwork Yet",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "Start exploring and save your favorite artworks!",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = TextAlign.Center,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                    }
+                }
 
-                // Grid of saved artworks
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(uiState.savedArtworks) { artwork ->
-                        SavedArtworkCard(
-                            artwork = artwork,
-                            onClick = { onArtworkClick(artwork) },
-                            onUnlike = { viewModel.toggleSaveArtwork(artwork.id) }
-                        )
+                else -> {
+                        itemsIndexed(uiState.savedArtworks) { index, artwork ->
+                            var isVisible by remember { mutableStateOf(false) }
+
+                            LaunchedEffect(Unit) {
+                                delay(index * 50L) // Staggered delay
+                                isVisible = true
+                            }
+
+                            val alpha by animateFloatAsState(
+                                targetValue = if (isVisible) 1f else 0f,
+                                animationSpec = tween(durationMillis = 500),
+                                label = "alphaAnimation"
+                            )
+                            val scale by animateFloatAsState(
+                                targetValue = if (isVisible) 1f else 0.8f,
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy
+                                ),
+                                label = "scaleAnimation"
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .graphicsLayer {
+                                        this.alpha = alpha
+                                        this.scaleX = scale
+                                        this.scaleY = scale
+                                    }
+                            ) {
+                                ArtworkCard(
+                                    artwork = artwork,
+                                    isSaved = true,
+                                    onArtworkClick = { onArtworkClick(artwork) },
+                                    onLikeClick = { viewModel.toggleSaveArtwork(artwork.id)},
+                                )
+                            }
+                        }
                     }
                 }
             }
-        }
 
         // Error message
         if (uiState.error != null) {

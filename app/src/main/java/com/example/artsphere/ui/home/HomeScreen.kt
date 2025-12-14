@@ -53,6 +53,7 @@ import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkUiState
 import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
 import com.example.artsphere.ui.profile.ProfileUiState
 import com.example.artsphere.ui.profile.ProfileViewModel
+import com.example.artsphere.ui.components.ArtworkCard
 import com.example.artsphere.ui.theme.ArtSphereTheme
 import kotlinx.coroutines.delay
 
@@ -465,11 +466,12 @@ fun HomeContent(
                                                 this.scaleY = scale
                                             }
                                     ) {
-                                        CuteArtworkCard(
+                                        ArtworkCard(
                                             artwork = artwork,
                                             isSaved = savedState.savedArtworkIds.contains(artwork.id),
                                             onArtworkClick = { onArtworkClick(artwork) },
-                                            onLikeClick = { onLikeClick(artwork.id) }
+                                            onLikeClick = { onLikeClick(artwork.id) },
+                                            isGallery = true
                                         )
                                     }
                                 }
