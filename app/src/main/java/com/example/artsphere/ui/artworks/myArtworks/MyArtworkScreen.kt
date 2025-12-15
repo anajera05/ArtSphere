@@ -183,32 +183,3 @@ fun MyArtworkScreen(
     }
 }
 
-//@Composable
-//fun ArtworkCard(
-//    height: Int,
-//    onClick: () -> Unit,
-//    artwork: Artwork
-//){
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .height(height.dp)
-//            .padding(6.dp)
-//            .clickable ( onClick = onClick ),
-//        shape = RoundedCornerShape(16.dp),
-//        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-//    ) {
-//        AsyncImage(
-//            model = artwork.imageUrl,
-//            contentDescription = artwork.name,
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .weight(1f)
-//                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-//            contentScale = ContentScale.Crop,
-//        )
-//
-//
-//    }
-//}
-//

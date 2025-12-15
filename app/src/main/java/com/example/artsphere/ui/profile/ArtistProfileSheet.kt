@@ -28,6 +28,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.example.artsphere.data.model.Artwork
+import com.example.artsphere.ui.components.ArtworkCard
 import com.example.artsphere.ui.theme.ArtSphereTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -299,6 +300,13 @@ fun ArtistProfileSheetContent(
 
                                 ) {
                                     items(artworks) { artwork ->
+                                        ArtworkCard(
+                                            artwork = artwork,
+                                            isSaved = false,
+                                            onArtworkClick = { onArtworkClick(artwork) },
+                                            onLikeClick = {},
+                                            isProfile = true
+                                        )
                                         Card(
                                             modifier = Modifier
                                                 .fillMaxWidth()

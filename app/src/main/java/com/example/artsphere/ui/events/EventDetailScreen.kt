@@ -140,7 +140,10 @@ fun EventDetailScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Event Image
             if (event.imageUrl.isNotEmpty()) {
