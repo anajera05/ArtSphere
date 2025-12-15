@@ -4,13 +4,10 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.UserProfileChangeRequest
-import com.google.firebase.storage.FirebaseStorage
+import com.example.artsphere.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 data class ProfileUiState(
     val photoUrl: String? = null,
@@ -20,54 +17,51 @@ data class ProfileUiState(
 
 class ProfileViewModel : ViewModel() {
 
-    private val auth = FirebaseAuth.getInstance()
-    private val user get() = auth.currentUser
-
-    private val storageRef =
-        FirebaseStorage.getInstance("gs://artsphere-android.firebasestorage.app")
-            .reference.child("profile_photos")
+    // Initialize Repository
+    private val userRepository = UserRepository()
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState
 
-    // Load latest photo and username when screen opens
+    // Load initial state
+    init {
+        refreshPhotoFromFirebase()
+    }
+
+    // Load latest photo from Firebase
     fun refreshPhotoFromFirebase() {
-        user?.reload()?.addOnSuccessListener {
-            val url = user?.photoUrl?.toString()
-            _uiState.value = _uiState.value.copy(photoUrl = url)
+        val user = userRepository.currentUser
+        // We can use a coroutine here to make it cleaner,
+        // though your original code used a callback (addOnSuccessListener).
+        // Since we are moving to repo pattern, coroutines are preferred.
+        viewModelScope.launch {
+            try {
+                userRepository.reloadUser()
+                _uiState.value = _uiState.value.copy(
+                    photoUrl = userRepository.currentUser?.photoUrl?.toString()
+                )
+            } catch (e: Exception) {
+                // Handle silent reload failure if needed
+            }
         }
     }
 
     fun uploadProfilePhoto(uri: Uri) {
-        val currentUser = user ?: return
-
         viewModelScope.launch {
             try {
                 Log.d("PROFILE_UPLOAD", "Upload started")
-
                 _uiState.value = _uiState.value.copy(isUploading = true)
 
-                val ref = storageRef.child("${currentUser.uid}/profile.jpg")
+                // Delegate logic to repository
+                val newPhotoUrl = userRepository.uploadProfilePhoto(uri)
 
-                // Upload
-                ref.putFile(uri).await()
-
-                val downloadUrl = ref.downloadUrl.await().toString()
-
-                val updates = UserProfileChangeRequest.Builder()
-                    .setPhotoUri(Uri.parse(downloadUrl))
-                    .build()
-
-                currentUser.updateProfile(updates).await()
-
-                currentUser.reload().await()  // important
-
-                Log.d("PROFILE_UPLOAD", "NEW PHOTO URL: ${currentUser.photoUrl}")
+                Log.d("PROFILE_UPLOAD", "NEW PHOTO URL: $newPhotoUrl")
 
                 // Update UI state
                 _uiState.value = _uiState.value.copy(
-                    photoUrl = currentUser.photoUrl?.toString(),
-                    isUploading = false
+                    photoUrl = newPhotoUrl,
+                    isUploading = false,
+                    error = null
                 )
 
             } catch (e: Exception) {

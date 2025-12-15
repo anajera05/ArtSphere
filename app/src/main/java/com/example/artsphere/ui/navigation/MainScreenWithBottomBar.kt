@@ -34,7 +34,6 @@ import com.example.artsphere.ui.artworks.ArtworkViewModel
 import com.example.artsphere.ui.artworks.addArtwork.CameraScreen
 import com.example.artsphere.ui.artworks.addArtwork.UploadArtworkScreen
 import com.example.artsphere.ui.artworks.gallery.GalleryViewModel
-import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
 import com.example.artsphere.ui.auth.LoginScreen
 import com.example.artsphere.ui.home.HomeScreen
 import com.example.artsphere.ui.inbox.ChatScreen
@@ -53,6 +52,7 @@ import com.example.artsphere.ui.events.CreateEventScreen
 import com.example.artsphere.ui.events.EventDetailScreen
 import com.example.artsphere.ui.news.WebViewScreen
 import com.example.artsphere.data.source.remote.Article
+import com.example.artsphere.ui.saved.SavedArtworkViewModel
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     data object Home : Screen("home", "Home", Icons.Default.Home)

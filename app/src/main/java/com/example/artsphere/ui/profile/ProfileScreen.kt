@@ -34,7 +34,7 @@ import com.example.artsphere.ui.artworks.ArtworkUiState
 import com.example.artsphere.ui.artworks.ArtworkViewModel
 import com.example.artsphere.ui.artworks.myArtworks.MyArtworkScreen
 import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkScreen
-import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
+import com.example.artsphere.ui.saved.SavedArtworkViewModel
 import com.example.artsphere.ui.theme.ArtSphereTheme
 
 @OptIn(ExperimentalMaterial3Api::class)

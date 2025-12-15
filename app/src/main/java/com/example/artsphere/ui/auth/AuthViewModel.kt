@@ -1,9 +1,11 @@
 package com.example.artsphere.ui.auth
 
 import androidx.lifecycle.ViewModel
-import com.google.firebase.auth.FirebaseAuth
+import androidx.lifecycle.viewModelScope
+import com.example.artsphere.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 data class AuthUiState(
     val email: String = "",
@@ -15,8 +17,8 @@ data class AuthUiState(
 
 class AuthViewModel : ViewModel() {
 
-
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    // Use the Repository instead of FirebaseAuth directly
+    private val repository = AuthRepository()
 
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState
@@ -47,20 +49,22 @@ class AuthViewModel : ViewModel() {
             return
         }
 
-        _uiState.value = state.copy(isLoading = true, error = null)
+        viewModelScope.launch {
+            try {
+                _uiState.value = state.copy(isLoading = true, error = null)
 
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    onSuccess()
-                    _uiState.value = _uiState.value.copy(isLoading = false)
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = task.exception?.message ?: "Login failed"
-                    )
-                }
+                // Call Repository
+                repository.login(email, password)
+
+                _uiState.value = _uiState.value.copy(isLoading = false)
+                onSuccess()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Login failed"
+                )
             }
+        }
     }
 
     fun signup(onSuccess: () -> Unit) {
@@ -74,23 +78,26 @@ class AuthViewModel : ViewModel() {
             return
         }
 
-        _uiState.value = state.copy(isLoading = true, error = null)
+        viewModelScope.launch {
+            try {
+                _uiState.value = state.copy(isLoading = true, error = null)
 
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    onSuccess()
-                    _uiState.value = _uiState.value.copy(isLoading = false)
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = task.exception?.message ?: "Sign up failed"
-                    )
-                }
+                // Call Repository
+                repository.signup(email, password, username)
+
+                _uiState.value = _uiState.value.copy(isLoading = false)
+                onSuccess()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Sign up failed"
+                )
             }
+        }
     }
+
     fun signOut() {
-        auth.signOut()
+        repository.signOut()
         // reset UI state so login/signup fields are empty next time
         _uiState.value = AuthUiState()
     }

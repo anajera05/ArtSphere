@@ -49,11 +49,11 @@ import com.example.artsphere.data.source.remote.NewsUiState
 import com.example.artsphere.data.source.remote.NewsViewModel
 import com.example.artsphere.ui.artworks.gallery.GalleryUiState
 import com.example.artsphere.ui.artworks.gallery.GalleryViewModel
-import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkUiState
-import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
 import com.example.artsphere.ui.profile.ProfileUiState
 import com.example.artsphere.ui.profile.ProfileViewModel
 import com.example.artsphere.ui.components.ArtworkCard
+import com.example.artsphere.ui.saved.SavedArtworkUiState
+import com.example.artsphere.ui.saved.SavedArtworkViewModel
 import com.example.artsphere.ui.theme.ArtSphereTheme
 import kotlinx.coroutines.delay
 
