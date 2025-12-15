@@ -53,6 +53,8 @@ import kotlinx.coroutines.delay
  *                  if true, the name text overlay shown.
  * @param isShop checks if the card is being displayed in the shop.
  *               if true, only the image of the artwork is shown
+ * @param isProfile checks if the card is being displayed as a profileCard.
+ *                if true, only the image of the artwork and name is shown
  *
  */
 @Composable
@@ -63,6 +65,7 @@ fun ArtworkCard(
     onLikeClick: () -> Unit,
     isGallery: Boolean = false,
     isShop: Boolean = false,
+    isProfile: Boolean = false
 ) {
     // checks if the card is pressed
     var isPressed by remember { mutableStateOf(false) }
@@ -128,7 +131,7 @@ fun ArtworkCard(
             // only applies if the card is being displayed in the gallery or saved
             if(!isShop){
                 // only shows name of artwork if in gallery
-                if (isGallery){
+                if (isGallery || isProfile){
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -156,23 +159,25 @@ fun ArtworkCard(
                     )
                 }
 
-                // Like Button (top right)
-                IconButton(
-                    onClick = onLikeClick,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(16.dp)
-                        .size(30.dp)
-                        .scale(heartScale)
-                        .shadow(10.dp, CircleShape)
-                        .background(Color.White, CircleShape)
-                ) {
-                    Icon(
-                        imageVector = if (isSaved) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                        contentDescription = null,
-                        tint = if (isSaved) Color(0xFFE91E63) else Color(0xFF424242),
-                        modifier = Modifier.size(22.dp)
-                    )
+                if (!isProfile) {
+                    // Like Button (top right)
+                    IconButton(
+                        onClick = onLikeClick,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp)
+                            .size(30.dp)
+                            .scale(heartScale)
+                            .shadow(10.dp, CircleShape)
+                            .background(Color.White, CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = if (isSaved) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            contentDescription = null,
+                            tint = if (isSaved) Color(0xFFE91E63) else Color(0xFF424242),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
 
             }
