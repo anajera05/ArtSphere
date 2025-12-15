@@ -15,6 +15,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
+/**
+ * Data class representing the UI state for event-related screens.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This class holds the state information for screens that display or manage events,
+ * including the list of events, loading states, and error messages.
+ *
+ * @property events List of Event objects to be displayed in the UI.
+ * @property isLoading Indicates whether events are currently being loaded from the database.
+ * @property isCreating Indicates whether a new event is currently being created.
+ * @property error Optional error message string if an operation failed. Null if no error.
+ */
 data class EventUiState(
     val events: List<Event> = emptyList(),
     val isLoading: Boolean = false,
@@ -22,8 +35,19 @@ data class EventUiState(
     val error: String? = null
 )
 
+/**
+ * ViewModel for managing event data and operations with Firebase.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This ViewModel handles all event-related operations including loading events from Firestore,
+ * creating new events with optional image uploads to Firebase Storage, managing event
+ * participants (joining/leaving), and deleting events. It exposes UI state through a StateFlow
+ * that UI components can observe.
+ */
 class EventViewModel : ViewModel() {
 
+    //Firebase
     private val auth = FirebaseAuth.getInstance()
     private val user get() = auth.currentUser
     private val db = FirebaseFirestore.getInstance()
@@ -33,10 +57,21 @@ class EventViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(EventUiState())
     val uiState: StateFlow<EventUiState> = _uiState
 
+    //Load events when viewModel is created
     init {
         loadEvents()
     }
 
+    /**
+     * Loads all events from Firestore and updates the UI state.
+     *
+     * KDoc generated with AI; reviewed and modified for accuracy.
+     *
+     * This method fetches all events from the "events" collection in Firestore,
+     * converts them to Event objects, sorts them by creation date (newest first),
+     * and updates the UI state. Any errors during loading are caught and stored
+     * in the error state.
+     */
     fun loadEvents() {
         viewModelScope.launch {
             try {
@@ -67,6 +102,30 @@ class EventViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Creates a new event in Firestore with optional image upload to Firebase Storage.
+     *
+     * KDoc generated with AI; reviewed and modified for accuracy.
+     *
+     * This method handles the complete event creation workflow:
+     * 1. Uploads the event image to Firebase Storage (if provided)
+     * 2. Creates an Event object with all provided data
+     * 3. Saves the event to Firestore
+     * 4. Reloads the event list to reflect the new event
+     * 5. Calls the onSuccess callback
+     *
+     * @param title The event's title/name.
+     * @param description Detailed description of the event.
+     * @param date The date when the event occurs (as a string).
+     * @param time The time when the event starts (as a string).
+     * @param location Human-readable location/address of the event.
+     * @param latitude Geographic latitude of the event location.
+     * @param longitude Geographic longitude of the event location.
+     * @param category The event category (as enum name string).
+     * @param maxParticipants Maximum number of participants allowed (0 for unlimited).
+     * @param imageUri Optional URI of the event image to upload.
+     * @param onSuccess Callback invoked when event creation succeeds.
+     */
     fun createEvent(
         title: String,
         description: String,
@@ -138,6 +197,18 @@ class EventViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Adds the current user as a participant to the specified event.
+     *
+     * KDoc generated with AI; reviewed and modified for accuracy.
+     *
+     * This method updates the event document in Firestore by adding the current user's ID
+     * to the participantIds array and their detailed information to the participants array.
+     * Uses FieldValue.arrayUnion to atomically add values without duplicates.
+     *
+     * @param eventId The ID of the event to join.
+     * @param onSuccess Optional callback invoked when joining succeeds.
+     */
     fun joinEvent(eventId: String, onSuccess: () -> Unit = {}) {
         val userId = user?.uid ?: return
         val userName = user?.displayName ?: user?.email?.substringBefore("@") ?: "User"
@@ -174,6 +245,18 @@ class EventViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Removes the current user from the specified event's participant list.
+     *
+     * KDoc generated with AI; reviewed and modified for accuracy.
+     *
+     * This method first retrieves the event to find the exact participant data for the
+     * current user, then removes both the user ID from participantIds and their detailed
+     * information from the participants array using FieldValue.arrayRemove.
+     *
+     * @param eventId The ID of the event to leave.
+     * @param onSuccess Optional callback invoked when leaving succeeds.
+     */
     fun leaveEvent(eventId: String, onSuccess: () -> Unit = {}) {
         val userId = user?.uid ?: return
 
@@ -219,11 +302,27 @@ class EventViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Deletes an event from Firestore and removes its associated image from Storage.
+     *
+     * KDoc generated with AI; reviewed and modified for accuracy.
+     *
+     * This method performs two operations:
+     * 1. Deletes the event document from Firestore
+     * 2. Attempts to delete the event's image from Firebase Storage (if it exists)
+     *
+     * The image deletion is in a try-catch block since not all events have images.
+     * After deletion, the event list is reloaded to reflect the change.
+     *
+     * @param eventId The ID of the event to delete.
+     * @param onSuccess Optional callback invoked when deletion succeeds.
+     */
     fun deleteEvent(eventId: String, onSuccess: () -> Unit = {}) {
         val userId = user?.uid ?: return
 
         viewModelScope.launch {
             try {
+                //Delete event from Firestore
                 db.collection("events")
                     .document(eventId)
                     .delete()

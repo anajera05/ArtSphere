@@ -35,6 +35,21 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.maps.android.compose.*
 
+/**
+ * Main composable for displaying a map screen with event markers and location features.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This screen handles location permissions, fetches the user's current location,
+ * and displays a Google Map with event markers. It provides functionality to view
+ * event details and create new events at specific locations on the map.
+ *
+ * @param modifier Modifier to be applied to the root composable.
+ * @param onEventClick Optional callback invoked when a user clicks on an event marker.
+ *                     Receives the clicked Event object.
+ * @param onCreateEventAtLocation Optional callback invoked when user wants to create
+ *                                an event at a specific location. Receives the LatLng coordinates.
+ */
 @Composable
 fun MapScreen(
     modifier: Modifier = Modifier,
@@ -55,6 +70,7 @@ fun MapScreen(
     var isLoadingLocation by remember { mutableStateOf(true) }
     var showPermissionRationale by remember { mutableStateOf(false) }
 
+    //Launcher for requesting locations
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -75,6 +91,7 @@ fun MapScreen(
         }
     }
 
+    //Request permission on initial load if not granted
     LaunchedEffect(Unit) {
         if (!hasLocationPermission) {
             locationPermissionLauncher.launch(
@@ -145,6 +162,20 @@ fun MapScreen(
     }
 }
 
+/**
+ * Private composable that displays the Google Map with event markers and interactive features.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This composable renders the Google Map with all event markers, provides a floating
+ * action button for creating events, displays an event count badge, and handles
+ * map interactions like tapping locations to create events.
+ *
+ * @param currentLocation The user's current location to center the map.
+ * @param onEventClick Optional callback invoked when an event marker is clicked.
+ * @param onCreateEventAtLocation Optional callback invoked when user confirms
+ *                                creating an event at a tapped location.
+ */
 @Composable
 private fun MapWithEvents(
     currentLocation: LatLng,
@@ -154,10 +185,12 @@ private fun MapWithEvents(
     val eventViewModel: EventViewModel = viewModel()
     val uiState by eventViewModel.uiState.collectAsState()
 
+    //Remember camera position state to centered on the user
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(currentLocation, 14f)
     }
 
+    // Track dialog visibility and selected location for event creation
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
 
@@ -292,6 +325,17 @@ private fun MapWithEvents(
     }
 }
 
+/**
+ * Private function that creates a custom bitmap for event markers on the map.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This function programmatically draws a circular marker icon with a colored fill
+ * and white stroke border. The marker is rendered as a bitmap that can be used
+ * as a custom marker icon in Google Maps.
+ *
+ * @return Bitmap representing the custom event marker icon.
+ */
 private fun createEventMarkerBitmap(): Bitmap {
     val size = 100
     val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
@@ -313,6 +357,19 @@ private fun createEventMarkerBitmap(): Bitmap {
     return output
 }
 
+/**
+ * Private composable that displays a screen when location permission is denied.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This screen provides information about why location permission is needed and
+ * offers options to either grant permission or open app settings (if permission
+ * was previously denied).
+ *
+ * @param showRationale If true, shows the "Open Settings" option for users who
+ *                      permanently denied permission. If false, shows "Grant Permission".
+ * @param onRequestPermission Callback invoked when user clicks to grant permission.
+ */
 @Composable
 private fun LocationPermissionDenied(
     showRationale: Boolean,
@@ -387,6 +444,18 @@ private fun LocationPermissionDenied(
     }
 }
 
+/**
+ * Private function that retrieves the user's current location using Google Play Services.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This function attempts to get the most recent location with high accuracy priority.
+ * If the current location is unavailable, it falls back to the last known location.
+ * If all location fetching fails, it defaults to New York City coordinates.
+ *
+ * @param context Android context needed to access location services.
+ * @param onLocationReceived Callback invoked with the retrieved LatLng location.
+ */
 private fun getCurrentLocation(
     context: Context,
     onLocationReceived: (LatLng) -> Unit

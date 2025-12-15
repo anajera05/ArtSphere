@@ -32,6 +32,19 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * Main composable function for the camera screen that handles artwork photography.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This screen manages camera permission requests and displays either the camera preview
+ * or a permission denied screen based on the permission state. It uses CameraX APIs
+ * for camera functionality.
+ *
+ * @param onBackClick Callback invoked when the user clicks the back button.
+ * @param onPhotoTaken Callback invoked when a photo is successfully captured,
+ *                     receives the URI of the saved photo file.
+ */
 @Composable
 fun CameraScreen(
     onBackClick: () -> Unit,
@@ -39,6 +52,7 @@ fun CameraScreen(
 ) {
     val context = LocalContext.current
 
+    //Track the status
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -48,18 +62,21 @@ fun CameraScreen(
         )
     }
 
+    //Launcher used for requesting camera premission
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasCameraPermission = isGranted
     }
 
+    //Request permission
     LaunchedEffect(Unit) {
         if (!hasCameraPermission) {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
+    //Based off the status
     if (hasCameraPermission) {
         CameraPreview(
             onBackClick = onBackClick,
@@ -75,6 +92,18 @@ fun CameraScreen(
     }
 }
 
+/**
+ * Private composable that displays the camera preview with capture functionality.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This composable sets up CameraX with a preview surface and image capture use case.
+ * It displays the camera feed using AndroidView with a PreviewView, and provides
+ * UI controls for capturing photos and navigating back.
+ *
+ * @param onBackClick Callback invoked when the back button is pressed.
+ * @param onPhotoTaken Callback invoked when a photo is captured, receives the photo URI.
+ */
 @Composable
 private fun CameraPreview(
     onBackClick: () -> Unit,
@@ -91,16 +120,20 @@ private fun CameraPreview(
                 val previewView = PreviewView(ctx)
                 val cameraProvider = cameraProviderFuture.get()
 
+                //Build Preview use case
                 val preview = Preview.Builder().build().also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
 
+                //Build image capture
                 imageCapture = ImageCapture.Builder()
                     .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                     .build()
 
+                //Using the back camera
                 val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
+                //Unbind and binding
                 try {
                     cameraProvider.unbindAll()
                     cameraProvider.bindToLifecycle(
@@ -152,6 +185,17 @@ private fun CameraPreview(
     }
 }
 
+/**
+ * Private composable that displays a permission denied screen with options to grant permission.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This screen is shown when camera permission has been denied. It explains why the
+ * permission is needed and provides buttons to either grant permission or go back.
+ *
+ * @param onBackClick Callback invoked when the "Go Back" button is clicked.
+ * @param onRequestPermission Callback invoked when the "Grant Permission" button is clicked.
+ */
 @Composable
 private fun PermissionDeniedScreen(
     onBackClick: () -> Unit,
@@ -218,6 +262,20 @@ private fun PermissionDeniedScreen(
     }
 }
 
+
+/**
+ * Private function that handles the photo capture process using CameraX ImageCapture.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This function creates a timestamped file, configures output options, and executes
+ * the image capture. On success, it invokes the callback with the photo URI.
+ * On failure, it prints the stack trace for debugging.
+ *
+ * @param context Android context used to access external files directory and main executor.
+ * @param imageCapture ImageCapture use case instance. Returns early if null.
+ * @param onPhotoTaken Callback invoked with the URI of the saved photo on successful capture.
+ */
 private fun capturePhoto(
     context: Context,
     imageCapture: ImageCapture?,
@@ -225,6 +283,7 @@ private fun capturePhoto(
 ) {
     val imageCapture = imageCapture ?: return
 
+    //Create file with timestamp to ensure unique
     val photoFile = File(
         context.getExternalFilesDir(null),
         SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.US)
@@ -233,11 +292,13 @@ private fun capturePhoto(
 
     val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
+    //Execute image capture with callback
     imageCapture.takePicture(
         outputOptions,
         ContextCompat.getMainExecutor(context),
         object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                //Convert file to URI
                 val savedUri = Uri.fromFile(photoFile)
                 onPhotoTaken(savedUri)
             }

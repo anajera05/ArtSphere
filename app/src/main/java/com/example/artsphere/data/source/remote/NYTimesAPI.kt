@@ -34,30 +34,70 @@ import androidx.compose.ui.Alignment
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 
-
+//NYTimes key retrieved from BuildConfig
 object ApiKeys {
     val apiKey: String = BuildConfig.NYT_API_KEY
 }
 
+/**
+ * Data class representing a news article from the New York Times API.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * @property title The headline or title of the article.
+ * @property url The web URL where the full article can be accessed.
+ * @property imageUrl Optional URL of the article's main image. Null if no image is available.
+ */
 data class Article(
     val title: String,
     val url: String,
     val imageUrl: String? = null
 )
+/**
+ * UI state data class for the news screen.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This class represents the current state of the news feed, including loading status,
+ * article data, and any error messages that may occur during data fetching.
+ *
+ * @property isLoading Indicates whether news data is currently being fetched.
+ * @property articles List of article objects to display. Empty list when loading or on error.
+ * @property error Error message string if an exception occurred during fetching. Null if no error.
+ */
 data class NewsUiState(
     val isLoading: Boolean = false,
     val articles: List<Article> = emptyList(),
     val error: String? = null
 )
 
+/**
+ * ViewModel for managing art news data and UI state.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This ViewModel handles fetching news articles from the New York Times API and
+ * exposes the UI state to composables. It automatically loads news on initialization
+ * and provides a method to manually refresh the data.
+ */
 class NewsViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(NewsUiState(isLoading = true))
     val uiState: StateFlow<NewsUiState> = _uiState
 
+    //Loads news when ViewModel is created
     init {
         loadNews()
     }
 
+    /**
+     * Loads or reloads art news articles from the New York Times API.
+     *
+     * KDoc generated with AI; reviewed and modified for accuracy.
+     *
+     * This method launches a coroutine in the viewModelScope to fetch news data asynchronously.
+     * It updates the UI state to reflect loading, success, or error states appropriately.
+     * Can be called manually to refresh the news feed.
+     */
     fun loadNews() {
         viewModelScope.launch {
             _uiState.value = NewsUiState(isLoading = true, error = null)
@@ -71,6 +111,19 @@ class NewsViewModel : ViewModel() {
     }
 }
 
+/**
+ * Composable function that displays a screen with the latest art news from NYT.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This screen shows a list of art-related news articles with images and titles.
+ * It handles loading states, error states, and provides a refresh button.
+ *
+ * @param viewModel The NewsViewModel instance that manages the news data and state.
+ *                  Defaults to a new instance created by viewModel().
+ * @param onArticleClick Callback function invoked when a user clicks on an article.
+ *                       Receives the clicked Article object as a parameter.
+ */
 @Composable
 fun ArtNewsScreen(
     viewModel: NewsViewModel = viewModel(),
@@ -141,6 +194,18 @@ fun ArtNewsScreen(
     }
 }
 
+/**
+ * Fetches art-related news articles from the New York Times Top Stories API.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This suspend function makes a network call to the NYT API's arts section,
+ * parses the JSON response, and returns a list of Article objects.
+ * It runs on the IO dispatcher to avoid blocking the main thread.
+ *
+ * @return List of Article objects containing title, URL, and optional image URL.
+ * @throws Exception if the network request fails or JSON parsing encounters an error.
+ */
 suspend fun fetchArtNews(): List<Article> = withContext(Dispatchers.IO) {
     val url = "https://api.nytimes.com/svc/topstories/v2/arts.json?api-key=${ApiKeys.apiKey}"
     val response = URL(url).readText()
