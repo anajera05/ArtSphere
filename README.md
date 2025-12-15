@@ -13,11 +13,12 @@
 </div>
 
 <!-- ABOUT THE PROJECT -->
-## About The Project
+## App Functionality & Demo
 
+### Why Artsphere 
 Our app facilitates the exchange and collaboration of artwork. It allows users to sell their own creations while also discovering and purchasing art from other artists. By providing a platform for both buying and selling, the app encourages creative collaboration and helps artists reach a wider audience.
 
-Features: 
+### Core Features: 
 * User Authentication:
   * Users can create their accounts and log in with the same credentials
   * Passwords must be +6 characters
@@ -45,72 +46,28 @@ Features:
 * Inbox:
   * Start chats with artists from their art pieces
   * Chat with multiple artists in the app
-
-
-<!-- build/run instructions -->
-## How to build and run the application 
-1. ```git clone https://github.com/anajera05/ArtSphere```
-2. ```cd Artsphere```
-3. Add MAPS_API_KEY=Key to local.properties, where Key is your Google Maps API key.
-4. Run emulator
-5. run application
-
-<!-- USAGE EXAMPLES -->
-## Users 
-
-Those who love art and/or want to sell!
-
-
-<!-- APIs Used -->
-## APIs Used  
-
-Google Maps
-New York 
-
-Times API
-
-## Navigation routes:
-
-| Screen | Route | Parent |
-|--------|-------|--------|
-| Login/Sign Up | `login` | Root |
-| Login Screen | `login` | Root |
-| Sign Up Screen | `signup` | Root |
-| Bottom Navigation | `main` | Root |
-| Home Screen | `home` | Bottom Nav |
-| Map Screen | `map` | Bottom Nav |
-| Shopping Cart | `inbox` | Bottom Nav |
-| Profile Screen | `profile` | Bottom Nav |
-| Camera Screen | `camera` | Any Main Screen |
-| Upload Artwork | `upload_artwork` | Camera/Map/Profile |
-| Art Detail | `artwork_detail` | Any Artwork |
-| My Artworks | `my_artwork` | Profile |
-| Saved Artworks | `saved_artwork` | Profile |
-| Settings | `settings` | Profile |
+ 
+### Completeness & Live Demo Quality
+(zoom link of live demo)
 
 
 
+## Technical Implementation
 
-## Testing Strategy
-The app was tested using a combination of debugging techniques, manual verification, and automated unit/UI tests. Debugging included the use of Log.d and Log.e for logging events and errors, try/catch blocks for exception handling, and managing errors through UI state to provide user feedback.
+### Architecture (MVVM structure with StateFlow and unidirectional data flow)
+(detail showed in report )
 
-Manual testing verified core components on the emulator:
+### Integration: Newyork Times API & Google map API & sensor 
+1. Newyork Times
+2. Google map 
+3. camera sensor 
 
-* Camera: capturing and uploading artwork
 
-* Map: displaying locations and coordinates accurately
+### Jetpack Compose Usage: UI 
 
-* Saved Artwork: loading, viewing, and deleting items
+(UI detail)
 
-* Navigation: ensuring smooth transitions between screens
-
-Automated unit/UI tests were added to verify key composable components and flows:
-* Login/Sign-in Screen: ensured users can type in email and password fields and that the login button is enabled
-* Artwork Upload Flow: verified that users can input and submit artwork details through the UI
-
-This approach ensured that each feature functions correctly and that the app behaves as expected under different scenarios.
-
-## AI Usage
+## AI Use in Development
 Tools Used: ChatGPT, Gemini
 
 Where and How Used: 
@@ -138,6 +95,47 @@ Analysis of Helpfulness and Limitations:
 Corrections Required / Demonstration of Understanding:
 
 While using ChatGPT, I verified its suggestions by checking official documentation, testing the code in my project, and interacting with the emulator to ensure each component worked correctly.
+
+
+
+
+## Testing Strategy
+The app was tested using a combination of debugging techniques, manual verification, and automated unit/UI tests. Debugging included the use of Log.d and Log.e for logging events and errors, try/catch blocks for exception handling, and managing errors through UI state to provide user feedback.
+
+Manual testing verified core components on the emulator:
+
+* Camera: capturing and uploading artwork
+
+* Map: displaying locations and coordinates accurately
+
+* Saved Artwork: loading, viewing, and deleting items
+
+* Navigation: ensuring smooth transitions between screens
+
+Automated unit/UI tests were added to verify key composable components and flows:
+* Login/Sign-in Screen: ensured users can type in email and password fields and that the login button is enabled
+* Artwork Upload Flow: verified that users can input and submit artwork details through the UI
+
+This approach ensured that each feature functions correctly and that the app behaves as expected under different scenarios.
+
+
+
+
+
+<!-- build/run instructions -->
+## How to build and run the application 
+1. ```git clone https://github.com/anajera05/ArtSphere```
+2. ```cd Artsphere```
+3. Add MAPS_API_KEY=Key to local.properties, where Key is your Google Maps API key.
+4. Run emulator
+5. run application
+
+<!-- USAGE EXAMPLES -->
+## Users 
+
+Those who love art and/or want to sell!
+
+
 ### Top contributors:
 
 <a href="https://github.com/anajera05/ArtSphere/graphs/contributors">
