@@ -4,12 +4,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.artsphere.data.model.Artwork
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.artsphere.data.repository.ArtworkRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 data class GalleryUiState(
     val artworks: List<Artwork> = emptyList(),
@@ -19,11 +17,14 @@ data class GalleryUiState(
 
 class GalleryViewModel : ViewModel() {
 
-    private val db = FirebaseFirestore.getInstance()
-    private val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+    // 1. Initialize the shared Repository
+    private val repository = ArtworkRepository()
 
     private val _uiState = MutableStateFlow(GalleryUiState())
     val uiState: StateFlow<GalleryUiState> = _uiState
+
+    // 2. Get current user ID via repository helper
+    private val currentUserId = repository.getCurrentUserId()
 
     init {
         loadAllArtworks()
@@ -34,26 +35,21 @@ class GalleryViewModel : ViewModel() {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
 
-                // Fetch ALL artworks from all users
-                val snapshot = db.collection("artworks")
-                    .get()
-                    .await()
+                // 3. Call Repository to get raw list
+                val allArtworks = repository.getAllArtworks()
 
-                val artworkList = snapshot.documents.mapNotNull { doc ->
-                    doc.toObject(Artwork::class.java)?.copy(id = doc.id)
-                }.filter { artwork ->
-                    // Show artwork if:
-                    // 1. It's not hidden, OR
-                    // 2. It's hidden but belongs to current user
+                // Filter logic remains in ViewModel (Presentation Logic)
+                // Filter: Show artwork if NOT hidden, OR if it's hidden but belongs to me
+                val filteredList = allArtworks.filter { artwork ->
                     !artwork.isHidden || artwork.userId == currentUserId
-                }.sortedByDescending { it.createdAt }
+                }
 
                 _uiState.value = _uiState.value.copy(
-                    artworks = artworkList,
+                    artworks = filteredList,
                     isLoading = false
                 )
 
-                Log.d("GALLERY_VM", "Loaded ${artworkList.size} artworks from all users")
+                Log.d("GALLERY_VM", "Loaded ${filteredList.size} artworks")
 
             } catch (e: Exception) {
                 Log.e("GALLERY_VM", "Error loading artworks", e)
@@ -69,10 +65,8 @@ class GalleryViewModel : ViewModel() {
     fun toggleSoldStatus(artworkId: String, currentStatus: Boolean) {
         viewModelScope.launch {
             try {
-                db.collection("artworks")
-                    .document(artworkId)
-                    .update("isSold", !currentStatus)
-                    .await()
+                // 4. Delegate to Repository
+                repository.toggleSoldStatus(artworkId, currentStatus)
 
                 // Reload artworks to reflect changes
                 loadAllArtworks()
@@ -89,10 +83,8 @@ class GalleryViewModel : ViewModel() {
     fun toggleHiddenStatus(artworkId: String, currentStatus: Boolean) {
         viewModelScope.launch {
             try {
-                db.collection("artworks")
-                    .document(artworkId)
-                    .update("isHidden", !currentStatus)
-                    .await()
+                // 5. Delegate to Repository
+                repository.toggleHiddenStatus(artworkId, currentStatus)
 
                 // Reload artworks to reflect changes
                 loadAllArtworks()

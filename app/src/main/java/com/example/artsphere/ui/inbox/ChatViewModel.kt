@@ -4,12 +4,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.artsphere.data.model.Message
+import com.example.artsphere.data.repository.MessageRepository
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 data class ChatUiState(
     val messages: List<Message> = emptyList(),
@@ -20,48 +19,30 @@ data class ChatUiState(
 
 class ChatViewModel : ViewModel() {
 
+    // Initialize Repository
+    private val repository = MessageRepository()
+
+    // We keep a local Auth instance just to grab the User's Display Name for the message object
+    // The actual data operations go through the repository
     private val auth = FirebaseAuth.getInstance()
-    private val user get() = auth.currentUser
-    private val db = FirebaseFirestore.getInstance()
 
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState
 
     fun loadMessages(otherUserId: String, artworkId: String) {
-        val userId = user?.uid ?: return
+        val userId = repository.getCurrentUserId() ?: return
 
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
 
-                val sentMessages = db.collection("messages")
-                    .whereEqualTo("senderId", userId)
-                    .whereEqualTo("receiverId", otherUserId)
-                    .whereEqualTo("artworkId", artworkId)
-                    .get()
-                    .await()
-
-                val receivedMessages = db.collection("messages")
-                    .whereEqualTo("senderId", otherUserId)
-                    .whereEqualTo("receiverId", userId)
-                    .whereEqualTo("artworkId", artworkId)
-                    .get()
-                    .await()
-
-                val allMessages = (sentMessages.documents + receivedMessages.documents)
-                    .mapNotNull { it.toObject(Message::class.java)?.copy(id = it.id) }
-                    .sortedBy { it.timestamp }
+                // Call Repository to get merged and sorted messages
+                val allMessages = repository.getMessages(userId, otherUserId, artworkId)
 
                 _uiState.value = _uiState.value.copy(
                     messages = allMessages,
                     isLoading = false
                 )
-
-                receivedMessages.documents.forEach { doc ->
-                    if (doc.getBoolean("read") == false) {
-                        doc.reference.update("read", true)
-                    }
-                }
 
             } catch (e: Exception) {
                 Log.e("CHAT_VM", "Error loading messages", e)
@@ -82,7 +63,10 @@ class ChatViewModel : ViewModel() {
         messageText: String,
         onSuccess: () -> Unit
     ) {
-        val userId = user?.uid ?: return
+        val userId = repository.getCurrentUserId() ?: return
+        val user = auth.currentUser
+
+        // Logic to determine display name (Presentation Logic)
         val senderName = user?.displayName?.takeIf { it.isNotBlank() }
             ?: user?.email?.substringBefore("@")
             ?: "User"
@@ -93,10 +77,8 @@ class ChatViewModel : ViewModel() {
             try {
                 _uiState.value = _uiState.value.copy(isSending = true)
 
-                val messageId = db.collection("messages").document().id
-
                 val message = Message(
-                    id = messageId,
+                    id = "", // Repository will generate the ID
                     senderId = userId,
                     senderName = senderName,
                     receiverId = receiverId,
@@ -109,13 +91,12 @@ class ChatViewModel : ViewModel() {
                     read = false
                 )
 
-                db.collection("messages")
-                    .document(messageId)
-                    .set(message)
-                    .await()
+                // Call Repository
+                repository.sendMessage(message)
 
                 _uiState.value = _uiState.value.copy(isSending = false)
 
+                // Reload to show the new message
                 loadMessages(receiverId, artworkId)
 
                 onSuccess()

@@ -1,15 +1,14 @@
-package com.example.artsphere.ui.artworks.savedArtworks
+package com.example.artsphere.ui.saved
 
 import android.util.Log
+import androidx.compose.foundation.layout.size
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.artsphere.data.model.Artwork
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.artsphere.data.repository.ArtworkRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 data class SavedArtworkUiState(
     val savedArtworks: List<Artwork> = emptyList(),
@@ -20,9 +19,9 @@ data class SavedArtworkUiState(
 
 class SavedArtworkViewModel : ViewModel() {
 
-    private val auth = FirebaseAuth.getInstance()
-    private val user get() = auth.currentUser
-    private val db = FirebaseFirestore.getInstance()
+    // 1. Initialize Repository
+    private val repository = ArtworkRepository()
+    private val currentUserId = repository.getCurrentUserId()
 
     private val _uiState = MutableStateFlow(SavedArtworkUiState())
     val uiState: StateFlow<SavedArtworkUiState> = _uiState
@@ -32,44 +31,18 @@ class SavedArtworkViewModel : ViewModel() {
     }
 
     fun loadSavedArtworks() {
-        val userId = user?.uid ?: return
+        val userId = currentUserId ?: return
 
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
 
-                // Get the user's saved artwork IDs
-                val savedDoc = db.collection("savedArtworks")
-                    .document(userId)
-                    .get()
-                    .await()
-
-                val savedIds = (savedDoc.get("artworkIds") as? List<*>)
-                    ?.filterIsInstance<String>()
-                    ?.toSet() ?: emptySet()
-
+                // 2. Get the IDs from Repository
+                val savedIds = repository.getSavedArtworkIds(userId)
                 Log.d("SAVED_VM", "Found ${savedIds.size} saved artwork IDs")
 
-                // Fetch the actual artwork objects
-                val artworks = if (savedIds.isNotEmpty()) {
-                    // Firestore whereIn has a limit of 10 items, so we need to batch
-                    val artworksList = mutableListOf<Artwork>()
-
-                    savedIds.chunked(10).forEach { chunk ->
-                        val snapshot = db.collection("artworks")
-                            .whereIn("__name__", chunk)
-                            .get()
-                            .await()
-
-                        snapshot.documents.mapNotNullTo(artworksList) { doc ->
-                            doc.toObject(Artwork::class.java)?.copy(id = doc.id)
-                        }
-                    }
-
-                    artworksList.sortedByDescending { it.createdAt }
-                } else {
-                    emptyList()
-                }
+                // 3. Fetch the objects from Repository
+                val artworks = repository.getArtworksByIds(savedIds)
 
                 _uiState.value = _uiState.value.copy(
                     savedArtworks = artworks,
@@ -91,7 +64,7 @@ class SavedArtworkViewModel : ViewModel() {
     }
 
     fun toggleSaveArtwork(artworkId: String) {
-        val userId = user?.uid ?: return
+        val userId = currentUserId ?: return
 
         viewModelScope.launch {
             try {
@@ -99,11 +72,9 @@ class SavedArtworkViewModel : ViewModel() {
                 val isCurrentlySaved = currentSavedIds.contains(artworkId)
 
                 if (isCurrentlySaved) {
-                    // Remove from saved
                     currentSavedIds.remove(artworkId)
                     Log.d("SAVED_VM", "Removing artwork $artworkId")
                 } else {
-                    // Add to saved
                     currentSavedIds.add(artworkId)
                     Log.d("SAVED_VM", "Saving artwork $artworkId")
                 }
@@ -113,11 +84,8 @@ class SavedArtworkViewModel : ViewModel() {
                     savedArtworkIds = currentSavedIds
                 )
 
-                // Update Firestore
-                db.collection("savedArtworks")
-                    .document(userId)
-                    .set(mapOf("artworkIds" to currentSavedIds.toList()))
-                    .await()
+                // 4. Update Firestore via Repository
+                repository.updateSavedArtworkIds(userId, currentSavedIds)
 
                 Log.d("SAVED_VM", "Successfully updated Firestore. Total saved: ${currentSavedIds.size}")
 
@@ -127,10 +95,16 @@ class SavedArtworkViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("SAVED_VM", "Error toggling save: ${e.message}", e)
                 _uiState.value = _uiState.value.copy(error = "Failed to save: ${e.message}")
-                // Reload to restore correct state
+                // Reload to restore correct state on error
                 loadSavedArtworks()
             }
         }
+    }
+
+    // Overload for consistency if you start passing full objects elsewhere,
+    // but keeps your main logic intact
+    fun toggleSave(artwork: Artwork) {
+        toggleSaveArtwork(artwork.id)
     }
 
     fun isArtworkSaved(artworkId: String): Boolean {

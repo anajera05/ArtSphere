@@ -22,9 +22,9 @@ import coil.compose.AsyncImage
 import com.example.artsphere.data.model.Artwork
 import com.example.artsphere.data.model.ArtworkCategory
 import com.example.artsphere.ui.artworks.gallery.GalleryViewModel
-import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkUiState
-import com.example.artsphere.ui.artworks.savedArtworks.SavedArtworkViewModel
 import com.example.artsphere.ui.profile.ArtistProfileSheet
+import com.example.artsphere.ui.saved.SavedArtworkViewModel
+import com.example.artsphere.ui.saved.SavedArtworkUiState
 import com.example.artsphere.ui.theme.ArtSphereTheme
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
