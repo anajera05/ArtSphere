@@ -14,6 +14,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 
+/**
+ * Composable function that displays a web page in a WebView with navigation controls.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This screen provides a full-featured web browsing experience within the app, including
+ * a top app bar with title, back navigation, and refresh functionality. It displays a
+ * loading indicator while pages are loading and handles JavaScript and DOM storage.
+ *
+ * @param url The web URL to load and display in the WebView.
+ * @param title The title to display in the top app bar. Defaults to "Article".
+ * @param onBackClick Callback invoked when the back button is pressed.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WebViewScreen(

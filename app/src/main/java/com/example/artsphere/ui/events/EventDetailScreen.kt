@@ -24,6 +24,19 @@ import com.example.artsphere.data.model.Event
 import com.example.artsphere.ui.theme.ArtSphereTheme
 import com.google.firebase.auth.FirebaseAuth
 
+/**
+ * Main composable for displaying detailed information about a specific event.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This composable determines the user's relationship to the event (organizer, participant,
+ * or neither) and passes this information to the content composable along with appropriate
+ * callbacks for event actions (delete, join, leave).
+ *
+ * @param event The Event object containing all event details to display.
+ * @param onBackClick Callback invoked when the user navigates back from this screen.
+ * @param viewModel The EventViewModel that handles event operations.
+ */
 @Composable
 fun EventDetailScreen(
     event: Event,
@@ -56,6 +69,29 @@ fun EventDetailScreen(
     )
 }
 
+/**
+ * Content composable that displays the event details UI.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This composable renders a comprehensive event details screen including:
+ * - Event image or placeholder
+ * - Title and category
+ * - Date, time, and location information
+ * - Event description
+ * - Organizer details
+ * - Participant count and list
+ * - Join/Leave/Delete buttons based on user permissions
+ *
+ * @param event The Event object to display.
+ * @param isOrganizer True if the current user is the event organizer.
+ * @param isParticipant True if the current user is registered as a participant.
+ * @param currentUserId The ID of the currently authenticated user, or null if not logged in.
+ * @param onBackClick Callback invoked when the back button is pressed.
+ * @param onDeleteClick Callback invoked when the organizer confirms event deletion.
+ * @param onJoinClick Callback invoked when a user clicks to join the event.
+ * @param onLeaveClick Callback invoked when a participant clicks to leave the event.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetailScreenContent(

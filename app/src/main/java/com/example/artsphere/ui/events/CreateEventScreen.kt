@@ -29,6 +29,19 @@ import com.example.artsphere.ui.components.StyledTextField
 import com.example.artsphere.ui.theme.ArtSphereTheme
 import com.google.android.gms.maps.model.LatLng
 
+/**
+ * Main composable for the event creation screen that integrates with the ViewModel.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This composable serves as a wrapper that connects the UI state from the EventViewModel
+ * to the CreateEventScreenContent composable. It handles event creation by calling the
+ * ViewModel's createEvent method with user-provided data.
+ *
+ * @param location The geographic coordinates (latitude/longitude) where the event will take place.
+ * @param onBackClick Callback invoked when the user navigates back from this screen.
+ * @param viewModel The EventViewModel that manages event creation and state.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateEventScreen(
@@ -61,6 +74,22 @@ fun CreateEventScreen(
     )
 }
 
+/**
+ * Content composable for the event creation screen with form inputs.
+ *
+ * KDoc generated with AI; reviewed and modified for accuracy.
+ *
+ * This composable displays a comprehensive form for creating an event, including fields
+ * for title, description, date, time, location name, category selection, participant limit,
+ * and optional image upload. It validates required fields and shows appropriate error messages.
+ *
+ * @param location The geographic coordinates for the event location.
+ * @param onBackClick Callback invoked when the back button is pressed.
+ * @param uiState The current UI state containing loading status and errors.
+ * @param onCreateEvent Callback invoked when the create button is pressed with all form data.
+ *                      Parameters: title, description, date, time, locationName, category,
+ *                      maxParticipants, imageUri.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateEventScreenContent(
