@@ -283,35 +283,35 @@ private fun MapWithEvents(
         }
 
         // Event count badge
-        if (uiState.events.isNotEmpty()) {
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp),
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
-                shadowElevation = 4.dp
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Event,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = "${uiState.events.size} Events",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-        }
+//        if (uiState.events.isNotEmpty()) {
+//            Surface(
+//                modifier = Modifier
+//                    .align(Alignment.TopEnd)
+//                    .padding(16.dp),
+//                shape = MaterialTheme.shapes.medium,
+//                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
+//                shadowElevation = 4.dp
+//            ) {
+//                Row(
+//                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Default.Event,
+//                        contentDescription = null,
+//                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+//                        modifier = Modifier.size(20.dp)
+//                    )
+//                    Text(
+//                        text = "${uiState.events.size} Events",
+//                        style = MaterialTheme.typography.labelLarge,
+//                        fontWeight = FontWeight.Bold,
+//                        color = MaterialTheme.colorScheme.onPrimaryContainer
+//                    )
+//                }
+//            }
+//        }
 
         // Loading indicator
         if (uiState.isLoading) {

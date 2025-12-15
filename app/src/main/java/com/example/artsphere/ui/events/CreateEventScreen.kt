@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -28,6 +30,11 @@ import com.example.artsphere.data.model.EventCategory
 import com.example.artsphere.ui.components.StyledTextField
 import com.example.artsphere.ui.theme.ArtSphereTheme
 import com.google.android.gms.maps.model.LatLng
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 /**
  * Main composable for the event creation screen that integrates with the ViewModel.
@@ -108,6 +115,9 @@ fun CreateEventScreenContent(
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var expandedCategory by remember { mutableStateOf(false) }
     var attemptedSave by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
 
     val allFieldsFilled = title.isNotBlank() &&
             description.isNotBlank() &&
@@ -124,7 +134,7 @@ fun CreateEventScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Create Event") },
+                title = { Text("Create Event", style = MaterialTheme.typography.titleLarge) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -217,23 +227,72 @@ fun CreateEventScreenContent(
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-            StyledTextField(
+            OutlinedTextField(
                 value = date,
-                onValueChange = { date = it },
-                label = "Date (e.g., Dec 25, 2024) *",
-                isSubmitted = attemptedSave,
-                icon = Icons.Default.CalendarToday
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Date *") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showDatePicker = true },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = if (attemptedSave && date.isBlank()) Color.Red else Color.Gray,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSecondary,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                    disabledBorderColor = if (attemptedSave && date.isBlank()) Color.Red else Color.Gray,
+                    disabledTextColor = MaterialTheme.colorScheme.onSecondary,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSecondary,
+                    disabledLeadingIconColor = MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(16.dp),
+                enabled = false
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            StyledTextField(
+            OutlinedTextField(
                 value = time,
-                onValueChange = { time = it },
-                label = "Time (e.g., 6:00 PM) *",
-                isSubmitted = attemptedSave,
-                icon = Icons.Default.Schedule
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Time *") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Schedule,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showTimePicker = true },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = if (attemptedSave && time.isBlank()) Color.Red else Color.Gray,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSecondary,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                    disabledBorderColor = if (attemptedSave && time.isBlank()) Color.Red else Color.Gray,
+                    disabledTextColor = MaterialTheme.colorScheme.onSecondary,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSecondary,
+                    disabledLeadingIconColor = MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(16.dp),
+                enabled = false
             )
+
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -406,6 +465,199 @@ fun CreateEventScreenContent(
 
         }
     }
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                            calendar.timeInMillis = millis
+
+                            val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+                            date = dateFormat.format(calendar.time)
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            },
+            colors = DatePickerDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                titleContentColor = MaterialTheme.colorScheme.onSurface,
+                headlineContentColor = MaterialTheme.colorScheme.onSurface,
+                weekdayContentColor = MaterialTheme.colorScheme.onSurface,
+                subheadContentColor = MaterialTheme.colorScheme.onSurface,
+                yearContentColor = MaterialTheme.colorScheme.onSurface,
+                currentYearContentColor = MaterialTheme.colorScheme.primary,
+                selectedYearContentColor = MaterialTheme.colorScheme.onPrimary,
+                selectedYearContainerColor = MaterialTheme.colorScheme.primary,
+                dayContentColor = MaterialTheme.colorScheme.onSurface,
+                selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
+                selectedDayContainerColor = MaterialTheme.colorScheme.primary,
+                todayContentColor = MaterialTheme.colorScheme.primary,
+                todayDateBorderColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    headlineContentColor = MaterialTheme.colorScheme.onSurface,
+                    weekdayContentColor = MaterialTheme.colorScheme.onSurface,
+                    subheadContentColor = MaterialTheme.colorScheme.onSurface,
+                    yearContentColor = MaterialTheme.colorScheme.onSurface,
+                    currentYearContentColor = MaterialTheme.colorScheme.primary,
+                    selectedYearContentColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedYearContainerColor = MaterialTheme.colorScheme.primary,
+                    dayContentColor = MaterialTheme.colorScheme.onSurface,
+                    selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedDayContainerColor = MaterialTheme.colorScheme.primary,
+                    todayContentColor = MaterialTheme.colorScheme.primary,
+                    todayDateBorderColor = MaterialTheme.colorScheme.primary
+                )
+            )
+        }
+    }
+
+    if (showTimePicker) {
+        TimePickerDialog(
+            onDismissRequest = { showTimePicker = false },
+            onConfirm = { selectedTime ->
+                time = selectedTime
+                showTimePicker = false
+            }
+        )
+    }
+}
+
+@Composable
+fun TimePickerDialog(
+    onDismissRequest: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var hour by remember { mutableStateOf("") }
+    var minute by remember { mutableStateOf("") }
+    var isAM by remember { mutableStateOf(true) }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Select Time", color = Color.Black) },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Hour input
+                    OutlinedTextField(
+                        value = hour,
+                        onValueChange = { newValue ->
+                            // Only allow numbers 1-12
+                            if (newValue.isEmpty()) {
+                                hour = ""
+                            } else if (newValue.all { it.isDigit() }) {
+                                val num = newValue.toIntOrNull()
+                                if (num != null && num in 1..12) {
+                                    hour = newValue
+                                }
+                            }
+                        },
+                        label = { Text("Hour") },
+                        placeholder = { Text("12") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.width(80.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            cursorColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+
+                    Text(":", style = MaterialTheme.typography.headlineMedium)
+
+                    // Minute input
+                    OutlinedTextField(
+                        value = minute,
+                        onValueChange = { newValue ->
+                            // Only allow numbers 00-59
+                            if (newValue.isEmpty()) {
+                                minute = ""
+                            } else if (newValue.all { it.isDigit() } && newValue.length <= 2) {
+                                val num = newValue.toIntOrNull()
+                                if (num != null && num in 0..59) {
+                                    minute = newValue
+                                }
+                            }
+                        },
+                        label = { Text("Minute") },
+                        placeholder = { Text("00") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier
+                            .width(90.dp)
+                            .heightIn(max = 60.dp),
+                        singleLine = true,
+                        maxLines = 1,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            cursorColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+
+                // AM/PM Selector
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = isAM,
+                        onClick = { isAM = true },
+                        label = { Text("AM") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = !isAM,
+                        onClick = { isAM = false },
+                        label = { Text("PM") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (hour.isNotEmpty() && minute.isNotEmpty()) {
+                        val formattedMinute = minute.padStart(2, '0')
+                        val period = if (isAM) "AM" else "PM"
+                        onConfirm("$hour:$formattedMinute $period")
+                    }
+                },
+                enabled = hour.isNotEmpty() && minute.isNotEmpty()
+            ) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Preview(showBackground = true)
