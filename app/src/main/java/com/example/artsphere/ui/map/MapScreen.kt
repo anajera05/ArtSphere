@@ -5,10 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Shader
 import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -24,7 +28,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.imageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import com.example.artsphere.data.model.Event
 import com.example.artsphere.ui.events.EventViewModel
 import com.google.android.gms.location.LocationServices
@@ -34,6 +42,8 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.maps.android.compose.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Main composable for displaying a map screen with event markers and location features.
@@ -182,8 +192,11 @@ private fun MapWithEvents(
     onEventClick: ((Event) -> Unit)?,
     onCreateEventAtLocation: ((LatLng) -> Unit)?
 ) {
+    val context = LocalContext.current
     val eventViewModel: EventViewModel = viewModel()
     val uiState by eventViewModel.uiState.collectAsState()
+
+    val markerBitmaps = remember { mutableStateMapOf<String, Bitmap>() }
 
     //Remember camera position state to centered on the user
     val cameraPositionState = rememberCameraPositionState {
@@ -193,6 +206,28 @@ private fun MapWithEvents(
     // Track dialog visibility and selected location for event creation
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
+
+    LaunchedEffect(uiState.events) {
+        uiState.events.forEach { event ->
+            if (!markerBitmaps.contains(event.id)) {
+                Log.d("MapScreen", "Loading marker for event: ${event.id}, imageUrl: ${event.imageUrl}")
+                val bitmap = if (event.imageUrl.isNotEmpty()) {
+                    val loadedBitmap = loadImageBitmap(context, event.imageUrl)
+                    if (loadedBitmap != null) {
+                        Log.d("MapScreen", "✅ Successfully loaded image for event: ${event.id}")
+                        loadedBitmap
+                    } else {
+                        Log.w("MapScreen", "⚠️ Failed to load image for event: ${event.id}, using purple marker")
+                        createEventMarkerBitmap()
+                    }
+                } else {
+                    Log.d("MapScreen", "No image URL for event: ${event.id}, using purple marker")
+                    createEventMarkerBitmap()
+                }
+                markerBitmaps[event.id] = bitmap
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
@@ -210,77 +245,80 @@ private fun MapWithEvents(
                 showAddDialog = true
             }
         ) {
-            // Add event markers
             uiState.events.forEach { event ->
-                Marker(
-                    state = MarkerState(position = LatLng(event.latitude, event.longitude)),
-                    title = event.title,
-                    snippet = "${event.date} at ${event.time}",
-                    icon = BitmapDescriptorFactory.fromBitmap(
-                        createEventMarkerBitmap()
-                    ),
-                    onClick = {
-                        onEventClick?.invoke(event)
-                        true
-                    },
-
-                )
+                val markerBitmap = markerBitmaps[event.id]
+                if (markerBitmap != null) {
+                    Marker(
+                        state = MarkerState(position = LatLng(event.latitude, event.longitude)),
+                        title = event.title,
+                        snippet = "${event.date} at ${event.time}",
+                        icon = BitmapDescriptorFactory.fromBitmap(markerBitmap),
+                        onClick = {
+                            onEventClick?.invoke(event)
+                            true
+                        },
+                    )
+                }
             }
         }
 
-        // Floating Action Button
-        FloatingActionButton(
-            onClick = {
-                selectedLocation = cameraPositionState.position.target
-                showAddDialog = true
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            containerColor = Color(0xFF7B61FF)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Create Event",
-                tint = Color.White
-            )
+        // Floating Action Button to add events
+        if (onCreateEventAtLocation != null) {
+            FloatingActionButton(
+                onClick = {
+                    selectedLocation = cameraPositionState.position.target
+                    showAddDialog = true
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Create Event"
+                )
+            }
         }
 
         // Event count badge
-        Card(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+        if (uiState.events.isNotEmpty()) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp),
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
+                shadowElevation = 4.dp
             ) {
-                Icon(
-                    Icons.Default.Event,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    "${uiState.events.size} Events",
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Event,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "${uiState.events.size} Events",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
             }
         }
 
+        // Loading indicator
         if (uiState.isLoading) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.TopCenter
+                    .align(Alignment.Center)
+                    .padding(16.dp)
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(32.dp),
@@ -321,20 +359,85 @@ private fun MapWithEvents(
             textContentColor = MaterialTheme.colorScheme.onSecondary,
 
 
-        )
+            )
     }
 }
 
 /**
- * Private function that creates a custom bitmap for event markers on the map.
+ * Loads an image from a URL and converts it to a circular bitmap for map markers.
  *
- * KDoc generated with AI; reviewed and modified for accuracy.
+ * @param context Android context for image loading
+ * @param imageUrl URL of the image to load
+ * @return Bitmap with the image in a circle, or null if loading fails
+ */
+private suspend fun loadImageBitmap(context: Context, imageUrl: String): Bitmap? {
+    return withContext(Dispatchers.IO) {
+        try {
+            Log.d("MapScreen", "Starting image load for URL: $imageUrl")
+
+            val request = ImageRequest.Builder(context)
+                .data(imageUrl)
+                .allowHardware(false) // Disable hardware bitmaps for compatibility
+                .size(200, 200) // Request smaller size for markers
+                .build()
+
+            val result = context.imageLoader.execute(request)
+
+            if (result is SuccessResult) {
+                val drawable = result.drawable
+                val bitmap = drawable.toBitmap(200, 200, Bitmap.Config.ARGB_8888)
+
+                Log.d("MapScreen", "✅ Image loaded successfully, creating circular marker")
+                createCircularMarkerBitmap(bitmap)
+            } else {
+                Log.e("MapScreen", "❌ Failed to load image: $result")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("MapScreen", "❌ Exception loading image: ${e.message}", e)
+            null
+        }
+    }
+}
+
+/**
+ * Creates a circular marker bitmap with the event image inside.
  *
- * This function programmatically draws a circular marker icon with a colored fill
- * and white stroke border. The marker is rendered as a bitmap that can be used
- * as a custom marker icon in Google Maps.
+ * @param imageBitmap The event image to display in the marker
+ * @return Circular bitmap with white border suitable for map markers
+ */
+private fun createCircularMarkerBitmap(imageBitmap: Bitmap): Bitmap {
+    val size = 100
+    val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(output)
+
+    // Scale the input bitmap
+    val scaledBitmap = Bitmap.createScaledBitmap(imageBitmap, size, size, true)
+
+    // Create circular shader with the image
+    val shader = BitmapShader(scaledBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+    val paint = Paint().apply {
+        isAntiAlias = true
+        this.shader = shader
+    }
+
+    val radius = size / 2f
+    canvas.drawCircle(radius, radius, radius, paint)
+
+    // Draw white border
+    paint.shader = null
+    paint.color = android.graphics.Color.WHITE
+    paint.style = Paint.Style.STROKE
+    paint.strokeWidth = 6f
+    canvas.drawCircle(radius, radius, radius - 3f, paint)
+
+    return output
+}
+
+/**
+ * Creates a default purple circular marker bitmap for events without images.
  *
- * @return Bitmap representing the custom event marker icon.
+ * @return Purple circular bitmap with white border
  */
 private fun createEventMarkerBitmap(): Bitmap {
     val size = 100
