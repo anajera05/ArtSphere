@@ -14,8 +14,7 @@
 
 <!-- ABOUT THE PROJECT -->
 ## App Functionality & Demo
-Video demo:
-[video1570142258.mp4.zip](https://github.com/user-attachments/files/24197434/video1570142258.mp4.zip)
+
 
 
 
@@ -52,24 +51,24 @@ Our app facilitates the exchange and collaboration of artwork. It allows users t
   * Chat with multiple artists in the app
  
 ### Completeness & Live Demo Quality
-(zoom link of live demo)
 
+Video demo:
+[video1570142258.mp4.zip](https://github.com/user-attachments/files/24197434/video1570142258.mp4.zip)
 
 
 ## Technical Implementation
-
-### Architecture (MVVM structure with StateFlow and unidirectional data flow)
-(detail showed in report )
 
 ### Integration: Newyork Times API & Google map API & sensor 
 1. Newyork Times
 2. Google map 
 3. camera sensor 
 
+### Architecture (MVVM structure with StateFlow and unidirectional data flow) & Jetpack Compose Usage: UI 
+(detail showed in report )
 
-### Jetpack Compose Usage: UI 
 
-(UI detail)
+
+
 
 ## AI Use in Development
 Tools Used: ChatGPT, Gemini
