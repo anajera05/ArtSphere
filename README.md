@@ -135,8 +135,9 @@ This approach ensured that each feature functions correctly and that the app beh
 1. ```git clone https://github.com/anajera05/ArtSphere```
 2. ```cd Artsphere```
 3. Add MAPS_API_KEY=Key to local.properties, where Key is your Google Maps API key.
-4. Run emulator
-5. run application
+4. factor the json file: [google-services.json.zip](https://github.com/user-attachments/files/24200465/google-services.json.zip)
+5. Run emulator
+6. run application
 
 <!-- USAGE EXAMPLES -->
 ## Users 
