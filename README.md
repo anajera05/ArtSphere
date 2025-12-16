@@ -64,7 +64,9 @@ Video demo:
 3. camera sensor 
 
 ### Architecture (MVVM structure with StateFlow and unidirectional data flow) & Jetpack Compose Usage: UI 
-(detail showed in report )
+
+[Final Report.pdf](https://github.com/user-attachments/files/24200581/Final.Report.pdf)
+
 
 
 
