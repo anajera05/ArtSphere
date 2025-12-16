@@ -53,6 +53,12 @@ android {
         compose = true
         buildConfig = true
     }
+
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 dependencies {
@@ -94,7 +100,19 @@ dependencies {
     implementation("androidx.camera:camera-view:$cameraxVersion")
     implementation("io.coil-kt:coil-compose:2.5.0")
 
+    testImplementation("junit:junit:4.13.2")
 
+    // Mockito - For mocking Firebase and other dependencies
+    testImplementation("org.mockito:mockito-core:5.7.0")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+
+    // Coroutines Testing - For testing suspend functions and flows
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("app.cash.turbine:turbine:1.0.0")
+    // Android Testing Core - For Android-specific test utilities
+    testImplementation("androidx.test:core:1.5.0")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

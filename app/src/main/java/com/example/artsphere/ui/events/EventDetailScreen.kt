@@ -525,7 +525,7 @@ fun EventDetailScreenContent(
                                     modifier = Modifier
                                         .size(40.dp)
                                         .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primary),
+                                        .background(Color(0xFF6200EE)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
@@ -543,7 +543,6 @@ fun EventDetailScreenContent(
                                             participant.name
                                         },
                                         style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSecondary,
                                         fontWeight = FontWeight.Medium
                                     )
                                     if (participant.email.isNotEmpty()) {

@@ -15,6 +15,9 @@
 <!-- ABOUT THE PROJECT -->
 ## App Functionality & Demo
 
+
+
+
 ### Why Artsphere 
 Our app facilitates the exchange and collaboration of artwork. It allows users to sell their own creations while also discovering and purchasing art from other artists. By providing a platform for both buying and selling, the app encourages creative collaboration and helps artists reach a wider audience.
 
@@ -48,24 +51,24 @@ Our app facilitates the exchange and collaboration of artwork. It allows users t
   * Chat with multiple artists in the app
  
 ### Completeness & Live Demo Quality
-(zoom link of live demo)
 
+Video demo:
+[video1570142258.mp4.zip](https://github.com/user-attachments/files/24197434/video1570142258.mp4.zip)
 
 
 ## Technical Implementation
-
-### Architecture (MVVM structure with StateFlow and unidirectional data flow)
-(detail showed in report )
 
 ### Integration: Newyork Times API & Google map API & sensor 
 1. Newyork Times
 2. Google map 
 3. camera sensor 
 
+### Architecture (MVVM structure with StateFlow and unidirectional data flow) & Jetpack Compose Usage: UI 
+(detail showed in report )
 
-### Jetpack Compose Usage: UI 
 
-(UI detail)
+
+
 
 ## AI Use in Development
 Tools Used: ChatGPT, Gemini
@@ -80,6 +83,10 @@ Where and How Used:
   * Using Chat helped me rewrite the rules so authenticated users could upload their own profile photos while preventing unauthorized access
 * Creating Previews: To help create more complex UI, we used Gemini to update our files to allow us to render previews that would not break our code
   * Example prompt: Why does the preview for X not render?
+* Test cases:
+  * Helped with setting up mock FirebaseAuth and FirebaseUser for testing offline authentication and session persistence, and provided example structures for unit tests, which served as a basis for artwork and event input validation
+* KDoc:
+  * Helped with generating KDoc comments for functions and classes, which were manually checked and reviewed to ensure accuracy and clarity.
 
 Analysis of Helpfulness and Limitations:
 * Helpfulness:
@@ -113,8 +120,9 @@ Manual testing verified core components on the emulator:
 * Navigation: ensuring smooth transitions between screens
 
 Automated unit/UI tests were added to verify key composable components and flows:
-* Login/Sign-in Screen: ensured users can type in email and password fields and that the login button is enabled
-* Artwork Upload Flow: verified that users can input and submit artwork details through the UI
+* Offline/Auth Functionality: Tested user session persistence, login/logout state transitions, and access to user data without requiring a network connection.
+* Artwork Input Validation: Ensured that all required fields are completed, emails are valid, price fields are correctly formatted, and optional fields behave as expected. Edit mode scenarios were also tested to handle missing images appropriately.
+* Event Input Validation: Verified that required fields are filled, time and date inputs are valid, participant limits are enforced, and optional fields such as images and categories are handled correctly. Edge cases for capacity and time formatting were also tested.
 
 This approach ensured that each feature functions correctly and that the app behaves as expected under different scenarios.
 
