@@ -14,6 +14,10 @@
 
 <!-- ABOUT THE PROJECT -->
 ## App Functionality & Demo
+Video demo:
+[video1570142258.mp4.zip](https://github.com/user-attachments/files/24197434/video1570142258.mp4.zip)
+
+
 
 ### Why Artsphere 
 Our app facilitates the exchange and collaboration of artwork. It allows users to sell their own creations while also discovering and purchasing art from other artists. By providing a platform for both buying and selling, the app encourages creative collaboration and helps artists reach a wider audience.
