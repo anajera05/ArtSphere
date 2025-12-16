@@ -80,6 +80,10 @@ Where and How Used:
   * Using Chat helped me rewrite the rules so authenticated users could upload their own profile photos while preventing unauthorized access
 * Creating Previews: To help create more complex UI, we used Gemini to update our files to allow us to render previews that would not break our code
   * Example prompt: Why does the preview for X not render?
+* Test cases:
+  * Helped with setting up mock FirebaseAuth and FirebaseUser for testing offline authentication and session persistence, and provided example structures for unit tests, which served as a basis for artwork and event input validation
+* KDoc:
+  * Helped with generating KDoc comments for functions and classes, which were manually checked and reviewed to ensure accuracy and clarity.
 
 Analysis of Helpfulness and Limitations:
 * Helpfulness:
@@ -113,8 +117,9 @@ Manual testing verified core components on the emulator:
 * Navigation: ensuring smooth transitions between screens
 
 Automated unit/UI tests were added to verify key composable components and flows:
-* Login/Sign-in Screen: ensured users can type in email and password fields and that the login button is enabled
-* Artwork Upload Flow: verified that users can input and submit artwork details through the UI
+* Offline/Auth Functionality: Tested user session persistence, login/logout state transitions, and access to user data without requiring a network connection.
+* Artwork Input Validation: Ensured that all required fields are completed, emails are valid, price fields are correctly formatted, and optional fields behave as expected. Edit mode scenarios were also tested to handle missing images appropriately.
+* Event Input Validation: Verified that required fields are filled, time and date inputs are valid, participant limits are enforced, and optional fields such as images and categories are handled correctly. Edge cases for capacity and time formatting were also tested.
 
 This approach ensured that each feature functions correctly and that the app behaves as expected under different scenarios.
 
