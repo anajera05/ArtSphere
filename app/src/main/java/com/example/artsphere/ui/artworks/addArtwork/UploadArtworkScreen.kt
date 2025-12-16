@@ -249,7 +249,7 @@ fun UploadArtworkContent(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
